@@ -7,12 +7,13 @@ import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.theme.EmprendedoresScreen
 import com.undef.manoslocales.ui.theme.HomeScreen
 import com.undef.manoslocales.ui.theme.LoginScreen
+import com.undef.manoslocales.ui.theme.ProveedoresScreen
 import com.undef.manoslocales.ui.theme.RegisterScreen
 import com.undef.manoslocales.ui.theme.SettingScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "login") {
         composable("register") {
             RegisterScreen(
                 onRegisterClick = { username, password ->
@@ -47,6 +48,9 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("emprendedores") {
             EmprendedoresScreen(navController = navController)  // Pasamos navController
+        }
+        composable ("proveedores"){
+            ProveedoresScreen(navController = navController)
         }
         composable("settings") {
             SettingScreen(navController = navController)

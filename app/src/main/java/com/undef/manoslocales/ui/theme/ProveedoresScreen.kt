@@ -20,7 +20,9 @@ import coil.compose.AsyncImage
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
 // Lista de ejemplo para poblar la LazyColumn de proveedores
@@ -31,10 +33,11 @@ val proveedoresList = listOf(
 )
 
 @Composable
-fun ProveedoresScreen() {
+fun ProveedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
     var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) }
+    var selectedItem by remember { mutableStateOf(1) } // 1 para que aparezca seleccionada la opción "Proveedores"
 
     val filteredList = if (selectedCategory == "Favoritos") {
         favoritos
@@ -45,59 +48,85 @@ fun ProveedoresScreen() {
     }
 
     ManosLocalesTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
+        Scaffold(
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedItem = selectedItem,
+                    onItemSelected = {
+                        selectedItem = it
+                        when (it) {
+                            0 -> navController.navigate("home") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                            1 -> navController.navigate("proveedores") {
+                                popUpTo("proveedores") { inclusive = true }
+                            }
+                            2 -> navController.navigate("emprendedores") {
+                                popUpTo("emprendedores") { inclusive = true }
+                            }
+                        }
+                    },
+                    navController = navController
+                )
+            },
+            containerColor = Color(0xff3E2C1C)
+        ) { paddingValues ->
+            Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xff3E2C1C))
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(paddingValues), // ✅ Ahora se usa el padding
+                color = MaterialTheme.colorScheme.background
             ) {
-
-                Image(
-                    painter = painterResource(id = R.drawable.manoslocales),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .width(180.dp)
-                        .offset(y = (-18).dp)
-                )
-
-                Spacer(modifier = Modifier.height(0.dp))
-
-                CategoryDropdown(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it },
-                    categories = categories
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xff3E2C1C)),
+                        .background(Color(0xff3E2C1C))
+                        .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(filteredList) { proveedor ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ProveedorItem(
-                                proveedor = proveedor,
-                                onFavoritoClicked = { selectedProveedor ->
-                                    if (favoritos.contains(selectedProveedor)) {
-                                        favoritos = favoritos.filter { it.id != selectedProveedor.id }
-                                    } else {
-                                        favoritos = favoritos + selectedProveedor
+
+                    Image(
+                        painter = painterResource(id = R.drawable.manoslocales),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .width(180.dp)
+                            .offset(y = (-18).dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(0.dp))
+
+                    CategoryDropdown(
+                        selectedCategory = selectedCategory,
+                        onCategorySelected = { selectedCategory = it },
+                        categories = categories
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xff3E2C1C)),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        items(filteredList) { proveedor ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ProveedorItem(
+                                    proveedor = proveedor,
+                                    onFavoritoClicked = { selectedProveedor ->
+                                        if (favoritos.contains(selectedProveedor)) {
+                                            favoritos = favoritos.filter { it.id != selectedProveedor.id }
+                                        } else {
+                                            favoritos = favoritos + selectedProveedor
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -105,6 +134,9 @@ fun ProveedoresScreen() {
         }
     }
 }
+
+
+
 
 
 @Composable
@@ -193,8 +225,4 @@ fun ProveedorItem(proveedor: Proveedor, onFavoritoClicked: (Proveedor) -> Unit) 
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewProveedoresScreen() {
-    ProveedoresScreen()
-}
+
