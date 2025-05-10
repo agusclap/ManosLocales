@@ -1,7 +1,6 @@
 package com.undef.manoslocales.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.Popup
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,6 +8,7 @@ import com.undef.manoslocales.ui.theme.EmprendedoresScreen
 import com.undef.manoslocales.ui.theme.HomeScreen
 import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.RegisterScreen
+import com.undef.manoslocales.ui.theme.SettingScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -44,6 +44,9 @@ fun AppNavGraph(navController: NavHostController) {
             }
         composable("emprendedores") {
             EmprendedoresScreen(navController = navController)  // Pasamos navController
+        }
+        composable("settings") {
+            SettingScreen(navController = navController)
         }
     }
 }

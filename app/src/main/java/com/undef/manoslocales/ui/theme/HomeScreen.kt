@@ -48,7 +48,8 @@ fun HomeScreen(
                             popUpTo("register") { inclusive = true }
                         }
                     }
-                }
+                },
+                navController = navController
             )
         },
         containerColor = Color(0xff3E2C1C)
@@ -176,7 +177,8 @@ fun PerfilButton() {
 @Composable
 fun BottomNavigationBar(
     selectedItem: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    navController: NavHostController
 ) {
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),

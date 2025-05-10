@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -30,10 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
 
 @Composable
-fun SettingScreen() {
+fun SettingScreen(navController: NavHostController) {
     var notificationEnabled by remember { mutableStateOf(true) }
     var loginEnabled by remember { mutableStateOf(true) }
     var selectedItem by remember { mutableStateOf(0) }
@@ -42,7 +42,8 @@ fun SettingScreen() {
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it }
+                onItemSelected = { selectedItem = it },
+                navController = navController
             )
         },
         containerColor = Color(0xff3E2C1C)
@@ -129,9 +130,3 @@ fun SwitchItem(title: String, isChecked: Boolean, onCheckedChange: (Boolean) -> 
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun SettingScreenPrewiew() {
-    SettingScreen()
-}
