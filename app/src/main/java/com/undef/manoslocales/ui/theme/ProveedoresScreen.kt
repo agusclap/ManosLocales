@@ -118,6 +118,7 @@ fun ProveedoresScreen(navController: NavHostController) {
                             ) {
                                 ProveedorItem(
                                     proveedor = proveedor,
+                                    isFavorito = favoritos.any { it.id == proveedor.id },
                                     onFavoritoClicked = { selectedProveedor ->
                                         if (favoritos.contains(selectedProveedor)) {
                                             favoritos = favoritos.filter { it.id != selectedProveedor.id }
@@ -140,7 +141,7 @@ fun ProveedoresScreen(navController: NavHostController) {
 
 
 @Composable
-fun ProveedorItem(proveedor: Proveedor, onFavoritoClicked: (Proveedor) -> Unit) {
+fun ProveedorItem(proveedor: Proveedor, isFavorito: Boolean, onFavoritoClicked: (Proveedor) -> Unit) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
@@ -213,7 +214,7 @@ fun ProveedorItem(proveedor: Proveedor, onFavoritoClicked: (Proveedor) -> Unit) 
                         onClick = { onFavoritoClicked(proveedor) }
                     ) {
                         Icon(
-                            imageVector = if (proveedor.favorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Agregar a favoritos",
                             tint = Color((0xffFEFAE0))
                         )
