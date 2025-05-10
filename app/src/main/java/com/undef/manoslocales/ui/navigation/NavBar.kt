@@ -43,16 +43,16 @@ fun BottomNavigationBar(
             selected = selectedItem == 1,
             onClick = {
                 onItemSelected(1)
-                if (navController.currentDestination?.route != "emprendedores") {
-                    navController.navigate("emprendedores") {
+                if (navController.currentDestination?.route != "home") {
+                    navController.navigate("home") {
                         popUpTo(0)
                         launchSingleTop = true
                     }
                 }
             },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Emprendedores") },
+            icon = { Icon(Icons.Filled.Person, contentDescription = "A CONFIGURAR") },
             label = {
-                Text("Emprendedores", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("A CONFIGURAR", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(

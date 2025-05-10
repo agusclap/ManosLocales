@@ -201,7 +201,7 @@ fun BottomNavigationBar(
             onClick = { onItemSelected(1) },
             icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
             label = {
-                Text("Profile", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("A CONFIGURAR", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
