@@ -54,9 +54,9 @@ fun HomeScreen(navController: NavHostController? = null,
                     .offset(y = (-20).dp)
             )
 
+            // Aquí utilizas la función de navegación pasada como parámetro.
             EmprendedoresCard(onClick = {
-                // Lógica para navegar a EmprendedoresScreen
-                navController?.navigate("emprendedores_screen")
+                onEmprendedoresClick() // Esto navegará a la pantalla de emprendedores
             })
             Spacer(modifier = Modifier.height(20.dp))
             ProveedoresCard()
@@ -73,7 +73,7 @@ fun EmprendedoresCard(onClick: () -> Unit) {
             .size(220.dp)
             .padding(8.dp)
             .offset(y = (-30).dp)
-            .clickable { onClick() }, // Aquí agregas el clickable
+            .clickable { onClick() }, // Acción de clic en el card
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFEFAE0)

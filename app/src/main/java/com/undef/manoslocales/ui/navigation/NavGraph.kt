@@ -37,7 +37,10 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreen(
                 navController = navController,  // Ahora estamos pasando el navController a HomeScreen
                 onEmprendedoresClick = {
-                    navController.navigate("emprendedores")
+                    navController.navigate("emprendedores") {
+                        // Limpiar la pila para evitar volver a home al presionar el retroceso
+                        popUpTo("home") { inclusive = true }
+                    }
                 }
             )
         }
