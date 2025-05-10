@@ -7,9 +7,11 @@ import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.theme.EmprendedoresScreen
 import com.undef.manoslocales.ui.theme.HomeScreen
 import com.undef.manoslocales.ui.theme.LoginScreen
+import com.undef.manoslocales.ui.theme.ProfileScreen
 import com.undef.manoslocales.ui.theme.ProveedoresScreen
 import com.undef.manoslocales.ui.theme.RegisterScreen
 import com.undef.manoslocales.ui.theme.SettingScreen
+import com.undef.manoslocales.ui.theme.getUser
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -55,5 +57,9 @@ fun AppNavGraph(navController: NavHostController) {
         composable("settings") {
             SettingScreen(navController = navController)
         }
+        composable("profile") {
+            ProfileScreen(getUser(), navController = navController)
+        }
+
     }
 }

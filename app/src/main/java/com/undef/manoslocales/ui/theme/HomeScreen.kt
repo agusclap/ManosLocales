@@ -80,7 +80,7 @@ fun HomeScreen(
                 onProveedoresClick()
             })
             Spacer(modifier = Modifier.height(20.dp))
-            PerfilButton()
+            PerfilButton(navController)
         }
     }
 }
@@ -155,9 +155,9 @@ fun ProveedoresCard(onClick: () -> Unit) {
 }
 
 @Composable
-fun PerfilButton() {
+fun PerfilButton(navController: NavHostController) {
     Button(
-        onClick = { /* Acción para ir al perfil */ },
+        onClick = { navController.navigate("profile") },
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)

@@ -30,6 +30,6 @@ fun getUser(): User {
         name = "Juan Pérez",
         email = "juan.perez@example.com",
         location = "Córdoba, Argentina",
-        profileImageUrl = "https://example.com/profile_image.jpg"
+        profileImageUrl = "file:///android_asset/sample_image.jpg"
     )
 }

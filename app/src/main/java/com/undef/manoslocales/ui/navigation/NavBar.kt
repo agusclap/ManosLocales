@@ -59,8 +59,8 @@ fun BottomNavigationBar(
             selected = selectedItem == 2,
             onClick = {
                 onItemSelected(2)
-                if (navController.currentDestination?.route != "register") {
-                    navController.navigate("register") {
+                if (navController.currentDestination?.route != "setttings") {
+                    navController.navigate("setttings") {
                         popUpTo(0)
                         launchSingleTop = true
                     }
@@ -68,7 +68,7 @@ fun BottomNavigationBar(
             },
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Registro") },
             label = {
-                Text("Registro", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
     }
