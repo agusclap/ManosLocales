@@ -122,16 +122,13 @@ fun EmprendedoresScreen(navController: NavHostController) {
 }
 
 
-
-
-
 @Composable
 fun EmprendedorItem(emprendedor: Emprendedor) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
             .width(320.dp)
-            ,
+        ,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // SIN SOMBRA
         shape = RoundedCornerShape(0.dp), // ESQUINAS RECTAS (opcional)
         colors = CardDefaults.cardColors(
@@ -200,13 +197,11 @@ fun EmprendedorItem(emprendedor: Emprendedor) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewEmprendedoresScreen() {
-    // Creamos un NavController "falso" para el Preview
-    val navController = rememberNavController()
+    ManosLocalesTheme {
+        // Crear un NavController "falso" para preview
+        val navController = rememberNavController()
 
-    // Llamamos a la pantalla con los parámetros necesarios
-    EmprendedoresScreen(
-        navController = navController  // Pasamos el navController aquí
-    )
+        // Llamar a la pantalla con el navController
+        EmprendedoresScreen(navController = navController)
+    }
 }
-
-
