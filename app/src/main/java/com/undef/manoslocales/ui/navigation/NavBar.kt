@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -36,10 +37,10 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = selectedItem == 1,
             onClick = { onItemSelected(1) },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
+            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favorites") },
             label = {
                 Text(
-                    text = "Profile",
+                    text = "Favorites",
                     color = if (selectedItem == 1) Color(0xFFFEFAE0) else Color.White,
                     fontWeight = FontWeight.Bold
                 )
