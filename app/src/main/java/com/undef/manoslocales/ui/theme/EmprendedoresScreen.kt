@@ -1,51 +1,47 @@
 package com.undef.manoslocales.ui.theme
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.shape.RoundedCornerShape
-import coil.compose.AsyncImage
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
-
-// Lista de ejemplo para poblar la LazyColumn
+// Lista de ejemplo
 val emprendedoresList = listOf(
-    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg"),
     Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
     Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
     Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg")
 )
 
-
 @Composable
 fun EmprendedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
-    val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
-    val filteredList = if (selectedCategory == "Todas") {
-        emprendedoresList
-    } else {
-        emprendedoresList.filter { it.categoria == selectedCategory }
+    var favoritos by remember { mutableStateOf<List<Emprendedor>>(emptyList()) }
+    val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos", "Favoritos")
+
+    val filteredList = when (selectedCategory) {
+        "Favoritos" -> favoritos
+        "Todas" -> emprendedoresList
+        else -> emprendedoresList.filter { it.categoria == selectedCategory }
     }
+
     var selectedItem by remember { mutableStateOf(0) }
 
     ManosLocalesTheme {
@@ -54,7 +50,7 @@ fun EmprendedoresScreen(navController: NavHostController) {
                 BottomNavigationBar(
                     selectedItem = selectedItem,
                     onItemSelected = { selectedItem = it },
-                    navController = navController  // Aquí pasas el navController a BottomNavigationBar
+                    navController = navController
                 )
             },
             containerColor = Color(0xff3E2C1C)
@@ -77,8 +73,6 @@ fun EmprendedoresScreen(navController: NavHostController) {
                         .offset(y = (-18).dp)
                 )
 
-                Spacer(modifier = Modifier.height(0.dp))
-
                 CategoryDropdown(
                     selectedCategory = selectedCategory,
                     onCategorySelected = { selectedCategory = it },
@@ -98,42 +92,38 @@ fun EmprendedoresScreen(navController: NavHostController) {
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            EmprendedorItem(emprendedor)
+                            EmprendedorItem(
+                                emprendedor = emprendedor,
+                                isFavorito = favoritos.any { it.id == emprendedor.id },
+                                onFavoritoClicked = { selected ->
+                                    favoritos = if (favoritos.any { it.id == selected.id }) {
+                                        favoritos.filter { it.id != selected.id }
+                                    } else {
+                                        favoritos + selected
+                                    }
+                                }
+                            )
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Botón para volver a Home usando navController
-                Button(
-                    onClick = {
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0))
-                ) {
-                    Text(text = "Volver a Home", color = Color.Black)
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun EmprendedorItem(emprendedor: Emprendedor) {
+fun EmprendedorItem(
+    emprendedor: Emprendedor,
+    isFavorito: Boolean,
+    onFavoritoClicked: (Emprendedor) -> Unit
+) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
-            .width(320.dp)
-            ,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // SIN SOMBRA
-        shape = RoundedCornerShape(0.dp), // ESQUINAS RECTAS (opcional)
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xff3E2C1C) // MISMO COLOR QUE EL FONDO
-        )
+            .width(320.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xff3E2C1C))
     ) {
         Row(
             modifier = Modifier
@@ -156,7 +146,6 @@ fun EmprendedorItem(emprendedor: Emprendedor) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Info
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxHeight()
@@ -178,31 +167,30 @@ fun EmprendedorItem(emprendedor: Emprendedor) {
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
-                    onClick = { /* Acción al hacer click */ },
-                    modifier = Modifier.align(Alignment.End)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "See Details",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
-                    )
+                    TextButton(onClick = { /* Ver detalles */ }) {
+                        Text(
+                            text = "Ver detalles",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White
+                        )
+                    }
+
+                    IconButton(onClick = { onFavoritoClicked(emprendedor) }) {
+                        Icon(
+                            imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Agregar a favoritos",
+                            tint = Color(0xffFEFAE0)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewEmprendedoresScreen() {
-    ManosLocalesTheme {
-        // Crear un NavController "falso" para preview
-        val navController = rememberNavController()
-
-        // Llamar a la pantalla con el navController
-        EmprendedoresScreen(navController = navController)
-    }
-}
 

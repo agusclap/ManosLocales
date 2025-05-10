@@ -27,7 +27,8 @@ import com.undef.manoslocales.R
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    onEmprendedoresClick: () -> Unit
+    onEmprendedoresClick: () -> Unit,
+    onProveedoresClick: () -> Unit
 ) {
     var selectedItem by remember { mutableStateOf(0) }
 
@@ -75,7 +76,9 @@ fun HomeScreen(
                 onEmprendedoresClick()
             })
             Spacer(modifier = Modifier.height(20.dp))
-            ProveedoresCard()
+            ProveedoresCard( onClick = {
+                onProveedoresClick()
+            })
             Spacer(modifier = Modifier.height(20.dp))
             PerfilButton()
         }
@@ -118,12 +121,13 @@ fun EmprendedoresCard(onClick: () -> Unit) {
 }
 
 @Composable
-fun ProveedoresCard() {
+fun ProveedoresCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .size(220.dp)
             .padding(8.dp)
-            .offset(y = (-30).dp),
+            .offset(y = (-30).dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFEFAE0)
@@ -210,16 +214,3 @@ fun BottomNavigationBar(
         )
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    val navController = rememberNavController()  // NavController falso para la preview
-    ManosLocalesTheme {
-        HomeScreen(
-            navController = navController,
-            onEmprendedoresClick = { /* Acción para ir a la pantalla de emprendedores */ }
-        )
-    }
-}
-

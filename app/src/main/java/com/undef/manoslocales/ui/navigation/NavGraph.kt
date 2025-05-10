@@ -35,13 +35,16 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
         composable("home") {
-                HomeScreen(
-                    navController = navController,  // Aquí pasas el navController a HomeScreen
-                    onEmprendedoresClick = {
-                        navController.navigate("emprendedores")  // Navegas a emprendedores
-                    }
-                )
-            }
+            HomeScreen(
+                navController = navController,
+                onEmprendedoresClick = {
+                    navController.navigate("emprendedores")
+                },
+                onProveedoresClick = {
+                    navController.navigate("proveedores")
+                }
+            )
+        }
         composable("emprendedores") {
             EmprendedoresScreen(navController = navController)  // Pasamos navController
         }
