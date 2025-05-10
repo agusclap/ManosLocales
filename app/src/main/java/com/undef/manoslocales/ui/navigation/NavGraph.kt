@@ -1,6 +1,7 @@
 package com.undef.manoslocales.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.Popup
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,7 +12,7 @@ import com.undef.manoslocales.ui.theme.RegisterScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "register") {
+    NavHost(navController = navController, startDestination = "home") {
         composable("register") {
             RegisterScreen(
                 onRegisterClick = { username, password ->
@@ -34,18 +35,15 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
         composable("home") {
-            HomeScreen(
-                navController = navController,  // Ahora estamos pasando el navController a HomeScreen
-                onEmprendedoresClick = {
-                    navController.navigate("emprendedores") {
-                        // Limpiar la pila para evitar volver a home al presionar el retroceso
-                        popUpTo("home") { inclusive = true }
+                HomeScreen(
+                    navController = navController,  // Aquí pasas el navController a HomeScreen
+                    onEmprendedoresClick = {
+                        navController.navigate("emprendedores")  // Navegas a emprendedores
                     }
-                }
-            )
-        }
+                )
+            }
         composable("emprendedores") {
-            EmprendedoresScreen()
+            EmprendedoresScreen(navController = navController)  // Pasamos navController
         }
     }
 }

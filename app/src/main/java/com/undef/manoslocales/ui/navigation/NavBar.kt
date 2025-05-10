@@ -12,60 +12,73 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun BottomNavigationBar(
     selectedItem: Int,
-    onItemSelected: (Int) -> Unit
+    onItemSelected: (Int) -> Unit,
+    navController: NavHostController // <-- Añado este parámetro
 ) {
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xFF3E2C1C)  // Fondo de la barra
+        containerColor = Color(0xffFEFAE0)
     ) {
         NavigationBarItem(
             selected = selectedItem == 0,
-            onClick = { onItemSelected(0) },
+            onClick = {
+                onItemSelected(0)
+                navController.navigate("home") {
+                    popUpTo("home") { inclusive = true }
+                }
+            },
             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
             label = {
-                Text(
-                    text = "Home",
-                    color = if (selectedItem == 0) Color(0xFFFEFAE0) else Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Home", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
             selected = selectedItem == 1,
-            onClick = { onItemSelected(1) },
-            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favorites") },
+            onClick = {
+                onItemSelected(1)
+                navController.navigate("emprendedores") {
+                    popUpTo("emprendedores") { inclusive = true }
+                }
+            },
+            icon = { Icon(Icons.Filled.Person, contentDescription = "Emprendedores") },
             label = {
-                Text(
-                    text = "Favorites",
-                    color = if (selectedItem == 1) Color(0xFFFEFAE0) else Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Emprendedores", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
             selected = selectedItem == 2,
-            onClick = { onItemSelected(2) },
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+            onClick = {
+                onItemSelected(2)
+                navController.navigate("register") {
+                    popUpTo("register") { inclusive = true }
+                }
+            },
+            icon = { Icon(Icons.Filled.Settings, contentDescription = "Registro") },
             label = {
-                Text(
-                    text = "Settings",
-                    color = if (selectedItem == 2) Color(0xFFFEFAE0) else Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Registro", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
     }
 }
 
+
+
+
 @Preview(showBackground = true)
 @Composable
 fun BottomNavigationBarPreview() {
+    val navController = rememberNavController() // NavController "falso" para el preview
     BottomNavigationBar(
         selectedItem = 0,
-        onItemSelected = {}
+        onItemSelected = {},
+        navController = navController
     )
 }
+
+

@@ -21,18 +21,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.undef.manoslocales.R
 
 @Composable
-fun HomeScreen(navController: NavHostController? = null,
-               onEmprendedoresClick: () -> Unit) {
+fun HomeScreen(
+    navController: NavHostController,
+    onEmprendedoresClick: () -> Unit
+) {
+    var selectedItem by remember { mutableStateOf(0) }
 
-    var selectedItem = 0
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it }
+                onItemSelected = {
+                    selectedItem = it
+                    when (it) {
+                        0 -> navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                        1 -> navController.navigate("emprendedores") {
+                            popUpTo("emprendedores") { inclusive = true }
+                        }
+                        2 -> navController.navigate("register") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                }
             )
         },
         containerColor = Color(0xff3E2C1C)
@@ -54,9 +70,8 @@ fun HomeScreen(navController: NavHostController? = null,
                     .offset(y = (-20).dp)
             )
 
-            // Aquí utilizas la función de navegación pasada como parámetro.
             EmprendedoresCard(onClick = {
-                onEmprendedoresClick() // Esto navegará a la pantalla de emprendedores
+                onEmprendedoresClick()
             })
             Spacer(modifier = Modifier.height(20.dp))
             ProveedoresCard()
@@ -65,6 +80,7 @@ fun HomeScreen(navController: NavHostController? = null,
         }
     }
 }
+
 
 @Composable
 fun EmprendedoresCard(onClick: () -> Unit) {
@@ -196,9 +212,12 @@ fun BottomNavigationBar(
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+    val navController = rememberNavController()  // NavController falso para la preview
     ManosLocalesTheme {
         HomeScreen(
+            navController = navController,
             onEmprendedoresClick = { /* Acción para ir a la pantalla de emprendedores */ }
         )
     }
 }
+

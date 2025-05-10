@@ -17,22 +17,28 @@ import coil.compose.AsyncImage
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
 
 // Lista de ejemplo para poblar la LazyColumn
 val emprendedoresList = listOf(
-    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "https://via.placeholder.com/150"),
-    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "https://via.placeholder.com/150"),
-    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "https://via.placeholder.com/150"),
-    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "https://via.placeholder.com/150"),
-    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "https://via.placeholder.com/150"),
-    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "https://via.placeholder.com/150")
+    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
+    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg")
 )
 
+
 @Composable
-fun EmprendedoresScreen() {
+fun EmprendedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
     val filteredList = if (selectedCategory == "Todas") {
@@ -40,20 +46,27 @@ fun EmprendedoresScreen() {
     } else {
         emprendedoresList.filter { it.categoria == selectedCategory }
     }
+    var selectedItem by remember { mutableStateOf(0) }
 
     ManosLocalesTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
+        Scaffold(
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedItem = selectedItem,
+                    onItemSelected = { selectedItem = it },
+                    navController = navController  // Aquí pasas el navController a BottomNavigationBar
+                )
+            },
+            containerColor = Color(0xff3E2C1C)
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xff3E2C1C))
+                    .padding(paddingValues)
                     .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally // CENTRAR TODO
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Image(
                     painter = painterResource(id = R.drawable.manoslocales),
                     contentDescription = null,
@@ -78,7 +91,7 @@ fun EmprendedoresScreen() {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xff3E2C1C)),
-                    horizontalAlignment = Alignment.CenterHorizontally // CENTRAR CADA ITEM
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(filteredList) { emprendedor ->
                         Box(
@@ -89,10 +102,28 @@ fun EmprendedoresScreen() {
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón para volver a Home usando navController
+                Button(
+                    onClick = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0))
+                ) {
+                    Text(text = "Volver a Home", color = Color.Black)
+                }
             }
         }
     }
 }
+
+
+
+
 
 @Composable
 fun EmprendedorItem(emprendedor: Emprendedor) {
@@ -169,5 +200,13 @@ fun EmprendedorItem(emprendedor: Emprendedor) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewEmprendedoresScreen() {
-    EmprendedoresScreen()
+    // Creamos un NavController "falso" para el Preview
+    val navController = rememberNavController()
+
+    // Llamamos a la pantalla con los parámetros necesarios
+    EmprendedoresScreen(
+        navController = navController  // Pasamos el navController aquí
+    )
 }
+
+
