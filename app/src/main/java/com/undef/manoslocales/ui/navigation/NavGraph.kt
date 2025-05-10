@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.undef.manoslocales.ui.theme.EmprendedoresScreen
+import com.undef.manoslocales.ui.theme.HomeScreen
 import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.RegisterScreen
 
@@ -13,9 +15,9 @@ fun AppNavGraph(navController: NavHostController) {
         composable("register") {
             RegisterScreen(
                 onRegisterClick = { username, password ->
-                    // Aca tenemos que poner la logica del registro
+                    // Lógica de registro
                 },
-                onLoginClick = { //Hace referencia a el texto "Already have an account..." porque ahi defini el onLoginClick
+                onLoginClick = {
                     navController.navigate("login")
                 }
             )
@@ -23,12 +25,24 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 onLoginClick = { username, password ->
-                    // Logica del login RODILLIN
+                    // Lógica del login, si es exitosa:
+                    navController.navigate("home")
                 },
-                onRegisterClick = { //Hace referencia a el texto "Dont have an account..." porque ahi defini el onRegisterClick
+                onRegisterClick = {
                     navController.navigate("register")
                 }
             )
+        }
+        composable("home") {
+            HomeScreen(
+                navController = navController,  // Ahora estamos pasando el navController a HomeScreen
+                onEmprendedoresClick = {
+                    navController.navigate("emprendedores")
+                }
+            )
+        }
+        composable("emprendedores") {
+            EmprendedoresScreen()
         }
     }
 }

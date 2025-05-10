@@ -107,12 +107,12 @@ fun LoginScreen(
         }
         Spacer(modifier = Modifier.height(70.dp))
         Text(
-            text = "Dont have an account? Register",
+            text = "Don't have an account? Register",
             color = Color(0xffFEFAE0),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onRegisterClick }
+                .clickable { onRegisterClick() }  // Llamar a la función aquí
         )
     }
 }

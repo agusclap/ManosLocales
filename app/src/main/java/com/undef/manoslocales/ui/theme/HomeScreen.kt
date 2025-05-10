@@ -1,7 +1,7 @@
 package com.undef.manoslocales.ui.theme
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,22 +11,23 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
 
 @Composable
-fun HomeScreen() {
-    var selectedItem = 0 // Podrías mover esto a un ViewModel en producción
+fun HomeScreen(navController: NavHostController? = null,
+               onEmprendedoresClick: () -> Unit) {
 
+    var selectedItem = 0
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -36,11 +37,10 @@ fun HomeScreen() {
         },
         containerColor = Color(0xff3E2C1C)
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // ⬅️ IMPORTANTE para que el contenido no quede detrás de la barra
+                .padding(paddingValues)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -51,11 +51,13 @@ fun HomeScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .width(180.dp)
                     .offset(y = (-20).dp)
             )
 
-            EmprendedoresCard()
+            EmprendedoresCard(onClick = {
+                // Lógica para navegar a EmprendedoresScreen
+                navController?.navigate("emprendedores_screen")
+            })
             Spacer(modifier = Modifier.height(20.dp))
             ProveedoresCard()
             Spacer(modifier = Modifier.height(20.dp))
@@ -65,12 +67,13 @@ fun HomeScreen() {
 }
 
 @Composable
-fun EmprendedoresCard() {
+fun EmprendedoresCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .size(220.dp)
             .padding(8.dp)
-            .offset(y = (-30).dp),
+            .offset(y = (-30).dp)
+            .clickable { onClick() }, // Aquí agregas el clickable
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFEFAE0)
@@ -133,7 +136,7 @@ fun ProveedoresCard() {
 @Composable
 fun PerfilButton() {
     Button(
-        onClick = { /* Acción */ },
+        onClick = { /* Acción para ir al perfil */ },
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
@@ -143,17 +146,16 @@ fun PerfilButton() {
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xffFEFAE0),
             contentColor = Color(0xff3E2C1C)
-        ) // Cierra correctamente los colores
+        )
     ) {
         Text(
             text = "My Profile",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color.Black,
-            fontSize = 20.sp
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = Color.Black
         )
     }
 }
-
 
 @Composable
 fun BottomNavigationBar(
@@ -162,18 +164,14 @@ fun BottomNavigationBar(
 ) {
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xffFEFAE0)  // Fondo de la barra
+        containerColor = Color(0xffFEFAE0)
     ) {
         NavigationBarItem(
             selected = selectedItem == 0,
             onClick = { onItemSelected(0) },
             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
             label = {
-                Text(
-                    text = "Home",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Home", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
@@ -181,11 +179,7 @@ fun BottomNavigationBar(
             onClick = { onItemSelected(1) },
             icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
             label = {
-                Text(
-                    text = "Profile",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Profile", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
@@ -193,21 +187,18 @@ fun BottomNavigationBar(
             onClick = { onItemSelected(2) },
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
             label = {
-                Text(
-                    text = "Settings",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     ManosLocalesTheme {
-        HomeScreen()
+        HomeScreen(
+            onEmprendedoresClick = { /* Acción para ir a la pantalla de emprendedores */ }
+        )
     }
 }
