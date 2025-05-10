@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.undef.manoslocales.ui.navigation.AppNavGraph
 import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 
@@ -21,9 +23,9 @@ class MainActivity : ComponentActivity() {
             ManosLocalesTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     // Aquí llamamos al Composable correctamente
-                    LoginScreen { username, password ->
-                        println("Usuario: $username, Contraseña: $password")
-                    }
+                    // Aquí llamamos al Composable correctamente
+                    val navController = rememberNavController()
+                    AppNavGraph(navController = navController)
                 }
             }
         }

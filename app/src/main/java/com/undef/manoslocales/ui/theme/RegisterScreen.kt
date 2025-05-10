@@ -1,5 +1,6 @@
 package com.undef.manoslocales.ui.theme
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
@@ -8,10 +9,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import com.undef.manoslocales.R
 
 @Composable
 fun RegisterScreen(
@@ -31,15 +34,19 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .wrapContentSize(Alignment.Center), // Centrado de los elementos
+                .wrapContentSize(Alignment.Center).
+                offset(y = (-40).dp), // Centrado de los elementos
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Register",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White // Texto blanco para el título
+            Image(
+                painter = painterResource(id = R.drawable.manoslocales),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().height(180.dp).width(180.dp).offset(y = (-95).dp)
             )
+
+            Text(text = "Sign Up", style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xffFEFAE0))
             Spacer(modifier = Modifier.height(24.dp))
 
             // Email input field
@@ -92,8 +99,8 @@ fun RegisterScreen(
                     .fillMaxWidth()
                     .padding(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White, // Fondo blanco para el botón
-                    contentColor = Color.Black // Texto negro en el botón
+                    containerColor = Color(0xffFEFAE0), // Fondo blanco para el botón
+                    contentColor = Color(0xff3E2C1C) // Texto negro en el botón
                 )
             ) {
                 Text(text = "Register")
@@ -105,7 +112,7 @@ fun RegisterScreen(
             Text(
                 text = "Already have an account? Login",
                 textAlign = TextAlign.Center,
-                color = Color.White, // Texto blanco para el enlace
+                color = Color(0xffFEFAE0), // Texto blanco para el enlace
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onLoginClick() }

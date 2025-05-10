@@ -2,6 +2,7 @@ package com.undef.manoslocales.ui.theme
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,7 +33,10 @@ import androidx.compose.ui.unit.dp
 import com.undef.manoslocales.R
 
 @Composable
-fun LoginScreen(onLoginClick: (String, String) -> Unit) {
+fun LoginScreen(
+    onLoginClick: (String, String) -> Unit,
+    onRegisterClick: () -> Unit
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -47,11 +51,16 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit) {
         Image(
             painter = painterResource(id = R.drawable.manoslocales),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(180.dp).width(180.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .width(180.dp)
         )
         Spacer(modifier = Modifier.height(100.dp))
-        Text(text = "Iniciar Sesión", style = MaterialTheme.typography.headlineMedium,
-            color = Color(0xffFEFAE0))
+        Text(
+            text = "Iniciar Sesión", style = MaterialTheme.typography.headlineMedium,
+            color = Color(0xffFEFAE0)
+        )
         Spacer(modifier = Modifier.height(24.dp))
 
         // TextField para el usuario
@@ -69,7 +78,7 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit) {
         TextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña") },
+            label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -77,7 +86,7 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit) {
 
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "Olvidaste tu contraseña?",
+            text = "Forgot your password?",
             color = Color(0xffFEFAE0),
             textAlign = TextAlign.Right,
             modifier = Modifier.fillMaxWidth()
@@ -96,6 +105,15 @@ fun LoginScreen(onLoginClick: (String, String) -> Unit) {
         ) {
             Text(text = "Log In")
         }
+        Spacer(modifier = Modifier.height(70.dp))
+        Text(
+            text = "Dont have an account? Register",
+            color = Color(0xffFEFAE0),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onRegisterClick }
+        )
     }
 }
 
@@ -107,5 +125,8 @@ fun MiImage(painter: Painter) {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen { _, _ -> }
+    LoginScreen(
+        onLoginClick = { _, _ -> },
+        onRegisterClick = { }
+    )
 }
