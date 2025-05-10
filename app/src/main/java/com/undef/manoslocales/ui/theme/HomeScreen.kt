@@ -42,11 +42,11 @@ fun HomeScreen(
                         0 -> navController.navigate("home") {
                             popUpTo("home") { inclusive = true }
                         }
-                        1 -> navController.navigate("emprendedores") {
-                            popUpTo("emprendedores") { inclusive = true }
+                        1 -> navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
                         }
-                        2 -> navController.navigate("register") {
-                            popUpTo("register") { inclusive = true }
+                        2 -> navController.navigate("settings") {
+                            popUpTo("settings") { inclusive = true }
                         }
                     }
                 },
@@ -198,7 +198,7 @@ fun BottomNavigationBar(
         )
         NavigationBarItem(
             selected = selectedItem == 1,
-            onClick = { onItemSelected(1) },
+            onClick = { onItemSelected(0) },
             icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
             label = {
                 Text("A CONFIGURAR", color = Color.Black, fontWeight = FontWeight.Bold)
