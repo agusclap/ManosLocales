@@ -15,81 +15,110 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 
 @Composable
 fun ProfileScreen(user: User, navController: NavHostController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xff3E2C1C))
-            .padding(24.dp), // Aumentado de 16.dp a 24.dp
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Imagen de perfil
-        Image(
-            painter = rememberImagePainter(user.profileImageUrl),
-            contentDescription = "Foto de perfil",
+    var selectedItem by remember { mutableStateOf(0) }
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                selectedItem = selectedItem,
+                onItemSelected = { selectedItem = it },
+                navController = navController
+            )
+        },
+        containerColor = Color(0xff3E2C1C)
+    ) { paddingValues ->
+
+        //  Aquí se aplica el padding de Scaffold
+        Column(
             modifier = Modifier
-                .size(140.dp) // Aumentado de 120.dp a 140.dp
-                .clip(CircleShape)
-                .background(Color.Gray)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp)) // Aumentado
-
-        // Datos del usuario
-        Text(
-            text = "Nombre: ${user.name}",
-            style = MaterialTheme.typography.headlineSmall, // Más grande que titleLarge
-            color = Color.White
-        )
-        Text(
-            text = "Correo: ${user.email}",
-            style = MaterialTheme.typography.titleMedium, // Más grande que bodyMedium
-            color = Color.White
-        )
-        Text(
-            text = "Ubicación: ${user.location}",
-            style = MaterialTheme.typography.bodyLarge, // Más grande que bodySmall
-            color = Color.White
-        )
-
-        Spacer(modifier = Modifier.height(40.dp)) // Más espacio
-
-        // Opciones de configuración
-        Button(
-            onClick = { /* Acciones de configuración */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp) // Botón más alto
+                .fillMaxSize()
+                .background(Color(0xff3E2C1C))
+                .padding(paddingValues)  // ✅ Solución: se aplica el padding aquí
+                .padding(24.dp), // Este padding extra se mantiene
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Editar perfil", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-        }
+            // Imagen de perfil
+            Image(
+                painter = rememberImagePainter(user.profileImageUrl),
+                contentDescription = "Foto de perfil",
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray)
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = { /* Cambiar contraseña */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp)
-        ) {
-            Text(text = "Cambiar contraseña", color = Color.Black, style = MaterialTheme.typography.titleMedium)
-        }
+            // Datos del usuario
+            Text(
+                text = "Nombre: ${user.name}",
+                style = MaterialTheme.typography.headlineSmall,
+                color = Color.White
+            )
+            Text(
+                text = "Correo: ${user.email}",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = "Ubicación: ${user.location}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-        Button(
-            onClick = { /* Cerrar sesión */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp)
-        ) {
-            Text(text = "Cerrar sesión", color = Color.Black, style = MaterialTheme.typography.titleMedium)
+            // Opciones de configuración
+            Button(
+                onClick = { /* Acciones de configuración */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(56.dp)
+            ) {
+                Text(
+                    text = "Editar perfil",
+                    color = Color.Black,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { /* Cambiar contraseña */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(56.dp)
+            ) {
+                Text(
+                    text = "Cambiar contraseña",
+                    color = Color.Black,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { /* Cerrar sesión */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(56.dp)
+            ) {
+                Text(
+                    text = "Cerrar sesión",
+                    color = Color.Black,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
     }
 }
