@@ -29,10 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
 
 @Composable
-fun SettingScreen() {
+fun SettingScreen(navController: NavHostController) {
     var notificationEnabled by remember { mutableStateOf(true) }
     var loginEnabled by remember { mutableStateOf(true) }
     var selectedItem by remember { mutableStateOf(0) }
@@ -129,9 +130,3 @@ fun SwitchItem(title: String, isChecked: Boolean, onCheckedChange: (Boolean) -> 
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun SettingScreenPrewiew() {
-    SettingScreen()
-}

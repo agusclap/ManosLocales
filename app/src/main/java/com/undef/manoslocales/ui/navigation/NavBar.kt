@@ -19,31 +19,35 @@ import androidx.navigation.compose.rememberNavController
 fun BottomNavigationBar(
     selectedItem: Int,
     onItemSelected: (Int) -> Unit,
-    navController: NavHostController // <-- Añado este parámetro
+    navController: NavHostController
 ) {
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
         containerColor = Color(0xffFEFAE0)
     ) {
         NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home", color = Color.Black, fontWeight = FontWeight.Bold) },
             selected = selectedItem == 0,
             onClick = {
                 onItemSelected(0)
-                navController.navigate("home") {
-                    popUpTo("home") { inclusive = true }
+                if (navController.currentDestination?.route != "home") {
+                    navController.navigate("home") {
+                        popUpTo(0) // limpia el stack si querés, opcional
+                        launchSingleTop = true
+                    }
                 }
-            },
-            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-            label = {
-                Text("Home", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(
             selected = selectedItem == 1,
             onClick = {
                 onItemSelected(1)
-                navController.navigate("emprendedores") {
-                    popUpTo("emprendedores") { inclusive = true }
+                if (navController.currentDestination?.route != "emprendedores") {
+                    navController.navigate("emprendedores") {
+                        popUpTo(0)
+                        launchSingleTop = true
+                    }
                 }
             },
             icon = { Icon(Icons.Filled.Person, contentDescription = "Emprendedores") },
@@ -55,8 +59,11 @@ fun BottomNavigationBar(
             selected = selectedItem == 2,
             onClick = {
                 onItemSelected(2)
-                navController.navigate("register") {
-                    popUpTo("register") { inclusive = true }
+                if (navController.currentDestination?.route != "register") {
+                    navController.navigate("register") {
+                        popUpTo(0)
+                        launchSingleTop = true
+                    }
                 }
             },
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Registro") },
@@ -66,6 +73,7 @@ fun BottomNavigationBar(
         )
     }
 }
+
 
 
 

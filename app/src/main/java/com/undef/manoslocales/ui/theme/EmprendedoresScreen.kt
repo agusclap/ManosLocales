@@ -128,7 +128,7 @@ fun EmprendedorItem(emprendedor: Emprendedor) {
         modifier = Modifier
             .padding(vertical = 8.dp)
             .width(320.dp)
-        ,
+            ,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // SIN SOMBRA
         shape = RoundedCornerShape(0.dp), // ESQUINAS RECTAS (opcional)
         colors = CardDefaults.cardColors(
@@ -205,3 +205,4 @@ fun PreviewEmprendedoresScreen() {
         EmprendedoresScreen(navController = navController)
     }
 }
+
