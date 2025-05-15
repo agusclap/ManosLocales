@@ -11,6 +11,7 @@ import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.ProfileScreen
 import com.undef.manoslocales.ui.theme.ProveedoresScreen
 import com.undef.manoslocales.ui.theme.RegisterScreen
+import com.undef.manoslocales.ui.theme.ResetLinkScreen
 import com.undef.manoslocales.ui.theme.SettingScreen
 import com.undef.manoslocales.ui.theme.getUser
 
@@ -52,7 +53,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable("emprendedores") {
             EmprendedoresScreen(navController = navController)  // Pasamos navController
         }
-        composable ("proveedores"){
+        composable("proveedores") {
             ProveedoresScreen(navController = navController)
         }
         composable("settings") {
@@ -64,7 +65,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable("forgotpassword") {
             ForgotPasswordScreen(
                 onSendResetClick = { email ->
-                    // Acá va la lógica para enviar el link de reset
+                    // TODO LOGICA PARA ENVIAR MAIL
                 },
                 onBackToLoginClick = {
                     navController.navigate("login")
@@ -72,6 +73,11 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-
+        composable("resetlink") {
+            ResetLinkScreen(
+                email = "example@mail.com",
+                onBackToLoginClick = { navController.navigate("login") }
+            )
+        }
     }
 }

@@ -26,6 +26,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var numerotel by remember { mutableStateOf("") }
+    val isFormValid = password.isNotBlank() && email.isNotBlank()
 
     Box(
         modifier = Modifier
@@ -122,7 +123,11 @@ fun RegisterScreen(
 
             // Register button
             Button(
-                onClick = { onRegisterClick(email, password) },
+                onClick = {
+                    if(email.contains("@") && password.length >=8){
+                    onRegisterClick(email, password)}
+                          },
+                enabled = isFormValid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),

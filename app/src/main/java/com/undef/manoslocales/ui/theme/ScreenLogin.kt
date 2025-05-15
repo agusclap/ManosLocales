@@ -37,9 +37,9 @@ fun LoginScreen(
     onLoginClick: (String, String) -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
+    val isFormValid = password.isNotBlank() && email.isNotBlank()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -65,8 +65,8 @@ fun LoginScreen(
 
         // TextField para el usuario
         TextField(
-            value = username,
-            onValueChange = { username = it },
+            value = email,
+            onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -95,7 +95,12 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(40.dp))
 
         Button(
-            onClick = { onLoginClick(username, password) },
+            onClick = {
+                if (email.contains("@") && password.length >= 8) {
+                    onLoginClick(email, password)
+                }
+            },
+            enabled = isFormValid,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xffFEFAE0),
