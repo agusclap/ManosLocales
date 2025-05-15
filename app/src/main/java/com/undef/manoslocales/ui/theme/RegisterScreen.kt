@@ -21,9 +21,11 @@ fun RegisterScreen(
     onRegisterClick: (String, String) -> Unit = { _, _ -> },
     onLoginClick: () -> Unit = {}
 ) {
-    var username by remember { mutableStateOf("") }
+    var nombre by remember { mutableStateOf("") }
+    var apellido by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var numerotel by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -51,9 +53,35 @@ fun RegisterScreen(
 
             // Email input field
             TextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Name") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White) // Fondo blanco para el input
+                    .padding(horizontal = 8.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextField(
+                value = apellido,
+                onValueChange = { apellido = it },
+                label = { Text("Lastname") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White) // Fondo blanco para el input
+                    .padding(horizontal = 8.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextField(
+                value = numerotel,
+                onValueChange = { numerotel = it },
+                label = { Text("Phone Number") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White) // Fondo blanco para el input
@@ -65,9 +93,9 @@ fun RegisterScreen(
 
             // Username input field
             TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") },
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White) // Fondo blanco para el input
@@ -94,7 +122,7 @@ fun RegisterScreen(
 
             // Register button
             Button(
-                onClick = { onRegisterClick(username, password) },
+                onClick = { onRegisterClick(email, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
@@ -103,7 +131,7 @@ fun RegisterScreen(
                     contentColor = Color(0xff3E2C1C) // Texto negro en el botón
                 )
             ) {
-                Text(text = "Register")
+                Text(text = "Sign Up")
             }
 
             Spacer(modifier = Modifier.height(10.dp))

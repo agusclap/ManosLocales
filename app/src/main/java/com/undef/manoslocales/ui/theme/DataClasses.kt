@@ -25,7 +25,7 @@ data class User(
 )
 
 fun getUser(): User {
-    // Aquí puedes obtener los datos desde tu fuente de datos, por ejemplo una base de datos, API o valores estáticos
+    // Aca podes obtener los datos desde tu fuente de datos, por ejemplo una base de datos, API o valores estáticos
     return User(
         name = "Juan Pérez",
         email = "juan.perez@example.com",

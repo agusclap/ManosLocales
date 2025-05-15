@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.theme.EmprendedoresScreen
+import com.undef.manoslocales.ui.theme.ForgotPasswordScreen
 import com.undef.manoslocales.ui.theme.HomeScreen
 import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.ProfileScreen
@@ -59,6 +60,16 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("profile") {
             ProfileScreen(getUser(), navController = navController)
+        }
+        composable("forgotpassword") {
+            ForgotPasswordScreen(
+                onSendResetClick = { email ->
+                    // Acá va la lógica para enviar el link de reset
+                },
+                onBackToLoginClick = {
+                    navController.navigate("login")
+                }
+            )
         }
 
 
