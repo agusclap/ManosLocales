@@ -37,7 +37,7 @@ fun ProveedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
     var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) }
-    var selectedItem by remember { mutableStateOf(1) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    var selectedItem by remember { mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
 
     val filteredList = if (selectedCategory == "Favoritos") {
         favoritos
@@ -52,20 +52,7 @@ fun ProveedoresScreen(navController: NavHostController) {
             bottomBar = {
                 BottomNavigationBar(
                     selectedItem = selectedItem,
-                    onItemSelected = {
-                        selectedItem = it
-                        when (it) {
-                            0 -> navController.navigate("home") {
-                                popUpTo("home") { inclusive = true }
-                            }
-                            1 -> navController.navigate("proveedores") {
-                                popUpTo("proveedores") { inclusive = true }
-                            }
-                            2 -> navController.navigate("emprendedores") {
-                                popUpTo("emprendedores") { inclusive = true }
-                            }
-                        }
-                    },
+                    onItemSelected = { selectedItem = it },
                     navController = navController
                 )
             },

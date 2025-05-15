@@ -36,24 +36,43 @@ import com.undef.manoslocales.R
 fun SettingScreen(navController: NavHostController) {
     var notificationEnabled by remember { mutableStateOf(true) }
     var loginEnabled by remember { mutableStateOf(true) }
-    var selectedItem by remember { mutableStateOf(0) }
+
+    // Detecta el ítem seleccionado según la ruta actual del NavController
+    val selectedItem = when (navController.currentDestination?.route) {
+        "home" -> 0
+        "profile" -> 1
+        "settings" -> 2
+        else -> 0
+    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it },
+                onItemSelected = { index ->
+                    when (index) {
+                        0 -> navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                        1 -> navController.navigate("profile") {
+                            popUpTo("profile") { inclusive = true }
+                        }
+                        2 -> navController.navigate("settings") {
+                            popUpTo("settings") { inclusive = true }
+                        }
+                    }
+                },
                 navController = navController
             )
         },
         containerColor = Color(0xff3E2C1C)
-    ) { paddingValues ->   // <-- Este paddingValues viene del Scaffold
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xff3E2C1C))
-                .padding(paddingValues)  // <-- Se aplica aquí
-                .padding(16.dp),          // <-- Este es el padding adicional
+                .padding(paddingValues)
+                .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -66,7 +85,8 @@ fun SettingScreen(navController: NavHostController) {
                     .width(180.dp)
             )
             Text(
-                text = "Settings", style = MaterialTheme.typography.headlineMedium,
+                text = "Settings",
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xffFEFAE0),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
@@ -88,6 +108,7 @@ fun SettingScreen(navController: NavHostController) {
         }
     }
 }
+
 
 
 @Composable

@@ -25,6 +25,7 @@ fun BottomNavigationBar(
         modifier = Modifier.fillMaxWidth(),
         containerColor = Color(0xffFEFAE0)
     ) {
+        // Home
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home", color = Color.Black, fontWeight = FontWeight.Bold) },
@@ -33,37 +34,48 @@ fun BottomNavigationBar(
                 onItemSelected(0)
                 if (navController.currentDestination?.route != "home") {
                     navController.navigate("home") {
-                        popUpTo(0) // limpia el stack si querés, opcional
+                        popUpTo("home") { inclusive = true }
                         launchSingleTop = true
                     }
+                } else {
+                    // Si ya está en Home, limpiamos el back stack
+                    navController.popBackStack("home", inclusive = false)
                 }
             }
         )
+
+        // A Configurar (Profile)
         NavigationBarItem(
             selected = selectedItem == 1,
             onClick = {
                 onItemSelected(1)
-                if (navController.currentDestination?.route != "home") {
-                    navController.navigate("home") {
-                        popUpTo(0)
+                if (navController.currentDestination?.route != "profile") {
+                    navController.navigate("profile") {
+                        popUpTo("profile") { inclusive = true }
                         launchSingleTop = true
                     }
+                } else {
+                    navController.popBackStack("profile", inclusive = false)
                 }
             },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "A CONFIGURAR") },
+            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
             label = {
-                Text("A CONFIGURAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Profile", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
+
+        // Settings
         NavigationBarItem(
             selected = selectedItem == 2,
             onClick = {
                 onItemSelected(2)
                 if (navController.currentDestination?.route != "settings") {
                     navController.navigate("settings") {
-                        popUpTo(0)
+                        popUpTo("settings") { inclusive = true }
                         launchSingleTop = true
                     }
+                } else {
+                    navController.popBackStack("settings", inclusive = false)
                 }
             },
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
@@ -71,6 +83,15 @@ fun BottomNavigationBar(
                 Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
+    }
+
+    // Listener para cambiar el estado del ítem seleccionado
+    navController.addOnDestinationChangedListener { _, destination, _ ->
+        when (destination.route) {
+            "home" -> onItemSelected(0)
+            "profile" -> onItemSelected(1)
+            "settings" -> onItemSelected(2)
+        }
     }
 }
 
