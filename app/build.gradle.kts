@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("com.google.android.material:material:1.8.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.navigation.compose) // o última versión disponible
     implementation(libs.androidx.core.ktx)
