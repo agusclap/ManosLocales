@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.theme
+package com.undef.manoslocales.ui.users
 
 data class Emprendedor(
     val id: Int,

@@ -5,23 +5,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDropdown(
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit,
-    categories: List<String>,
+    selectedCategory: String, //Categoria seleccionada
+    onCategorySelected: (String) -> Unit, //Callback cuando se selecciona una categoria
+    categories: List<String>, //Lista de las categorias
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) } //controla si esl menu esta abierto o no
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
-        TextField(
+        TextField( //Cuando lo tocamos, se abre la lista de categorias
             value = selectedCategory,
             onValueChange = {},
             readOnly = true,
@@ -36,8 +34,8 @@ fun CategoryDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            categories.forEach { category ->
-                DropdownMenuItem(
+            categories.forEach {
+                category -> DropdownMenuItem( //Por cada categoria crea un item
                     text = { Text(category) },
                     onClick = {
                         onCategorySelected(category)

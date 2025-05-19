@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.theme
+package com.undef.manoslocales.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +11,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -24,6 +23,9 @@ import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
+import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import com.undef.manoslocales.ui.users.Proveedor
+import kotlin.collections.plus
 
 // Lista de ejemplo para poblar la LazyColumn de proveedores
 val proveedoresList = listOf(
@@ -36,10 +38,11 @@ val proveedoresList = listOf(
 fun ProveedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
-    var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) }
-    var selectedItem by remember {  mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) } //Lista de favoritos
+    var selectedItem by remember { mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
 
-    val filteredList = if (selectedCategory == "Favoritos") {
+    val filteredList =
+    if (selectedCategory == "Favoritos") { //filtra por categoria
         favoritos
     } else if (selectedCategory == "Todas") {
         proveedoresList
@@ -61,7 +64,7 @@ fun ProveedoresScreen(navController: NavHostController) {
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues), // ✅ Ahora se usa el padding
+                    .padding(paddingValues),
                 color = MaterialTheme.colorScheme.background
             ) {
                 Column(
@@ -86,8 +89,10 @@ fun ProveedoresScreen(navController: NavHostController) {
 
                     CategoryDropdown(
                         selectedCategory = selectedCategory,
-                        onCategorySelected = { selectedCategory = it },
-                        categories = categories
+                        onCategorySelected = {
+                            selectedCategory = it
+                        }, //Si clickeamos textil, se ejecuta onCategorySelected("Textil")
+                        categories = categories //Cambia el selectedcategory de la screen y se reconstruye la interfaz
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -108,7 +113,8 @@ fun ProveedoresScreen(navController: NavHostController) {
                                     isFavorito = favoritos.any { it.id == proveedor.id },
                                     onFavoritoClicked = { selectedProveedor ->
                                         if (favoritos.contains(selectedProveedor)) {
-                                            favoritos = favoritos.filter { it.id != selectedProveedor.id }
+                                            favoritos =
+                                                favoritos.filter { it.id != selectedProveedor.id }
                                         } else {
                                             favoritos = favoritos + selectedProveedor
                                         }
@@ -124,16 +130,16 @@ fun ProveedoresScreen(navController: NavHostController) {
 }
 
 
-
-
-
 @Composable
-fun ProveedorItem(proveedor: Proveedor, isFavorito: Boolean, onFavoritoClicked: (Proveedor) -> Unit) {
+fun ProveedorItem(
+    proveedor: Proveedor,
+    isFavorito: Boolean,
+    onFavoritoClicked: (Proveedor) -> Unit
+) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
-            .width(320.dp)
-        ,
+            .width(320.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = RoundedCornerShape(0.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xff3E2C1C))

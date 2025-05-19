@@ -4,16 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.undef.manoslocales.ui.theme.EmprendedoresScreen
-import com.undef.manoslocales.ui.theme.ForgotPasswordScreen
-import com.undef.manoslocales.ui.theme.HomeScreen
-import com.undef.manoslocales.ui.theme.LoginScreen
-import com.undef.manoslocales.ui.theme.ProfileScreen
-import com.undef.manoslocales.ui.theme.ProveedoresScreen
-import com.undef.manoslocales.ui.theme.RegisterScreen
-import com.undef.manoslocales.ui.theme.ResetLinkScreen
-import com.undef.manoslocales.ui.theme.SettingScreen
-import com.undef.manoslocales.ui.theme.getUser
+import com.undef.manoslocales.ui.screens.EmprendedoresScreen
+import com.undef.manoslocales.ui.screens.ForgotPasswordScreen
+import com.undef.manoslocales.ui.screens.HomeScreen
+import com.undef.manoslocales.ui.screens.LoginScreen
+import com.undef.manoslocales.ui.screens.ProfileScreen
+import com.undef.manoslocales.ui.screens.ProveedoresScreen
+import com.undef.manoslocales.ui.screens.RegisterScreen
+import com.undef.manoslocales.ui.screens.ResetLinkScreen
+import com.undef.manoslocales.ui.screens.SettingScreen
+import com.undef.manoslocales.ui.users.getUser
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -37,7 +37,7 @@ fun AppNavGraph(navController: NavHostController) {
                 onRegisterClick = {
                     navController.navigate("register")
                 },
-                onForgotPasswordClick = {  // 👈 Agregado
+                onForgotPasswordClick = {
                     navController.navigate("forgotpassword")
                 }
             )

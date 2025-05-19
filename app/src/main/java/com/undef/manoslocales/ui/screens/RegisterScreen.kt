@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.theme
+package com.undef.manoslocales.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.undef.manoslocales.ui.navigation.AppNavGraph
-import com.undef.manoslocales.ui.theme.LoginScreen
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 
 class MainActivity : ComponentActivity() {

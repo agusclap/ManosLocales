@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.theme
+package com.undef.manoslocales.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,12 +22,21 @@ import coil.compose.AsyncImage
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
+import com.undef.manoslocales.ui.users.Emprendedor
+import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import kotlin.collections.plus
 
 // Lista de ejemplo
 val emprendedoresList = listOf(
     Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", R.drawable.empendedoresimage1),
     Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", R.drawable.emprendedoresimage2),
-    Emprendedor(3, "Bautista Macedo Rodriguez", "Mendoza", "Alimentos", R.drawable.empendedoresimage1),
+    Emprendedor(
+        3,
+        "Bautista Macedo Rodriguez",
+        "Mendoza",
+        "Alimentos",
+        R.drawable.empendedoresimage1
+    ),
     Emprendedor(1, "Agustin Rodeyro", "Córdoba", "Artesanías", R.drawable.emprendedoresimage2),
     Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", R.drawable.emprendedoresimage2),
     Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", R.drawable.empendedoresimage1),
