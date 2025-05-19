@@ -12,17 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ManosLocales"
         tools:targetApi="31">
+
+
+        <!-- MainActivity normal -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.ManosLocales">
+            android:theme="@style/Theme.ManosLocales" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

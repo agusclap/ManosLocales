@@ -37,7 +37,7 @@ fun ProveedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
     var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) }
-    var selectedItem by remember { mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    var selectedItem by remember {  mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
 
     val filteredList = if (selectedCategory == "Favoritos") {
         favoritos
