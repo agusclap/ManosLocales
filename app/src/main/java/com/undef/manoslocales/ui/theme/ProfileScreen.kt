@@ -56,17 +56,17 @@ fun ProfileScreen(user: User, navController: NavHostController) {
 
             // Datos del usuario
             Text(
-                text = "Nombre: ${user.name}",
+                text = "Name: ${user.name}",
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.White
             )
             Text(
-                text = "Correo: ${user.email}",
+                text = "Email: ${user.email}",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White
             )
             Text(
-                text = "Ubicación: ${user.location}",
+                text = "Phone Number: ${user.phonenumber}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White
             )

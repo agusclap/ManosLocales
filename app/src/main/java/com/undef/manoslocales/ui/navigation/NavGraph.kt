@@ -21,7 +21,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable("register") {
             RegisterScreen(
                 onRegisterClick = { username, password ->
-                    // Lógica de registro
+                    navController.navigate("login")
                 },
                 onLoginClick = {
                     navController.navigate("login")
@@ -36,6 +36,9 @@ fun AppNavGraph(navController: NavHostController) {
                 },
                 onRegisterClick = {
                     navController.navigate("register")
+                },
+                onForgotPasswordClick = {  // 👈 Agregado
+                    navController.navigate("forgotpassword")
                 }
             )
         }

@@ -25,9 +25,15 @@ import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
 // Lista de ejemplo
 val emprendedoresList = listOf(
-    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", "file:///android_asset/sample_image.jpg"),
-    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg")
+    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", R.drawable.empendedoresimage1),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", R.drawable.emprendedoresimage2),
+    Emprendedor(3, "Bautista Macedo Rodriguez", "Mendoza", "Alimentos", R.drawable.empendedoresimage1),
+    Emprendedor(1, "Agustin Rodeyro", "Córdoba", "Artesanías", R.drawable.emprendedoresimage2),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", R.drawable.emprendedoresimage2),
+    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", R.drawable.empendedoresimage1),
+    Emprendedor(1, "Juan Pérez", "Córdoba", "Artesanías", R.drawable.empendedoresimage1),
+    Emprendedor(2, "Ana García", "Buenos Aires", "Textiles", R.drawable.emprendedoresimage2),
+    Emprendedor(3, "Pedro López", "Mendoza", "Alimentos", R.drawable.empendedoresimage1)
 )
 
 @Composable

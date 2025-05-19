@@ -35,7 +35,8 @@ import com.undef.manoslocales.R
 @Composable
 fun LoginScreen(
     onLoginClick: (String, String) -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onForgotPasswordClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -89,7 +90,9 @@ fun LoginScreen(
             text = "Forgot your password?",
             color = Color(0xffFEFAE0),
             textAlign = TextAlign.Right,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable{ onForgotPasswordClick() }
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -132,6 +135,7 @@ fun MiImage(painter: Painter) {
 fun LoginScreenPreview() {
     LoginScreen(
         onLoginClick = { _, _ -> },
-        onRegisterClick = { }
+        onRegisterClick = { },
+        onForgotPasswordClick = {}
     )
 }

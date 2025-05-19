@@ -27,9 +27,15 @@ import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
 // Lista de ejemplo para poblar la LazyColumn de proveedores
 val proveedoresList = listOf(
-    Proveedor(1, "Distribuidora XYZ", "Córdoba", "Tecnología", "file:///android_asset/sample_image.jpg"),
-    Proveedor(2, "Proveedores ABC", "Buenos Aires", "Herramientas", "file:///android_asset/sample_image.jpg"),
-    Proveedor(3, "Alimentos del Sur", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg")
+    Proveedor(1, "Distribuidora XYZ", "Córdoba", "Tecnología", R.drawable.providersimage),
+    Proveedor(2, "Proveedores ABC", "Buenos Aires", "Herramientas", R.drawable.providersimage),
+    Proveedor(3, "Alimentos del Sur", "Mendoza", "Alimentos", R.drawable.providersimage),
+    Proveedor(4, "Distribuidora XYZ", "Córdoba", "Tecnología", R.drawable.providersimage),
+    Proveedor(5, "Proveedores ABC", "Buenos Aires", "Herramientas", R.drawable.providersimage),
+    Proveedor(6, "Alimentos del Sur", "Mendoza", "Alimentos", R.drawable.providersimage),
+    Proveedor(7, "Distribuidora XYZ", "Córdoba", "Tecnología", R.drawable.providersimage),
+    Proveedor(8, "Proveedores ABC", "Buenos Aires", "Herramientas", R.drawable.providersimage),
+    Proveedor(9, "Alimentos del Sur", "Mendoza", "Alimentos", R.drawable.providersimage)
 )
 
 @Composable
@@ -37,7 +43,7 @@ fun ProveedoresScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
     var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) }
-    var selectedItem by remember { mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    var selectedItem by remember { mutableIntStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
 
     val filteredList = if (selectedCategory == "Favoritos") {
         favoritos
