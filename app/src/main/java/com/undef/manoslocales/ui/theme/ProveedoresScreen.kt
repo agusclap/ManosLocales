@@ -27,9 +27,9 @@ import com.undef.manoslocales.ui.navigation.CategoryDropdown
 
 // Lista de ejemplo para poblar la LazyColumn de proveedores
 val proveedoresList = listOf(
-    Proveedor(1, "Distribuidora XYZ", "Córdoba", "Tecnología", "file:///android_asset/sample_image.jpg"),
-    Proveedor(2, "Proveedores ABC", "Buenos Aires", "Herramientas", "file:///android_asset/sample_image.jpg"),
-    Proveedor(3, "Alimentos del Sur", "Mendoza", "Alimentos", "file:///android_asset/sample_image.jpg")
+    Proveedor(1, "Distribuidora XYZ", "Córdoba", "Tecnología", R.drawable.providersimage),
+    Proveedor(2, "Proveedores ABC", "Buenos Aires", "Herramientas", R.drawable.providersimage),
+    Proveedor(3, "Alimentos del Sur", "Mendoza", "Alimentos", R.drawable.providersimage)
 )
 
 @Composable
