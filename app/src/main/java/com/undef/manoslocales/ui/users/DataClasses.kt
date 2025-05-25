@@ -1,9 +1,9 @@
 package com.undef.manoslocales.ui.users
 
-data class Emprendedor(
+data class Producto(
     val id: Int,
     val nombre: String,
-    val ubicacion: String,
+    val descripcion: String,
     val categoria: String,
     val imagenUrl: Int
 )

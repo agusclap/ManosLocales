@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -20,31 +21,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.undef.manoslocales.R
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    onEmprendedoresClick: () -> Unit,
+    onProductosClick: () -> Unit,
     onProveedoresClick: () -> Unit
 ) {
-    var selectedItem by remember { mutableStateOf(0) }
+    // Observar la ruta actual para determinar el ítem seleccionado en el navbar
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Mapear rutas a índice del navbar
+    val selectedItem = when (currentRoute) {
+        "home" -> 0
+        "favoritos" -> 1
+        "settings" -> 2
+        else -> 0
+    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = {
-                    selectedItem = it
-                    when (it) {
+                onItemSelected = { index ->
+                    when (index) {
                         0 -> navController.navigate("home") {
                             popUpTo("home") { inclusive = true }
+                            launchSingleTop = true
                         }
-                        1 -> navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
+                        1 -> navController.navigate("favoritos") {
+                            popUpTo("favoritos") { inclusive = true }
+                            launchSingleTop = true
                         }
                         2 -> navController.navigate("settings") {
                             popUpTo("settings") { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 },
@@ -70,13 +84,9 @@ fun HomeScreen(
                     .offset(y = (-20).dp)
             )
 
-            EmprendedoresCard(onClick = {
-                onEmprendedoresClick()
-            })
+            ProductosCard(onClick = { onProductosClick() })
             Spacer(modifier = Modifier.height(20.dp))
-            ProveedoresCard( onClick = {
-                onProveedoresClick()
-            })
+            ProveedoresCard(onClick = { onProveedoresClick() })
             Spacer(modifier = Modifier.height(20.dp))
             PerfilButton(navController)
         }
@@ -85,7 +95,7 @@ fun HomeScreen(
 
 
 @Composable
-fun EmprendedoresCard(onClick: () -> Unit) {
+fun ProductosCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .size(220.dp)
@@ -107,7 +117,7 @@ fun EmprendedoresCard(onClick: () -> Unit) {
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_emprendedores),
-                contentDescription = "Icono Emprendedores",
+                contentDescription = "Icono Productos",
                 tint = Color.Unspecified,
                 modifier = Modifier
                     .size(160.dp)
@@ -197,9 +207,9 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = selectedItem == 1,
             onClick = { onItemSelected(0) },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
+            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favorite") },
             label = {
-                Text("A CONFIGURAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Favoritos", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
         NavigationBarItem(

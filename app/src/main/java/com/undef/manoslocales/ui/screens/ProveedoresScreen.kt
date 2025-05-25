@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Search
 import coil.compose.AsyncImage
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
@@ -25,7 +25,7 @@ import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 import com.undef.manoslocales.ui.users.Proveedor
-import kotlin.collections.plus
+import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 
 // Lista de ejemplo para poblar la LazyColumn de proveedores
 val proveedoresList = listOf(
@@ -35,16 +35,18 @@ val proveedoresList = listOf(
 )
 
 @Composable
-fun ProveedoresScreen(navController: NavHostController) {
+fun ProveedoresScreen(
+    navController: NavHostController,
+    favoritosViewModel: FavoritosViewModel
+) {
     var selectedCategory by remember { mutableStateOf("Todas") }
-    val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos", "Favoritos")
-    var favoritos by remember { mutableStateOf<List<Proveedor>>(emptyList()) } //Lista de favoritos
-    var selectedItem by remember { mutableStateOf(0) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos")
+    var searchQuery by remember { mutableStateOf("") }
+    val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
 
-    val filteredList =
-    if (selectedCategory == "Favoritos") { //filtra por categoria
-        favoritos
-    } else if (selectedCategory == "Todas") {
+    var selectedItem by remember { mutableStateOf(1) } // 1 para que aparezca seleccionada la opción "Proveedores"
+
+    val filteredList = if (selectedCategory == "Todas") {
         proveedoresList
     } else {
         proveedoresList.filter { it.categoria == selectedCategory }
@@ -89,13 +91,46 @@ fun ProveedoresScreen(navController: NavHostController) {
 
                     CategoryDropdown(
                         selectedCategory = selectedCategory,
-                        onCategorySelected = {
-                            selectedCategory = it
-                        }, //Si clickeamos textil, se ejecuta onCategorySelected("Textil")
-                        categories = categories //Cambia el selectedcategory de la screen y se reconstruye la interfaz
+                        onCategorySelected = { selectedCategory = it },
+                        categories = categories
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+                    // TextField para la búsqueda de proveedores
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Buscar proveedor", color = Color(0xFFFEFAE0)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp), // Esquinas redondeadas
+                        leadingIcon = { // Icono de búsqueda
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Icono de búsqueda",
+                                tint = Color(0xFFFEFAE0)
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFFFEFAE0),
+                            focusedIndicatorColor = Color.Transparent, // Quitar la línea inferior al enfocar
+                            unfocusedIndicatorColor = Color.Transparent, // Quitar la línea inferior sin enfocar
+                            focusedLabelColor = Color(0xFFFEFAE0),
+                            unfocusedLabelColor = Color.LightGray,
+                            focusedContainerColor = Color(0xFF5C4033),
+                            unfocusedContainerColor = Color(0xFF5C4033),
+                            disabledContainerColor = Color(0xFF5C4033),
+                            errorContainerColor = Color(0xFF5C4033),
+                            focusedLeadingIconColor = Color(0xFFFEFAE0),
+                            unfocusedLeadingIconColor = Color.LightGray,
+                        )
+                    )
+
+
 
                     LazyColumn(
                         modifier = Modifier
@@ -110,14 +145,9 @@ fun ProveedoresScreen(navController: NavHostController) {
                             ) {
                                 ProveedorItem(
                                     proveedor = proveedor,
-                                    isFavorito = favoritos.any { it.id == proveedor.id },
+                                    isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
                                     onFavoritoClicked = { selectedProveedor ->
-                                        if (favoritos.contains(selectedProveedor)) {
-                                            favoritos =
-                                                favoritos.filter { it.id != selectedProveedor.id }
-                                        } else {
-                                            favoritos = favoritos + selectedProveedor
-                                        }
+                                        favoritosViewModel.toggleProveedorFavorito(selectedProveedor)
                                     }
                                 )
                             }
@@ -128,7 +158,6 @@ fun ProveedoresScreen(navController: NavHostController) {
         }
     }
 }
-
 
 @Composable
 fun ProveedorItem(
@@ -189,9 +218,8 @@ fun ProveedorItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween // Esto asegura que los elementos se distribuyan correctamente
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Botón de "Ver detalles"
                     TextButton(
                         onClick = { /* Acción al hacer click en "Ver detalles" */ }
                     ) {
@@ -202,14 +230,13 @@ fun ProveedorItem(
                         )
                     }
 
-                    // Botón de favoritos
                     IconButton(
                         onClick = { onFavoritoClicked(proveedor) }
                     ) {
                         Icon(
                             imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Agregar a favoritos",
-                            tint = Color((0xffFEFAE0))
+                            tint = Color(0xffFEFAE0)
                         )
                     }
                 }
@@ -217,6 +244,3 @@ fun ProveedorItem(
         }
     }
 }
-
-
-

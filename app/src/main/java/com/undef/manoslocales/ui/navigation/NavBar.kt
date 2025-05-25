@@ -37,35 +37,30 @@ fun BottomNavigationBar(
                         popUpTo("home") { inclusive = true }
                         launchSingleTop = true
                     }
-                } else {
-                    // Si ya está en Home, limpiamos el back stack
-                    navController.popBackStack("home", inclusive = false)
                 }
             }
         )
 
-        // A Configurar (Profile)
+        // Favoritos
         NavigationBarItem(
+            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favoritos") },
+            label = { Text("Favoritos", color = Color.Black, fontWeight = FontWeight.Bold) },
             selected = selectedItem == 1,
             onClick = {
                 onItemSelected(1)
-                if (navController.currentDestination?.route != "profile") {
-                    navController.navigate("profile") {
-                        popUpTo("profile") { inclusive = true }
+                if (navController.currentDestination?.route != "favoritos") {
+                    navController.navigate("favoritos") {
+                        popUpTo("favoritos") { inclusive = true }
                         launchSingleTop = true
                     }
-                } else {
-                    navController.popBackStack("profile", inclusive = false)
                 }
-            },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
-            label = {
-                Text("Profile", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
 
         // Settings
         NavigationBarItem(
+            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+            label = { Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold) },
             selected = selectedItem == 2,
             onClick = {
                 onItemSelected(2)
@@ -74,26 +69,13 @@ fun BottomNavigationBar(
                         popUpTo("settings") { inclusive = true }
                         launchSingleTop = true
                     }
-                } else {
-                    navController.popBackStack("settings", inclusive = false)
                 }
-            },
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-            label = {
-                Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         )
     }
-
-    // Listener para cambiar el estado del ítem seleccionado
-    navController.addOnDestinationChangedListener { _, destination, _ ->
-        when (destination.route) {
-            "home" -> onItemSelected(0)
-            "profile" -> onItemSelected(1)
-            "settings" -> onItemSelected(2)
-        }
-    }
 }
+
+
 
 
 

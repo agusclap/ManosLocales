@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 
 @Composable
 fun SettingScreen(navController: NavHostController) {
