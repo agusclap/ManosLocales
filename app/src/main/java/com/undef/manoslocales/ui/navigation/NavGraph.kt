@@ -39,7 +39,7 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreen(
                 navController = navController,
                 onProductosClick = { navController.navigate("productos") },
-                onProveedoresClick = { navController.navigate("proveedores") }
+                onProveedoresClick = { navController.navigate("proveedores") },
             )
         }
         composable("productos") {

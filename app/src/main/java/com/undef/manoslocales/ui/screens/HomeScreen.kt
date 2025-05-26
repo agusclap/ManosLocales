@@ -206,7 +206,7 @@ fun BottomNavigationBar(
         )
         NavigationBarItem(
             selected = selectedItem == 1,
-            onClick = { onItemSelected(0) },
+            onClick = { onItemSelected(1) },
             icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favorite") },
             label = {
                 Text("Favoritos", color = Color.Black, fontWeight = FontWeight.Bold)
