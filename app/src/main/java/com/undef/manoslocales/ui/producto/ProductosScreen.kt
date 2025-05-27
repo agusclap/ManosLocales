@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.screens
+package com.undef.manoslocales.ui.producto
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

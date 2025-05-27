@@ -1,30 +1,20 @@
 package com.undef.manoslocales.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
-import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
-import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.users.Producto
-import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import com.undef.manoslocales.ui.producto.ProductoItem
+import com.undef.manoslocales.ui.proveedor.ProveedorItem
 
 
 @Composable

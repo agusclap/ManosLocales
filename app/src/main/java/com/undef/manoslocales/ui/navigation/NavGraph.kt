@@ -6,14 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.screens.FavoritosScreen
-import com.undef.manoslocales.ui.screens.ForgotPasswordScreen
+import com.undef.manoslocales.ui.login.ForgotPasswordScreen
 import com.undef.manoslocales.ui.screens.HomeScreen
-import com.undef.manoslocales.ui.screens.LoginScreen
-import com.undef.manoslocales.ui.screens.ProductosScreen
+import com.undef.manoslocales.ui.login.LoginScreen
+import com.undef.manoslocales.ui.producto.ProductosScreen
 import com.undef.manoslocales.ui.screens.ProfileScreen
-import com.undef.manoslocales.ui.screens.ProveedoresScreen
-import com.undef.manoslocales.ui.screens.RegisterScreen
-import com.undef.manoslocales.ui.screens.ResetLinkScreen
+import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
+import com.undef.manoslocales.ui.login.RegisterScreen
+import com.undef.manoslocales.ui.login.ResetLinkScreen
 import com.undef.manoslocales.ui.screens.SettingScreen
 import com.undef.manoslocales.ui.users.getUser
 

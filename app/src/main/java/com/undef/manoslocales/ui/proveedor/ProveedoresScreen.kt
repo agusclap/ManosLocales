@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.screens
+package com.undef.manoslocales.ui.proveedor
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
