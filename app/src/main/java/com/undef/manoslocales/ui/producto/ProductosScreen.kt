@@ -33,7 +33,13 @@ val productosList = listOf(
     Producto(1, "Vaso de cerámica", "Hecho a mano", "Artesanías", R.drawable.empendedoresimage1),
     Producto(2, "Bufanda tejida", "100% lana", "Textiles", R.drawable.emprendedoresimage2),
     Producto(3, "Dulce de leche", "Envase 250g", "Alimentos", R.drawable.empendedoresimage1),
-    Producto(4, "Porta velas", "Decoración artesanal", "Artesanías", R.drawable.emprendedoresimage2),
+    Producto(
+        4,
+        "Porta velas",
+        "Decoración artesanal",
+        "Artesanías",
+        R.drawable.emprendedoresimage2
+    ),
     Producto(5, "Camiseta estampada", "Diseño local", "Textiles", R.drawable.emprendedoresimage2),
     Producto(6, "Aceite de oliva", "Botella 500ml", "Alimentos", R.drawable.empendedoresimage1)
 )

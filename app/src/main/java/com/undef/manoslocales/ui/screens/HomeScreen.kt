@@ -52,10 +52,12 @@ fun HomeScreen(
                             popUpTo("home") { inclusive = true }
                             launchSingleTop = true
                         }
+
                         1 -> navController.navigate("favoritos") {
                             popUpTo("favoritos") { inclusive = true }
                             launchSingleTop = true
                         }
+
                         2 -> navController.navigate("settings") {
                             popUpTo("settings") { inclusive = true }
                             launchSingleTop = true

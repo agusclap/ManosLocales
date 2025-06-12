@@ -76,11 +76,6 @@ fun BottomNavigationBar(
 }
 
 
-
-
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun BottomNavigationBarPreview() {

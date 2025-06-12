@@ -92,7 +92,7 @@ fun LoginScreen(
             textAlign = TextAlign.Right,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable{ onForgotPasswordClick() }
+                .clickable { onForgotPasswordClick() }
         )
 
         Spacer(modifier = Modifier.height(40.dp))

@@ -37,19 +37,25 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .wrapContentSize(Alignment.Center).
-                offset(y = (-40).dp), // Centrado de los elementos
+                .wrapContentSize(Alignment.Center)
+                .offset(y = (-40).dp), // Centrado de los elementos
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(180.dp).width(180.dp).offset(y = (-95).dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .width(180.dp)
+                    .offset(y = (-95).dp)
             )
 
-            Text(text = "Sign Up", style = MaterialTheme.typography.headlineMedium,
-                color = Color(0xffFEFAE0))
+            Text(
+                text = "Sign Up", style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xffFEFAE0)
+            )
             Spacer(modifier = Modifier.height(24.dp))
 
             // Email input field
@@ -124,9 +130,10 @@ fun RegisterScreen(
             // Register button
             Button(
                 onClick = {
-                    if(email.contains("@") && password.length >=8){
-                    onRegisterClick(email, password)}
-                          },
+                    if (email.contains("@") && password.length >= 8) {
+                        onRegisterClick(email, password)
+                    }
+                },
                 enabled = isFormValid,
                 modifier = Modifier
                     .fillMaxWidth()

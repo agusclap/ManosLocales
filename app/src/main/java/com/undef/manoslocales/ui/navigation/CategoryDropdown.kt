@@ -34,8 +34,8 @@ fun CategoryDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            categories.forEach {
-                category -> DropdownMenuItem( //Por cada categoria crea un item
+            categories.forEach { category ->
+                DropdownMenuItem( //Por cada categoria crea un item
                     text = { Text(category) },
                     onClick = {
                         onCategorySelected(category)
