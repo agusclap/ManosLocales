@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
+
 android {
     namespace = "com.undef.manoslocales"
     compileSdk = 35
@@ -63,6 +65,13 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material3:material3:1.2.0")
 
+// Room components
+    implementation("androidx.room:room-runtime:2.6.1")
+
+// Kotlin extensions + Coroutines support for Room
+    implementation("androidx.room:room-ktx:2.6.1")
 
 
 }
+
+
