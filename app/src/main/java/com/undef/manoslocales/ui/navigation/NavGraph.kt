@@ -32,33 +32,26 @@ fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    // 1. Get the DAO (this is still on the main thread, but it just gets the DAO,
-    //    not performs a query or creates the DB blocking the main thread)
+    // These are correctly initialized with remember and the custom factory
     val userDao = remember { AppDatabase.getInstance(application).UserDao() }
-
-    // 2. Create the Repository (takes the DAO)
     val userRepository = remember { UserRepository(userDao) }
-
-    // 3. Create the UserViewModel using your custom factory
     val userViewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory(application, userRepository)
     )
 
-    // And for FavoritosViewModel, assuming it's simple or handled elsewhere
-    val favoritosViewModel: FavoritosViewModel = viewModel() // Or provide a factory if it needs params
+    val favoritosViewModel: FavoritosViewModel = viewModel() // Assuming this exists
 
     NavHost(navController = navController, startDestination = "login") {
         composable("register") {
             RegisterScreen(
-                viewModel = userViewModel, // Use the new userViewModel
+                viewModel = userViewModel,
                 onRegisterSuccess = { navController.navigate("login") },
                 onLoginClick = { navController.navigate("login") }
             )
         }
         composable("login") {
             LoginScreen(
-                // You might need to pass userViewModel here if LoginScreen needs it
-                // viewModel = userViewModel, // Add if needed
+                viewModel = userViewModel, // <--- THIS IS THE CRUCIAL LINE
                 onLoginClick = { _, _ -> navController.navigate("home") },
                 onRegisterClick = { navController.navigate("register") },
                 onForgotPasswordClick = { navController.navigate("forgotpassword") }
