@@ -2,9 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt") // <--- ADD THIS LINE
 }
-
-
 
 android {
     namespace = "com.undef.manoslocales"
@@ -64,14 +63,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
 
-// Room components
+    // Room components
     implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1") // <--- ADD THIS LINE (use the same version as runtime)
 
-// Kotlin extensions + Coroutines support for Room
+    // Kotlin extensions + Coroutines support for Room
     implementation("androidx.room:room-ktx:2.6.1")
-
-
 }
-
-
