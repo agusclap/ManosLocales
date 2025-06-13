@@ -1,7 +1,8 @@
+// Assuming this is your LoginScreen.kt (or ScreenLogin.kt if you renamed it)
 package com.undef.manoslocales.ui.login
 
-import android.app.Application // Necesario para la preview
-import android.widget.Toast // Necesario para la vista real
+import android.app.Application
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,17 +28,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext // Import for Toast
+import androidx.compose.ui.platform.LocalContext // Import LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.undef.manoslocales.R
-import com.undef.manoslocales.ui.database.AppDatabase // Import para el preview
-import com.undef.manoslocales.ui.database.UserRepository // Import para el preview
-import com.undef.manoslocales.ui.database.UserViewModel // Import UserViewModel
-import com.undef.manoslocales.ui.database.UserViewModelFactory // Import para el preview
+import com.undef.manoslocales.ui.database.AppDatabase
+import com.undef.manoslocales.ui.database.UserRepository
+import com.undef.manoslocales.ui.database.UserViewModel
+import com.undef.manoslocales.ui.data.SessionManager // <--- ADD THIS IMPORT
 
 
 @Composable
@@ -45,7 +46,7 @@ fun LoginScreen(
     onLoginClick: (String, String) -> Unit,
     onRegisterClick: () -> Unit,
     onForgotPasswordClick: () -> Unit,
-    viewModel: UserViewModel // ViewModel passed as a parameter
+    viewModel: UserViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -75,7 +76,6 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // TextField para el usuario
         TextField(
             value = email,
             onValueChange = { email = it },
@@ -86,7 +86,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // TextField para la contraseña
         TextField(
             value = password,
             onValueChange = { password = it },
@@ -110,11 +109,9 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                // Now, call the loginUser method from your ViewModel
                 viewModel.loginUser(email, password) { user ->
                     if (user != null) {
                         Toast.makeText(context, "Login Exitoso!", Toast.LENGTH_SHORT).show()
-                        // Aquí, onLoginClick se encarga de la navegación
                         onLoginClick(email, password)
                     } else {
                         Toast.makeText(context, "Email o Contraseña inválidos", Toast.LENGTH_SHORT).show()
@@ -150,18 +147,27 @@ fun MiImage(painter: Painter) {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    // FIX: Provide a dummy UserViewModel instance for the preview
-    // This creates a minimal setup for the ViewModel to exist in the preview context.
+    // Get a dummy context for the preview
+    val context = LocalContext.current
+    val application = Application() // Or use an actual Mockito mock of Application if preferred for more complex scenarios
+
+    // Instantiate dummy dependencies for the ViewModel in the preview
+    // Note: AppDatabase.getInstance() for preview should ideally be a mock or a in-memory database.
+    // For now, if AppDatabase.getInstance(context) works in preview, it's fine.
+    // If it causes issues, you'd create a mock UserDao and UserRepository here.
+    val dummyUserDao = AppDatabase.getInstance(context).UserDao()
+    val dummyUserRepository = UserRepository(dummyUserDao)
+    val dummySessionManager = SessionManager(context) // <--- INSTANTIATE SessionManager HERE
+
     LoginScreen(
         onLoginClick = { _, _ -> },
         onRegisterClick = { },
         onForgotPasswordClick = {},
-        viewModel = UserViewModel( // marca como error pero no pasa nada ejecuta igual
-            Application(), // Dummy Application context for preview
-            // For preview, you need a dummy UserRepository that might not even do real DB operations.
-            // Or, if your AppDatabase.getInstance() is light enough to run in preview, use it.
-            // If the AppDatabase.getInstance() in preview causes issues, you'd create a mock UserRepository.
-            UserRepository(AppDatabase.getInstance(LocalContext.current).UserDao())
+        // Pass the fully instantiated dummy ViewModel
+        viewModel = UserViewModel(
+            application,
+            dummyUserRepository,
+            dummySessionManager // <--- PASS THE SESSION MANAGER TO THE VIEWMODEL
         )
     )
 }

@@ -30,10 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 
 @Composable
-fun SettingScreen(navController: NavHostController) {
+fun SettingScreen(navController: NavHostController, userViewModel: UserViewModel) {
     var notificationEnabled by remember { mutableStateOf(true) }
     var loginEnabled by remember { mutableStateOf(true) }
 

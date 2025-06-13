@@ -1,19 +1,20 @@
-// src/main/java/com/undef/manoslocales/ui/navigation/AppNavGraph.kt
+// src/main/java/com.undef.manoslocales.ui.navigation/AppNavGraph.kt
 package com.undef.manoslocales.ui.navigation
 
 import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel // Use this specific viewModel import
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
-import com.undef.manoslocales.ui.database.AppDatabase // Import your AppDatabase
+import com.undef.manoslocales.ui.data.SessionManager
+import com.undef.manoslocales.ui.database.AppDatabase
 import com.undef.manoslocales.ui.database.UserViewModel
-import com.undef.manoslocales.ui.database.UserRepository // Import UserRepository
-import com.undef.manoslocales.ui.database.UserViewModelFactory // Import your custom factory
+import com.undef.manoslocales.ui.database.UserRepository
+import com.undef.manoslocales.ui.database.UserViewModelFactory
 
 import com.undef.manoslocales.ui.screens.FavoritosScreen
 import com.undef.manoslocales.ui.login.ForgotPasswordScreen
@@ -25,23 +26,35 @@ import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
 import com.undef.manoslocales.ui.login.RegisterScreen
 import com.undef.manoslocales.ui.login.ResetLinkScreen
 import com.undef.manoslocales.ui.screens.SettingScreen
-import com.undef.manoslocales.ui.users.getUser
+import com.undef.manoslocales.ui.users.getUser // Considerar cómo getUser() obtiene el usuario ahora
+
+
+// Asumiendo que FavoritosViewModel ya está definido
+
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    // These are correctly initialized with remember and the custom factory
+    // Instanciar SessionManager
+    val sessionManager = remember { SessionManager(application) }
+
+    // Instanciar dependencias de UserViewModel
     val userDao = remember { AppDatabase.getInstance(application).UserDao() }
     val userRepository = remember { UserRepository(userDao) }
+
+    // Instanciar UserViewModel con las nuevas dependencias
     val userViewModel: UserViewModel = viewModel(
-        factory = UserViewModelFactory(application, userRepository)
+        factory = UserViewModelFactory(application, userRepository, sessionManager) // <--- Pasa sessionManager
     )
 
-    val favoritosViewModel: FavoritosViewModel = viewModel() // Assuming this exists
+    // Determinar la ruta de inicio basada en si el usuario ya está logueado
+    val startDestination = if (userViewModel.isUserLoggedIn()) "home" else "login"
 
-    NavHost(navController = navController, startDestination = "login") {
+    val favoritosViewModel: FavoritosViewModel = viewModel()
+
+    NavHost(navController = navController, startDestination = startDestination) { // <--- Usa la ruta de inicio dinámica
         composable("register") {
             RegisterScreen(
                 viewModel = userViewModel,
@@ -51,7 +64,7 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("login") {
             LoginScreen(
-                viewModel = userViewModel, // <--- THIS IS THE CRUCIAL LINE
+                viewModel = userViewModel,
                 onLoginClick = { _, _ -> navController.navigate("home") },
                 onRegisterClick = { navController.navigate("register") },
                 onForgotPasswordClick = { navController.navigate("forgotpassword") }
@@ -83,10 +96,17 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
         composable("settings") {
-            SettingScreen(navController = navController)
+            SettingScreen(
+                navController = navController,
+                userViewModel = userViewModel // Pasa el userViewModel si necesitas cerrar sesión desde Settings
+            )
         }
         composable("profile") {
-            ProfileScreen(getUser(), navController = navController)
+            ProfileScreen(
+                user = getUser(), // Aquí tendrías que obtener el usuario de sessionManager o de ViewModel
+                navController = navController,
+                userViewModel = userViewModel // Pasa el userViewModel si necesitas datos del usuario logueado
+            )
         }
         composable("forgotpassword") {
             ForgotPasswordScreen(

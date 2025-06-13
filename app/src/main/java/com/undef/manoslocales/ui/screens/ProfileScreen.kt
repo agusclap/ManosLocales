@@ -14,11 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.users.User
 
 @Composable
-fun ProfileScreen(user: User, navController: NavHostController) {
+fun ProfileScreen(user: User, navController: NavHostController, userViewModel: UserViewModel) {
     var selectedItem by remember { mutableStateOf(0) }
 
     Scaffold(
