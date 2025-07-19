@@ -100,17 +100,45 @@ fun HomeScreen(
 
             if (userRole == "provider") {
                 Button(
-                    onClick = onCreateProductClick,
+                    onClick = { navController.navigate("misproductos") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(vertical = 30.dp),
+                        .height(65.dp)
+                        .padding(top = 16.dp)
+                        .offset(y = (-30).dp),
+                    shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xffFEFAE0),
                         contentColor = Color(0xff3E2C1C)
                     )
                 ) {
-                    Text("Crear Producto", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Mis Productos",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color.Black
+                    )
+                }
+
+                Button(
+                    onClick = onCreateProductClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(65.dp)
+                        .padding(top = 16.dp)
+                        .offset(y = (-30).dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xffFEFAE0),
+                        contentColor = Color(0xff3E2C1C)
+                    )
+                ) {
+                    Text(
+                        text = "Crear Producto",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color.Black
+                    )
                 }
             }
 

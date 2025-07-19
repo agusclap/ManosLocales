@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.producto.ProductoItemFirestore
+import com.undef.manoslocales.ui.producto.ProductoFavoritoItem
 import com.undef.manoslocales.ui.proveedor.ProveedorItem
 import kotlin.collections.isNotEmpty
 
@@ -63,10 +63,12 @@ fun FavoritosScreen(
                         )
                     }
                     items(productosFavoritos) { producto ->
-                        ProductoItemFirestore(
+                        ProductoFavoritoItem(
                             producto = producto,
                             isFavorito = true,
-                            onFavoritoClicked = { favoritosViewModel.toggleProductoFavorito(it) }
+                            onFavoritoClicked = {
+                                favoritosViewModel.toggleProductoFavorito(it)
+                            }
                         )
                     }
                 }
@@ -84,9 +86,15 @@ fun FavoritosScreen(
                         ProveedorItem(
                             proveedor = proveedor,
                             isFavorito = true,
-                            onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(it) }
+                            onFavoritoClicked = {
+                                favoritosViewModel.toggleProveedorFavorito(it)
+                            },
+                            onVerDetallesClick = {
+                                navController.navigate("proveedorDetalle/${proveedor.email}")
+                            }
                         )
                     }
+
                 }
             }
         }

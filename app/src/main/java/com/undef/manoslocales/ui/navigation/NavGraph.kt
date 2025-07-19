@@ -16,9 +16,14 @@ import com.undef.manoslocales.ui.login.ForgotPasswordScreen
 import com.undef.manoslocales.ui.login.LoginScreen
 import com.undef.manoslocales.ui.login.RegisterScreen
 import com.undef.manoslocales.ui.login.ResetLinkScreen
+import com.undef.manoslocales.ui.producto.ProductoDetalleScreen
 import com.undef.manoslocales.ui.producto.ProductosScreen
 import com.undef.manoslocales.ui.proveedor.CreateProductScreen
+import com.undef.manoslocales.ui.proveedor.EditProductScreen
+import com.undef.manoslocales.ui.proveedor.MisProductosScreen
+import com.undef.manoslocales.ui.proveedor.ProveedorDetalleScreen
 import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
+import com.undef.manoslocales.ui.screens.EditProfileScreen
 import com.undef.manoslocales.ui.screens.FavoritosScreen
 import com.undef.manoslocales.ui.screens.HomeScreen
 import com.undef.manoslocales.ui.screens.ProfileScreen
@@ -82,6 +87,25 @@ fun AppNavGraph(navController: NavHostController) {
                 favoritosViewModel = favoritosViewModel
             )
         }
+
+        composable("productoDetalle/{productId}/{providerId}") { backStack ->
+            val pid = backStack.arguments?.getString("productId") ?: ""
+            val provId = backStack.arguments?.getString("providerId") ?: ""
+            ProductoDetalleScreen(pid, provId, viewModel = userViewModel, navController = navController)
+        }
+
+        composable("proveedorDetalle/{providerId}") { backStack ->
+            val providerId = backStack.arguments?.getString("providerId") ?: ""
+            ProveedorDetalleScreen(providerId = providerId, viewModel = userViewModel, onBack = {
+                navController.popBackStack()
+            })
+        }
+
+        composable("editProfile") {
+            EditProfileScreen(navController = navController, userViewModel = userViewModel)
+        }
+
+
         composable("proveedores") {
             ProveedoresScreen(
                 navController = navController,
@@ -96,11 +120,11 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("profile") {
             ProfileScreen(
-                user = getUser(), // Considerar usar sessionManager.getLoggedInUserEmail()
                 navController = navController,
                 userViewModel = userViewModel
             )
         }
+
         composable("forgotpassword") {
             ForgotPasswordScreen(
                 onSendResetClick = { navController.navigate("resetlink") },
@@ -113,6 +137,16 @@ fun AppNavGraph(navController: NavHostController) {
                 onBackToLoginClick = { navController.navigate("login") }
             )
         }
+
+        composable("misproductos") {
+            MisProductosScreen(navController, userViewModel)
+        }
+
+        composable("editarProducto/{productId}") { backStackEntry ->
+            val prodId = backStackEntry.arguments?.getString("productId") ?: return@composable
+            EditProductScreen(productId = prodId, viewModel = userViewModel, navController = navController)
+        }
+
         composable("createproduct") {
             CreateProductScreen(viewModel = userViewModel)
         }

@@ -1,38 +1,32 @@
 package com.undef.manoslocales.ui.proveedor
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
-import coil.compose.AsyncImage
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import com.google.firebase.firestore.FirebaseFirestore
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
-import com.undef.manoslocales.ui.theme.ManosLocalesTheme
-import com.undef.manoslocales.ui.users.Proveedor
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-
-// Lista de ejemplo para poblar la LazyColumn de proveedores
-val proveedoresList = listOf(
-    Proveedor(1, "Distribuidora XYZ", "Córdoba", "Tecnología", R.drawable.providersimage),
-    Proveedor(2, "Proveedores ABC", "Buenos Aires", "Herramientas", R.drawable.providersimage),
-    Proveedor(3, "Alimentos del Sur", "Mendoza", "Alimentos", R.drawable.providersimage)
-)
+import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 
 @Composable
 fun ProveedoresScreen(
@@ -42,14 +36,43 @@ fun ProveedoresScreen(
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos")
     var searchQuery by remember { mutableStateOf("") }
+    var selectedItem by remember { mutableStateOf(1) }
+
     val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
+    var proveedores by remember { mutableStateOf<List<User>>(emptyList()) }
 
-    var selectedItem by remember { mutableStateOf(1) } // 1 para que aparezca seleccionada la opción "Proveedores"
+    LaunchedEffect(Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("role", "provider")
+            .get()
+            .addOnSuccessListener { result ->
+                val lista = result.documents.mapNotNull { doc ->
+                    val nombre = doc.getString("nombre") ?: ""
+                    val apellido = doc.getString("apellido") ?: ""
+                    val fullName = "$nombre $apellido"
+                    val phone = doc.getString("phone") ?: ""
+                    val email = doc.getString("email") ?: ""
+                    val profileImageUrl = doc.getString("profileImageUrl") ?: ""
+                    val categoria = doc.getString("categoria") ?: ""
+                    User(
+                        nombre = fullName,
+                        apellido = apellido,
+                        phone = phone,
+                        email = email,
+                        password = "",
+                        profileImageUrl = profileImageUrl,
+                        categoria = categoria,
+                        role = "provider"
+                    )
+                }
+                proveedores = lista
+            }
+    }
 
-    val filteredList = if (selectedCategory == "Todas") {
-        proveedoresList
-    } else {
-        proveedoresList.filter { it.categoria == selectedCategory }
+    val filteredList = proveedores.filter {
+        (selectedCategory == "Todas" || it.categoria == selectedCategory) &&
+                it.nombre.contains(searchQuery, ignoreCase = true)
     }
 
     ManosLocalesTheme {
@@ -63,95 +86,74 @@ fun ProveedoresScreen(
             },
             containerColor = Color(0xff3E2C1C)
         ) { paddingValues ->
-            Surface(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                color = MaterialTheme.colorScheme.background
+                    .padding(paddingValues)
+                    .background(Color(0xff3E2C1C))
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
+                Image(
+                    painter = painterResource(id = R.drawable.manoslocales),
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xff3E2C1C))
-                        .padding(8.dp),
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .width(180.dp)
+                        .offset(y = (-18).dp)
+                )
+
+                CategoryDropdown(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it },
+                    categories = categories
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Buscar proveedor", color = Color(0xFFFEFAE0)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Buscar",
+                            tint = Color(0xFFFEFAE0)
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFFFEFAE0),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedLabelColor = Color(0xFFFEFAE0),
+                        unfocusedLabelColor = Color.LightGray,
+                        focusedContainerColor = Color(0xFF5C4033),
+                        unfocusedContainerColor = Color(0xFF5C4033)
+                    )
+                )
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    Image(
-                        painter = painterResource(id = R.drawable.manoslocales),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                            .width(180.dp)
-                            .offset(y = (-18).dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(0.dp))
-
-                    CategoryDropdown(
-                        selectedCategory = selectedCategory,
-                        onCategorySelected = { selectedCategory = it },
-                        categories = categories
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                    // TextField para la búsqueda de proveedores
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        label = { Text("Buscar proveedor", color = Color(0xFFFEFAE0)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp), // Esquinas redondeadas
-                        leadingIcon = { // Icono de búsqueda
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Icono de búsqueda",
-                                tint = Color(0xFFFEFAE0)
-                            )
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color(0xFFFEFAE0),
-                            focusedIndicatorColor = Color.Transparent, // Quitar la línea inferior al enfocar
-                            unfocusedIndicatorColor = Color.Transparent, // Quitar la línea inferior sin enfocar
-                            focusedLabelColor = Color(0xFFFEFAE0),
-                            unfocusedLabelColor = Color.LightGray,
-                            focusedContainerColor = Color(0xFF5C4033),
-                            unfocusedContainerColor = Color(0xFF5C4033),
-                            disabledContainerColor = Color(0xFF5C4033),
-                            errorContainerColor = Color(0xFF5C4033),
-                            focusedLeadingIconColor = Color(0xFFFEFAE0),
-                            unfocusedLeadingIconColor = Color.LightGray,
-                        )
-                    )
-
-
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xff3E2C1C)),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        items(filteredList) { proveedor ->
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                ProveedorItem(
-                                    proveedor = proveedor,
-                                    isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
-                                    onFavoritoClicked = { selectedProveedor ->
-                                        favoritosViewModel.toggleProveedorFavorito(selectedProveedor)
-                                    }
-                                )
+                    items(filteredList) { proveedor ->
+                        ProveedorItem(
+                            proveedor = proveedor,
+                            isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
+                            onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(it) },
+                            onVerDetallesClick = {
+                                navController.navigate("proveedorDetalle/${proveedor.email}")
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -161,9 +163,10 @@ fun ProveedoresScreen(
 
 @Composable
 fun ProveedorItem(
-    proveedor: Proveedor,
+    proveedor: User,
     isFavorito: Boolean,
-    onFavoritoClicked: (Proveedor) -> Unit
+    onFavoritoClicked: (User) -> Unit,
+    onVerDetallesClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -178,14 +181,13 @@ fun ProveedorItem(
                 .padding(8.dp)
                 .fillMaxWidth()
         ) {
-            // Imagen
             Card(
                 modifier = Modifier.size(115.dp),
                 shape = RoundedCornerShape(8.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 AsyncImage(
-                    model = proveedor.imagenUrl,
+                    model = proveedor.profileImageUrl,
                     contentDescription = "Imagen de ${proveedor.nombre}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -194,7 +196,6 @@ fun ProveedorItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Info
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxHeight()
@@ -205,37 +206,30 @@ fun ProveedorItem(
                     color = Color.White
                 )
                 Text(
-                    text = proveedor.categoria,
+                    text = proveedor.categoria ?: "Sin categoría",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray
                 )
                 Text(
-                    text = proveedor.ubicacion,
+                    text = proveedor.email,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TextButton(
-                        onClick = { /* Acción al hacer click en "Ver detalles" */ }
-                    ) {
-                        Text(
-                            text = "Ver detalles",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White
-                        )
+                    TextButton(onClick = onVerDetallesClick) {
+                        Text("Ver detalles", color = Color.White)
                     }
 
-                    IconButton(
-                        onClick = { onFavoritoClicked(proveedor) }
-                    ) {
+                    IconButton(onClick = { onFavoritoClicked(proveedor) }) {
                         Icon(
                             imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Agregar a favoritos",
+                            contentDescription = null,
                             tint = Color(0xffFEFAE0)
                         )
                     }

@@ -37,15 +37,42 @@ class UserViewModel(
         private set
 
     // ✅ Registro de usuario con teléfono
-    fun registerUser(email: String, password: String, name: String, role: String, phone: String) {
-        authManager.registerUser(email, password, name, role, phone) { success, error ->
-            if (success) {
-                sessionManager.saveLoginState(true, email)
+    fun registerUser(
+        email: String,
+        password: String,
+        nombre: String,
+        apellido: String,
+        phone: String,
+        role: String,
+        categoria: String? = null
+    ) {
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { authResult ->
+                val uid = authResult.user?.uid ?: return@addOnSuccessListener
+                val userMap = mutableMapOf(
+                    "email" to email,
+                    "password" to password,
+                    "nombre" to nombre,
+                    "apellido" to apellido,
+                    "phone" to phone,
+                    "role" to role
+                )
+
+                // solo agrega categoría si es proveedor
+                if (role == "provider" && categoria != null) {
+                    userMap["categoria"] = categoria
+                }
+
+                FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(uid)
+                    .set(userMap)
             }
-            registrationSuccess.value = success
-            authErrorMessage.value = error
-        }
+            .addOnFailureListener {
+                // manejar error de registro
+            }
     }
+
 
     // 🔑 Login
     fun loginUser(email: String, password: String) {
@@ -89,11 +116,35 @@ class UserViewModel(
         }
     }
 
+    fun getMyProducts(onResult: (List<Product>) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return onResult(emptyList())
+        FirebaseFirestore.getInstance()
+            .collection("products")
+            .whereEqualTo("providerId", uid)
+            .get()
+            .addOnSuccessListener { result ->
+                val list = result.documents.mapNotNull { doc ->
+                    doc.toObject(Product::class.java)?.copy(id = doc.id) // asumí que Product incluye campo 'id'
+                }
+                onResult(list)
+            }
+    }
+
+    fun deleteProduct(productId: String, onResult: (Boolean, String?) -> Unit) {
+        FirebaseFirestore.getInstance().collection("products")
+            .document(productId)
+            .delete()
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
+    }
+
+
     fun createProduct(
         name: String,
         description: String,
         price: Double,
         imageUrl: String,
+        category: String,
         onResult: (Boolean, String?) -> Unit
     ) {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -108,7 +159,8 @@ class UserViewModel(
             "price" to price,
             "imageUrl" to imageUrl,
             "providerId" to currentUser.uid,
-            "createdAt" to System.currentTimeMillis()
+            "createdAt" to System.currentTimeMillis(),
+            "category" to category
         )
 
         FirebaseFirestore.getInstance()
@@ -123,15 +175,64 @@ class UserViewModel(
     }
 
 
+
     fun uploadProductImage(imageUri: Uri, onResult: (String?) -> Unit) {
+        val context = getApplication<Application>().applicationContext
         val fileName = "products/${UUID.randomUUID()}.jpg"
         val storageRef = FirebaseStorage.getInstance().reference.child(fileName)
 
-        storageRef.putFile(imageUri)
-            .addOnSuccessListener {
-                storageRef.downloadUrl.addOnSuccessListener { uri ->
-                    onResult(uri.toString())
-                }.addOnFailureListener {
+        try {
+            val inputStream = context.contentResolver.openInputStream(imageUri)
+            val bytes = inputStream?.readBytes()
+
+            if (bytes != null) {
+                storageRef.putBytes(bytes)
+                    .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { uri ->
+                            onResult(uri.toString())
+                        }.addOnFailureListener {
+                            onResult(null)
+                        }
+                    }
+                    .addOnFailureListener {
+                        onResult(null)
+                    }
+            } else {
+                onResult(null)
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onResult(null)
+        }
+    }
+
+    fun fetchUserInfo(onResult: (User?) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return onResult(null)
+
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val fullName = document.getString("name") ?: ""
+                    val parts = fullName.split(" ")
+
+                    val nombre = parts.getOrNull(0) ?: ""
+                    val apellido = parts.drop(1).joinToString(" ")
+
+                    val user = User(
+                        nombre = nombre,
+                        apellido = apellido,
+                        phone = document.getString("phone") ?: "",
+                        email = document.getString("email") ?: "",
+                        password = "", // No se guarda la contraseña en Firestore
+                        profileImageUrl = document.getString("profileImageUrl") ?: "",
+                        categoria = document.getString("categoria") ?: "",
+                        role = document.getString("rol") ?: ""
+                    )
+
+                    onResult(user)
+                } else {
                     onResult(null)
                 }
             }
@@ -139,6 +240,92 @@ class UserViewModel(
                 onResult(null)
             }
     }
+
+
+    fun getProductById(productId: String, onResult: (Product?) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("products")
+            .document(productId)
+            .get()
+            .addOnSuccessListener { doc ->
+                val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
+                onResult(product)
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+    fun getUserByEmail(email: String, onResult: (User?) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("email", email)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val doc = snapshot.documents.firstOrNull()
+                if (doc != null) {
+                    val user = User(
+                        nombre = doc.getString("nombre") ?: "",
+                        apellido = doc.getString("apellido") ?: "",
+                        phone = doc.getString("phone") ?: "",
+                        email = doc.getString("email") ?: "",
+                        password = doc.getString("password") ?: "",
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        categoria = doc.getString("categoria") ?: "",
+                        role = doc.getString("role") ?: ""
+                    )
+                    onResult(user)
+                } else onResult(null)
+            }
+            .addOnFailureListener { onResult(null) }
+    }
+
+
+    fun getProductsByProvider(providerId: String, onResult: (List<Product>) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("products")
+            .whereEqualTo("providerId", providerId)
+            .get()
+            .addOnSuccessListener { result ->
+                val list = result.documents.mapNotNull { doc ->
+                    doc.toObject(Product::class.java)?.copy(id = doc.id)
+                }
+                onResult(list)
+            }
+    }
+
+    fun updateProduct(product: Product, onResult: (Boolean, String?) -> Unit) {
+        val data = mapOf(
+            "name" to product.name,
+            "description" to product.description,
+            "price" to product.price,
+            "category" to product.category
+        )
+
+        FirebaseFirestore.getInstance()
+            .collection("products")
+            .document(product.id)
+            .update(data)
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
+    }
+
+    fun updateUserProfile(updated: User, onComplete: () -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val updates = mapOf(
+            "nombre" to updated.nombre,
+            "apellido" to updated.apellido,
+            "phone" to updated.phone,
+            "categoria" to updated.categoria
+        )
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .update(updates)
+            .addOnSuccessListener { onComplete() }
+            .addOnFailureListener { /* manejar error si querés */ }
+    }
+
 
     fun getProducts(onResult: (List<Product>) -> Unit) {
         FirebaseFirestore.getInstance()
@@ -152,13 +339,25 @@ class UserViewModel(
                     val imageUrl = doc.getString("imageUrl")
                     val providerId = doc.getString("providerId")
                     val createdAt = doc.getLong("createdAt")
+                    val category = doc.getString("category") ?: "Sin categoría"
 
                     if (name != null && description != null && price != null && imageUrl != null && providerId != null) {
-                        Product(name, description, price, imageUrl, providerId, createdAt ?: 0L)
+                        Product(
+                            id = doc.id,
+                            name = name,
+                            description = description,
+                            price = price,
+                            imageUrl = imageUrl,
+                            providerId = providerId,
+                            createdAt = createdAt ?: 0L,
+                            category = category
+                        )
+
                     } else null
                 }
                 onResult(products)
             }
     }
+
 
 }

@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     viewModel: UserViewModel,
@@ -29,7 +32,11 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var numerotel by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("user") } // 👈 campo de rol
+    var role by remember { mutableStateOf("user") }
+    var categoria by remember { mutableStateOf("") }
+
+    val categorias = listOf("Tecnología", "Herramientas", "Alimentos")
+    var expanded by remember { mutableStateOf(false) }
 
     val isFormValid = password.isNotBlank() && email.isNotBlank()
     val context = LocalContext.current
@@ -43,11 +50,12 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .wrapContentSize(Alignment.Center)
-                .offset(y = (-40).dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        )
+        {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
                 contentDescription = null,
@@ -66,18 +74,17 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Inputs
-            TextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Name") },
+            TextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") },
                 modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = apellido, onValueChange = { apellido = it }, label = { Text("Lastname") },
+            TextField(value = apellido, onValueChange = { apellido = it }, label = { Text("Apellido") },
                 modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = numerotel, onValueChange = { numerotel = it }, label = { Text("Phone Number") },
+            TextField(value = numerotel, onValueChange = { numerotel = it }, label = { Text("Teléfono") },
                 modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -93,7 +100,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 👇 Rol selector
             Text("Rol", color = Color.White)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = role == "user", onClick = { role = "user" })
@@ -103,13 +109,55 @@ fun RegisterScreen(
                 Text("Proveedor", color = Color.White)
             }
 
+            if (role == "provider") {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Categoría", color = Color.White)
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    TextField(
+                        value = categoria,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .background(Color.White),
+                        label = { Text("Seleccionar categoría") }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        categorias.forEach { cat ->
+                            DropdownMenuItem(
+                                text = { Text(cat) },
+                                onClick = {
+                                    categoria = cat
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
                     if (email.contains("@") && password.length >= 8) {
-                        val fullName = "$nombre $apellido"
-                        viewModel.registerUser(email, password, fullName, role, numerotel)
+                        viewModel.registerUser(
+                            email = email,
+                            password = password,
+                            nombre = nombre,
+                            apellido = apellido,
+                            role = role,
+                            phone = numerotel,
+                            categoria = if (role == "provider") categoria else null
+                        )
                         Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
                         onRegisterSuccess()
                     } else {
@@ -131,7 +179,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Already have an account? Login",
+                text = "¿Ya tenés cuenta? Iniciá sesión",
                 textAlign = TextAlign.Center,
                 color = Color(0xffFEFAE0),
                 modifier = Modifier

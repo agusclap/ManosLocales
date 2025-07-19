@@ -9,12 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search // Importar el icono de búsqueda
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip // Importar clip para las esquinas redondeadas de la imagen
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -27,32 +27,26 @@ import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.users.Producto
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
-
 
 @Composable
 fun ProductosScreen(
     navController: NavHostController,
-    viewModel: UserViewModel // <--- le pasás el viewModel
+    viewModel: UserViewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedItem by remember { mutableStateOf(0) }
-
-    //val favoritos by favoritosViewModel.productosFavoritos.collectAsState()
+    var selectedItem by remember { mutableIntStateOf(0) }
 
     val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        viewModel.getProducts { productosFirestore ->
-            productos = productosFirestore
-        }
+        viewModel.getProducts { productos = it }
     }
 
     val filteredList = productos.filter { producto ->
-        (selectedCategory == "Todas" || producto.description.contains(selectedCategory, ignoreCase = true)) &&
+        (selectedCategory == "Todas" || producto.category.equals(selectedCategory, ignoreCase = true)) &&
                 producto.name.contains(searchQuery, ignoreCase = true)
     }
 
@@ -75,10 +69,9 @@ fun ProductosScreen(
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo y filtros
                 Image(
-                    painter = painterResource(id = R.drawable.manoslocales),
-                    contentDescription = "Logo Manos Locales",
+                    painter = painterResource(R.drawable.manoslocales),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
@@ -93,7 +86,7 @@ fun ProductosScreen(
                     categories = categories
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(Modifier.height(20.dp))
 
                 TextField(
                     value = searchQuery,
@@ -103,11 +96,7 @@ fun ProductosScreen(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Buscar",
-                            tint = Color(0xFFFEFAE0)
-                        )
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
                     },
                     colors = TextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -132,7 +121,10 @@ fun ProductosScreen(
                         ProductoItemFirestore(
                             producto = producto,
                             isFavorito = false,
-                            onFavoritoClicked = { /* Si querés, integrás favoritos acá */ }
+                            onFavoritoClicked = { /* favorito */ },
+                            onVerDetalles = {
+                                navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
+                            }
                         )
                     }
                 }
@@ -145,7 +137,8 @@ fun ProductosScreen(
 fun ProductoItemFirestore(
     producto: Product,
     isFavorito: Boolean,
-    onFavoritoClicked: (Product) -> Unit
+    onFavoritoClicked: (Product) -> Unit,
+    onVerDetalles: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -191,7 +184,7 @@ fun ProductoItemFirestore(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(
-                        onClick = { /* ver detalles */ },
+                        onClick = onVerDetalles,
                         colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFEFAE0))
                     ) {
                         Text("Ver detalles")

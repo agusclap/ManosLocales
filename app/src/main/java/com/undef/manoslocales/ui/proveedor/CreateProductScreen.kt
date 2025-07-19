@@ -20,19 +20,35 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.undef.manoslocales.ui.database.UserViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateProductScreen(viewModel: UserViewModel) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-
+    var selectedCategory by remember { mutableStateOf("Artesanías") }
+    var expanded by remember { mutableStateOf(false) }
+    val categorias = listOf("Artesanías", "Textiles", "Alimentos")
     val context = LocalContext.current
+    val placeholderImage = "https://via.placeholder.com/150"
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> imageUri = uri }
     )
+
+    fun handleCreateResult(success: Boolean, error: String?) {
+        if (success) {
+            Toast.makeText(context, "Producto creado!", Toast.LENGTH_SHORT).show()
+            name = ""
+            description = ""
+            price = ""
+            imageUri = null
+        } else {
+            Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -61,12 +77,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
                 onValueChange = { name = it },
                 label = { Text("Nombre") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFFFF5C0),
-                    focusedContainerColor = Color(0xFFFFF5C0),
-                    unfocusedIndicatorColor = Color(0xFFFEFAE0),
-                    focusedIndicatorColor = Color(0xFFFEFAE0)
-                )
+                colors = textFieldColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -76,12 +87,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
                 onValueChange = { description = it },
                 label = { Text("Descripción") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFFFF5C0),
-                    focusedContainerColor = Color(0xFFFFF5C0),
-                    unfocusedIndicatorColor = Color(0xFFFEFAE0),
-                    focusedIndicatorColor = Color(0xFFFEFAE0)
-                )
+                colors = textFieldColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -91,13 +97,44 @@ fun CreateProductScreen(viewModel: UserViewModel) {
                 onValueChange = { price = it },
                 label = { Text("Precio") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFFFF5C0),
-                    focusedContainerColor = Color(0xFFFFF5C0),
-                    unfocusedIndicatorColor = Color(0xFFFEFAE0),
-                    focusedIndicatorColor = Color(0xFFFEFAE0)
-                )
+                colors = textFieldColors()
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedCategory,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Categoría") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = textFieldColors()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    categorias.forEach { categoria ->
+                        DropdownMenuItem(
+                            text = { Text(categoria) },
+                            onClick = {
+                                selectedCategory = categoria
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -129,26 +166,28 @@ fun CreateProductScreen(viewModel: UserViewModel) {
             Button(
                 onClick = {
                     val priceDouble = price.toDoubleOrNull() ?: 0.0
+
                     if (imageUri != null) {
                         viewModel.uploadProductImage(imageUri!!) { imageUrl ->
-                        if (imageUrl != null) {
-                                viewModel.createProduct(name, description, priceDouble, imageUrl) { success, error ->
-                                    if (success) {
-                                        Toast.makeText(context, "Producto creado!", Toast.LENGTH_SHORT).show()
-                                        name = ""
-                                        description = ""
-                                        price = ""
-                                        imageUri = null
-                                    } else {
-                                        Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            } else {
-                                Toast.makeText(context, "Error al subir la imagen", Toast.LENGTH_SHORT).show()
-                            }
+                            val finalUrl = imageUrl ?: placeholderImage
+                            viewModel.createProduct(
+                                name,
+                                description,
+                                priceDouble,
+                                finalUrl,
+                                selectedCategory,
+                                ::handleCreateResult
+                            )
                         }
                     } else {
-                        Toast.makeText(context, "Seleccioná una imagen", Toast.LENGTH_SHORT).show()
+                        viewModel.createProduct(
+                            name,
+                            description,
+                            priceDouble,
+                            placeholderImage,
+                            selectedCategory,
+                            ::handleCreateResult
+                        )
                     }
                 },
                 modifier = Modifier
@@ -165,3 +204,11 @@ fun CreateProductScreen(viewModel: UserViewModel) {
         }
     }
 }
+
+@Composable
+private fun textFieldColors() = TextFieldDefaults.colors(
+    unfocusedContainerColor = Color(0xFFFFF5C0),
+    focusedContainerColor = Color(0xFFFFF5C0),
+    unfocusedIndicatorColor = Color(0xFFFEFAE0),
+    focusedIndicatorColor = Color(0xFFFEFAE0)
+)
