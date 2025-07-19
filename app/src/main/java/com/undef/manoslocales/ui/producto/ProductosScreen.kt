@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.database.UserViewModel
+import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
@@ -29,38 +31,30 @@ import com.undef.manoslocales.ui.users.Producto
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 
 
-val productosList = listOf(
-    Producto(1, "Vaso de cerámica", "Hecho a mano", "Artesanías", R.drawable.empendedoresimage1),
-    Producto(2, "Bufanda tejida", "100% lana", "Textiles", R.drawable.emprendedoresimage2),
-    Producto(3, "Dulce de leche", "Envase 250g", "Alimentos", R.drawable.empendedoresimage1),
-    Producto(
-        4,
-        "Porta velas",
-        "Decoración artesanal",
-        "Artesanías",
-        R.drawable.emprendedoresimage2
-    ),
-    Producto(5, "Camiseta estampada", "Diseño local", "Textiles", R.drawable.emprendedoresimage2),
-    Producto(6, "Aceite de oliva", "Botella 500ml", "Alimentos", R.drawable.empendedoresimage1)
-)
-
 @Composable
 fun ProductosScreen(
     navController: NavHostController,
-    favoritosViewModel: FavoritosViewModel
+    viewModel: UserViewModel // <--- le pasás el viewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedItem by remember { mutableStateOf(0) }
 
-    val favoritos by favoritosViewModel.productosFavoritos.collectAsState()
+    //val favoritos by favoritosViewModel.productosFavoritos.collectAsState()
+
     val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
+    var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
 
-    val filteredList = productosList.filter { producto ->
-        (selectedCategory == "Todas" || producto.categoria == selectedCategory) &&
-                producto.nombre.contains(searchQuery, ignoreCase = true)
+    LaunchedEffect(Unit) {
+        viewModel.getProducts { productosFirestore ->
+            productos = productosFirestore
+        }
     }
 
-    var selectedItem by remember { mutableStateOf(0) }
+    val filteredList = productos.filter { producto ->
+        (selectedCategory == "Todas" || producto.description.contains(selectedCategory, ignoreCase = true)) &&
+                producto.name.contains(searchQuery, ignoreCase = true)
+    }
 
     ManosLocalesTheme {
         Scaffold(
@@ -81,17 +75,16 @@ fun ProductosScreen(
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Imagen con esquinas redondeadas
+                // Logo y filtros
                 Image(
                     painter = painterResource(id = R.drawable.manoslocales),
                     contentDescription = "Logo Manos Locales",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
-                        .width(180.dp)
-                        .offset(y = (-18).dp)
-                        .clip(RoundedCornerShape(16.dp)), // Esquinas redondeadas para la imagen
-                    contentScale = ContentScale.Fit // Ajustar la escala para que la imagen se vea bien
+                        .clip(RoundedCornerShape(16.dp))
+                        .offset(y = (-18).dp),
+                    contentScale = ContentScale.Fit
                 )
 
                 CategoryDropdown(
@@ -102,20 +95,17 @@ fun ProductosScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // TextField con esquinas redondeadas y icono de búsqueda
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     label = { Text("Buscar producto", color = Color(0xFFFEFAE0)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp), // Esquinas redondeadas para el TextField
-                    leadingIcon = { // Icono de búsqueda
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Icono de búsqueda",
+                            contentDescription = "Buscar",
                             tint = Color(0xFFFEFAE0)
                         )
                     },
@@ -123,17 +113,12 @@ fun ProductosScreen(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         cursorColor = Color(0xFFFEFAE0),
-                        focusedIndicatorColor = Color.Transparent, // Quitar la línea inferior al enfocar
-                        unfocusedIndicatorColor = Color.Transparent, // Quitar la línea inferior sin enfocar
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
                         focusedLabelColor = Color(0xFFFEFAE0),
                         unfocusedLabelColor = Color.LightGray,
-                        // Color de fondo del TextField para que contraste
                         focusedContainerColor = Color(0xFF5C4033),
-                        unfocusedContainerColor = Color(0xFF5C4033),
-                        disabledContainerColor = Color(0xFF5C4033),
-                        errorContainerColor = Color(0xFF5C4033),
-                        focusedLeadingIconColor = Color(0xFFFEFAE0),
-                        unfocusedLeadingIconColor = Color.LightGray,
+                        unfocusedContainerColor = Color(0xFF5C4033)
                     )
                 )
 
@@ -144,18 +129,11 @@ fun ProductosScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(filteredList) { producto ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ProductoItem(
-                                producto = producto,
-                                isFavorito = favoritos.any { it.id == producto.id },
-                                onFavoritoClicked = { selected ->
-                                    favoritosViewModel.toggleProductoFavorito(selected)
-                                }
-                            )
-                        }
+                        ProductoItemFirestore(
+                            producto = producto,
+                            isFavorito = false,
+                            onFavoritoClicked = { /* Si querés, integrás favoritos acá */ }
+                        )
                     }
                 }
             }
@@ -164,18 +142,18 @@ fun ProductosScreen(
 }
 
 @Composable
-fun ProductoItem(
-    producto: Producto,
+fun ProductoItemFirestore(
+    producto: Product,
     isFavorito: Boolean,
-    onFavoritoClicked: (Producto) -> Unit
+    onFavoritoClicked: (Product) -> Unit
 ) {
     Card(
         modifier = Modifier
             .padding(vertical = 8.dp)
             .width(320.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Mayor elevación para sombra
-        shape = RoundedCornerShape(12.dp), // Esquinas más redondeadas
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033)) // Color de fondo diferente para la tarjeta
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033))
     ) {
         Row(
             modifier = Modifier
@@ -188,8 +166,8 @@ fun ProductoItem(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 AsyncImage(
-                    model = producto.imagenUrl,
-                    contentDescription = "Imagen de ${producto.nombre}",
+                    model = producto.imageUrl,
+                    contentDescription = "Imagen de ${producto.name}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -201,44 +179,28 @@ fun ProductoItem(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxHeight()
             ) {
-                Text(
-                    text = producto.nombre,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
-                )
-                Text(
-                    text = producto.descripcion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.LightGray
-                )
-                Text(
-                    text = producto.categoria,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Text(producto.name, style = MaterialTheme.typography.titleMedium, color = Color.White)
+                Text(producto.description, style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
+                Text("Precio: $${producto.price}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically // Alinear verticalmente los elementos del Row
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(
-                        onClick = { /* Ver detalles */ },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFEFAE0)) // Color de acento
+                        onClick = { /* ver detalles */ },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFEFAE0))
                     ) {
-                        Text(
-                            text = "Ver detalles",
-                            style = MaterialTheme.typography.bodyMedium,
-                            // color = Color.White // Ya se define en contentColor del ButtonDefaults
-                        )
+                        Text("Ver detalles")
                     }
 
                     IconButton(onClick = { onFavoritoClicked(producto) }) {
                         Icon(
                             imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Agregar a favoritos",
+                            contentDescription = "Favorito",
                             tint = Color(0xffFEFAE0)
                         )
                     }

@@ -13,9 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.producto.ProductoItem
+import com.undef.manoslocales.ui.producto.ProductoItemFirestore
 import com.undef.manoslocales.ui.proveedor.ProveedorItem
-
+import kotlin.collections.isNotEmpty
 
 @Composable
 fun FavoritosScreen(
@@ -63,7 +63,7 @@ fun FavoritosScreen(
                         )
                     }
                     items(productosFavoritos) { producto ->
-                        ProductoItem(
+                        ProductoItemFirestore(
                             producto = producto,
                             isFavorito = true,
                             onFavoritoClicked = { favoritosViewModel.toggleProductoFavorito(it) }
@@ -92,4 +92,3 @@ fun FavoritosScreen(
         }
     }
 }
-

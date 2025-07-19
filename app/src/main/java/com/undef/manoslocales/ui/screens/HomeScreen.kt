@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,23 +22,31 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.database.UserViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
     onProductosClick: () -> Unit,
-    onProveedoresClick: () -> Unit
+    onProveedoresClick: () -> Unit,
+    userViewModel: UserViewModel,
+    onCreateProductClick: () -> Unit
 ) {
-    // Observar la ruta actual para determinar el ítem seleccionado en el navbar
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-    // Mapear rutas a índice del navbar
     val selectedItem = when (currentRoute) {
         "home" -> 0
         "favoritos" -> 1
         "settings" -> 2
         else -> 0
+    }
+
+    var userRole by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        userViewModel.getUserRole { role ->
+            userRole = role
+        }
     }
 
     Scaffold(
@@ -90,11 +97,27 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(20.dp))
             ProveedoresCard(onClick = { onProveedoresClick() })
             Spacer(modifier = Modifier.height(20.dp))
+
+            if (userRole == "provider") {
+                Button(
+                    onClick = onCreateProductClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(vertical = 30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xffFEFAE0),
+                        contentColor = Color(0xff3E2C1C)
+                    )
+                ) {
+                    Text("Crear Producto", fontWeight = FontWeight.Bold)
+                }
+            }
+
             PerfilButton(navController)
         }
     }
 }
-
 
 @Composable
 fun ProductosCard(onClick: () -> Unit) {
@@ -103,7 +126,7 @@ fun ProductosCard(onClick: () -> Unit) {
             .size(220.dp)
             .padding(8.dp)
             .offset(y = (-30).dp)
-            .clickable { onClick() }, // Acción de clic en el card
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFEFAE0)

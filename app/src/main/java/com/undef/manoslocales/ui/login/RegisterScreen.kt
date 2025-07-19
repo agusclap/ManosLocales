@@ -1,11 +1,10 @@
 package com.undef.manoslocales.ui.login
 
-import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,16 +15,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel // Keep this import
 import com.undef.manoslocales.R
-import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.database.UserViewModel
-import com.undef.manoslocales.ui.database.UserViewModelFactory // Keep this import
 
 @Composable
 fun RegisterScreen(
-    // Keep this parameter:
     viewModel: UserViewModel,
     onRegisterSuccess: () -> Unit = {},
     onLoginClick: () -> Unit = {}
@@ -35,13 +29,10 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var numerotel by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("user") } // 👈 campo de rol
+
     val isFormValid = password.isNotBlank() && email.isNotBlank()
     val context = LocalContext.current
-
-    // REMOVE this line:
-    // val userViewModel: UserViewModel = viewModel(
-    //     factory = UserViewModelFactory(context.applicationContext as Application)
-    // )
 
     Box(
         modifier = Modifier
@@ -75,98 +66,54 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campos de entrada
-            TextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = { Text("Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                singleLine = true
-            )
+            // Inputs
+            TextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
-                value = apellido,
-                onValueChange = { apellido = it },
-                label = { Text("Lastname") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                singleLine = true
-            )
+            TextField(value = apellido, onValueChange = { apellido = it }, label = { Text("Lastname") },
+                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
-                value = numerotel,
-                onValueChange = { numerotel = it },
-                label = { Text("Phone Number") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                singleLine = true
-            )
+            TextField(value = numerotel, onValueChange = { numerotel = it }, label = { Text("Phone Number") },
+                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                singleLine = true
-            )
+            TextField(value = email, onValueChange = { email = it }, label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
+            TextField(value = password, onValueChange = { password = it }, label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                singleLine = true
-            )
+                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 👇 Rol selector
+            Text("Rol", color = Color.White)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(selected = role == "user", onClick = { role = "user" })
+                Text("Usuario", color = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                RadioButton(selected = role == "provider", onClick = { role = "provider" })
+                Text("Proveedor", color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
                     if (email.contains("@") && password.length >= 8) {
-                        val user = User(
-                            nombre = nombre,
-                            apellido = apellido,
-                            email = email,
-                            password = password,
-                            phone = numerotel
-                        )
-                        // Use the 'viewModel' parameter directly
-                        viewModel.userRegister(user) { success ->
-                            if(success) {
-                                onRegisterSuccess()
-                                Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Registration failed. Email might already be in use.", Toast.LENGTH_LONG).show()
-                            }
-                        }
+                        val fullName = "$nombre $apellido"
+                        viewModel.registerUser(email, password, fullName, role, numerotel)
+                        Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
+                        onRegisterSuccess()
                     } else {
-                        if (!email.contains("@")) {
-                            Toast.makeText(context, "Please enter a valid email address.", Toast.LENGTH_SHORT).show()
-                        } else if (password.length < 8) {
-                            Toast.makeText(context, "Password must be at least 8 characters long.", Toast.LENGTH_SHORT).show()
-                        }
+                        Toast.makeText(context, "Verificá tu email o contraseña", Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = isFormValid,
@@ -178,7 +125,7 @@ fun RegisterScreen(
                     contentColor = Color(0xff3E2C1C)
                 )
             ) {
-                Text(text = "Sign Up")
+                Text("Sign Up")
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -193,12 +140,4 @@ fun RegisterScreen(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RegisterScreenPreview() {
-    // For preview, you'll need to provide a mock ViewModel or use a dummy one.
-    // This is a basic example. In a real app, you might use a Hilt preview setup or similar.
-// Provide a dummy ViewModel
 }

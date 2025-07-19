@@ -1,12 +1,12 @@
 package com.undef.manoslocales.ui.users
 
-data class Producto(
+/*data class Producto(
     val id: Int,
     val nombre: String,
     val descripcion: String,
     val categoria: String,
     val imagenUrl: Int
-)
+)*/
 
 data class Proveedor(
     val id: Int,

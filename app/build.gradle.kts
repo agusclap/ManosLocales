@@ -2,7 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt") // <--- ADD THIS LINE
+
+    id("com.google.gms.google-services")  // Firebase
+    id("kotlin-kapt")                     // Si usás Room, Hilt, etc.
 }
 
 android {
@@ -41,6 +43,8 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.firebase:firebase-storage-ktx:20.3.0")
+    implementation ("androidx.activity:activity-compose:1.7.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("com.google.android.material:material:1.8.0")
@@ -71,4 +75,9 @@ dependencies {
 
     // Kotlin extensions + Coroutines support for Room
     implementation("androidx.room:room-ktx:2.6.1")
+
+    //firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 }

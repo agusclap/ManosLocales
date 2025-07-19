@@ -9,52 +9,38 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
 import com.undef.manoslocales.ui.data.SessionManager
-import com.undef.manoslocales.ui.database.AppDatabase
 import com.undef.manoslocales.ui.database.UserViewModel
-import com.undef.manoslocales.ui.database.UserRepository
 import com.undef.manoslocales.ui.database.UserViewModelFactory
-
-import com.undef.manoslocales.ui.screens.FavoritosScreen
 import com.undef.manoslocales.ui.login.ForgotPasswordScreen
-import com.undef.manoslocales.ui.screens.HomeScreen
 import com.undef.manoslocales.ui.login.LoginScreen
-import com.undef.manoslocales.ui.producto.ProductosScreen
-import com.undef.manoslocales.ui.screens.ProfileScreen
-import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
 import com.undef.manoslocales.ui.login.RegisterScreen
 import com.undef.manoslocales.ui.login.ResetLinkScreen
+import com.undef.manoslocales.ui.producto.ProductosScreen
+import com.undef.manoslocales.ui.proveedor.CreateProductScreen
+import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
+import com.undef.manoslocales.ui.screens.FavoritosScreen
+import com.undef.manoslocales.ui.screens.HomeScreen
+import com.undef.manoslocales.ui.screens.ProfileScreen
 import com.undef.manoslocales.ui.screens.SettingScreen
-import com.undef.manoslocales.ui.users.getUser // Considerar cómo getUser() obtiene el usuario ahora
-
-
-// Asumiendo que FavoritosViewModel ya está definido
-
+import com.undef.manoslocales.ui.users.getUser
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    // Instanciar SessionManager
     val sessionManager = remember { SessionManager(application) }
 
-    // Instanciar dependencias de UserViewModel
-    val userDao = remember { AppDatabase.getInstance(application).UserDao() }
-    val userRepository = remember { UserRepository(userDao) }
-
-    // Instanciar UserViewModel con las nuevas dependencias
     val userViewModel: UserViewModel = viewModel(
-        factory = UserViewModelFactory(application, userRepository, sessionManager) // <--- Pasa sessionManager
+        factory = UserViewModelFactory(application, sessionManager)
     )
 
-    // Determinar la ruta de inicio basada en si el usuario ya está logueado
     val startDestination = if (userViewModel.isUserLoggedIn()) "home" else "login"
 
     val favoritosViewModel: FavoritosViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = startDestination) { // <--- Usa la ruta de inicio dinámica
+    NavHost(navController = navController, startDestination = startDestination) {
         composable("register") {
             RegisterScreen(
                 viewModel = userViewModel,
@@ -65,7 +51,12 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 viewModel = userViewModel,
-                onLoginClick = { _, _ -> navController.navigate("home") },
+                onLoginSuccess = { role ->
+                    when (role) {
+                        "provider" -> navController.navigate("home")
+                        "user" -> navController.navigate("home")
+                    }
+                },
                 onRegisterClick = { navController.navigate("register") },
                 onForgotPasswordClick = { navController.navigate("forgotpassword") }
             )
@@ -73,14 +64,16 @@ fun AppNavGraph(navController: NavHostController) {
         composable("home") {
             HomeScreen(
                 navController = navController,
+                userViewModel = userViewModel,
                 onProductosClick = { navController.navigate("productos") },
                 onProveedoresClick = { navController.navigate("proveedores") },
+                onCreateProductClick = { navController.navigate("createproduct") }
             )
         }
         composable("productos") {
             ProductosScreen(
                 navController = navController,
-                favoritosViewModel = favoritosViewModel
+                viewModel = userViewModel
             )
         }
         composable("favoritos") {
@@ -98,14 +91,14 @@ fun AppNavGraph(navController: NavHostController) {
         composable("settings") {
             SettingScreen(
                 navController = navController,
-                userViewModel = userViewModel // Pasa el userViewModel si necesitas cerrar sesión desde Settings
+                userViewModel = userViewModel
             )
         }
         composable("profile") {
             ProfileScreen(
-                user = getUser(), // Aquí tendrías que obtener el usuario de sessionManager o de ViewModel
+                user = getUser(), // Considerar usar sessionManager.getLoggedInUserEmail()
                 navController = navController,
-                userViewModel = userViewModel // Pasa el userViewModel si necesitas datos del usuario logueado
+                userViewModel = userViewModel
             )
         }
         composable("forgotpassword") {
@@ -119,6 +112,9 @@ fun AppNavGraph(navController: NavHostController) {
                 email = "example@mail.com",
                 onBackToLoginClick = { navController.navigate("login") }
             )
+        }
+        composable("createproduct") {
+            CreateProductScreen(viewModel = userViewModel)
         }
     }
 }
