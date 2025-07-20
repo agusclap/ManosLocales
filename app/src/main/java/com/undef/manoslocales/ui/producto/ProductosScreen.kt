@@ -7,8 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.dataclasses.Product
@@ -32,7 +30,8 @@ import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 @Composable
 fun ProductosScreen(
     navController: NavHostController,
-    viewModel: UserViewModel
+    viewModel: UserViewModel,
+    favoritosViewModel: FavoritosViewModel = viewModel() // Inyección del FavoritosViewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
@@ -42,6 +41,9 @@ fun ProductosScreen(
 
     val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
+
+    // Observa el StateFlow de productos favoritos del ViewModel
+    val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
 
     LaunchedEffect(selectedCategory, ciudad, proveedor) {
         val ciudadNormalized = ciudad.trim().lowercase()
@@ -64,7 +66,6 @@ fun ProductosScreen(
             ) { productos = it }
         }
     }
-
 
     val filteredList = productos.filter { producto ->
         producto.name.contains(searchQuery, ignoreCase = true)
@@ -154,11 +155,20 @@ fun ProductosScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(filteredList) { producto ->
-                        ProductoItemFirestore(
+                        // Determina si el producto actual es favorito
+                        val isFavorito = productosFavoritos.any { favProduct ->
+                            // Idealmente: favProduct.id == producto.id
+                            favProduct.name == producto.name && favProduct.description == producto.description
+                        }
+
+                        // Usando ItemProduct aquí:
+                        ItemProduct(
                             producto = producto,
-                            isFavorito = false,
-                            onFavoritoClicked = { /* favorito */ },
-                            onVerDetalles = {
+                            isFavorito = isFavorito,
+                            onFavoritoClicked = { clickedProduct ->
+                                favoritosViewModel.toggleProductoFavorito(clickedProduct)
+                            },
+                            onVerDetallesClick = {
                                 navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
                             }
                         )
@@ -181,74 +191,3 @@ private fun getSearchColors() = TextFieldDefaults.colors(
     focusedContainerColor = Color(0xFF5C4033),
     unfocusedContainerColor = Color(0xFF5C4033)
 )
-
-
-@Composable
-fun ProductoItemFirestore(
-    producto: Product,
-    isFavorito: Boolean,
-    onFavoritoClicked: (Product) -> Unit,
-    onVerDetalles: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .width(320.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033))
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-        ) {
-            Card(
-                modifier = Modifier.size(115.dp),
-                shape = RoundedCornerShape(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                AsyncImage(
-                    model = producto.imageUrl,
-                    contentDescription = "Imagen de ${producto.name}",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxHeight()
-            ) {
-                Text(producto.name, style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Text(producto.description, style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
-                Text("Precio: $${producto.price}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onVerDetalles,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFEFAE0))
-                    ) {
-                        Text("Ver detalles")
-                    }
-
-                    IconButton(onClick = { onFavoritoClicked(producto) }) {
-                        Icon(
-                            imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorito",
-                            tint = Color(0xffFEFAE0)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}

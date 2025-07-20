@@ -13,9 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.producto.ProductoFavoritoItem
+import com.undef.manoslocales.ui.producto.ItemProduct // ¡IMPORTACIÓN CLAVE!
 import com.undef.manoslocales.ui.proveedor.ProveedorItem
 import kotlin.collections.isNotEmpty
+import android.util.Log // Para depuración
 
 @Composable
 fun FavoritosScreen(
@@ -25,11 +26,14 @@ fun FavoritosScreen(
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
     val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
 
+    Log.d("FavoritosScreen", "Composable Productos Favoritos (antes de LazyColumn): ${productosFavoritos.size} elementos")
+    Log.d("FavoritosScreen", "Composable Proveedores Favoritos (antes de LazyColumn): ${proveedoresFavoritos.size} elementos")
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                selectedItem = 1,
-                onItemSelected = { /* manejar navegación */ },
+                selectedItem = 1, // Asumo que 1 es el índice de Favoritos
+                onItemSelected = { /* manejar navegación, quizás navController.navigate(rutas[it]) */ },
                 navController = navController
             )
         },
@@ -63,11 +67,15 @@ fun FavoritosScreen(
                         )
                     }
                     items(productosFavoritos) { producto ->
-                        ProductoFavoritoItem(
+                        // Usando ItemProduct aquí:
+                        ItemProduct(
                             producto = producto,
-                            isFavorito = true,
-                            onFavoritoClicked = {
-                                favoritosViewModel.toggleProductoFavorito(it)
+                            isFavorito = true, // Siempre es true en la pantalla de favoritos
+                            onFavoritoClicked = { clickedProduct ->
+                                favoritosViewModel.toggleProductoFavorito(clickedProduct)
+                            },
+                            onVerDetallesClick = {
+                                navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
                             }
                         )
                     }
@@ -85,7 +93,7 @@ fun FavoritosScreen(
                     items(proveedoresFavoritos) { proveedor ->
                         ProveedorItem(
                             proveedor = proveedor,
-                            isFavorito = true,
+                            isFavorito = true, // Siempre es true en la pantalla de favoritos
                             onFavoritoClicked = {
                                 favoritosViewModel.toggleProveedorFavorito(it)
                             },
@@ -95,6 +103,15 @@ fun FavoritosScreen(
                         )
                     }
 
+                } else if (productosFavoritos.isEmpty() && proveedoresFavoritos.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No tienes favoritos aún. ¡Explora y añade algunos!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
         }

@@ -70,7 +70,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-
+    implementation ("com.google.code.gson:gson:2.10.1")
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
 
