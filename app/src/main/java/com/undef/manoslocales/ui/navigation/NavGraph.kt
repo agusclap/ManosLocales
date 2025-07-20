@@ -137,10 +137,11 @@ fun AppNavGraph(navController: NavHostController) {
 
         composable("forgotpassword") {
             ForgotPasswordScreen(
-                onSendResetClick = { navController.navigate("resetlink") },
                 onBackToLoginClick = { navController.navigate("login") }
             )
         }
+
+
         composable("resetlink") {
             ResetLinkScreen(
                 email = "example@mail.com",

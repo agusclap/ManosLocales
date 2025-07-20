@@ -421,6 +421,12 @@ class UserViewModel(
             }
     }
 
+    fun sendPasswordResetEmail(email: String, onResult: (Boolean, String?) -> Unit) {
+        FirebaseAuth.getInstance()
+            .sendPasswordResetEmail(email)
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
+    }
 
 
 }

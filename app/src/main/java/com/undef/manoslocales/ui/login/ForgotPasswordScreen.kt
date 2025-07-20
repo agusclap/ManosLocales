@@ -14,17 +14,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
+import com.google.firebase.auth.FirebaseAuth
 import com.undef.manoslocales.R
 
 @Composable
 fun ForgotPasswordScreen(
-    onSendResetClick: (String) -> Unit,
     onBackToLoginClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
-
     val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -41,16 +40,19 @@ fun ForgotPasswordScreen(
                 .height(180.dp)
                 .width(180.dp)
         )
-        Spacer(modifier = Modifier.height(100.dp))
+
+        Spacer(modifier = Modifier.height(80.dp))
+
         Text(
-            text = "Forgot Password",
+            text = "Recuperar Contraseña",
             style = MaterialTheme.typography.headlineMedium,
             color = Color(0xffFEFAE0)
         )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Enter your email to receive a password reset link",
+            text = "Ingresá tu email y recibirás un enlace para restablecer tu contraseña.",
             color = Color(0xffFEFAE0),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -63,19 +65,41 @@ fun ForgotPasswordScreen(
             onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            )
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = {
-                onSendResetClick(email)
-                Toast.makeText(
-                    context,
-                    "A password recovery email has been sent.",
-                    Toast.LENGTH_LONG
-                ).show()
+                if (email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                Toast.makeText(
+                                    context,
+                                    "Revisá tu correo para restablecer la contraseña",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Error al enviar el correo: ${task.exception?.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Ingresá un email válido",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
@@ -83,13 +107,13 @@ fun ForgotPasswordScreen(
                 contentColor = Color(0xff3E2C1C)
             )
         ) {
-            Text(text = "Send Reset Link")
+            Text(text = "Enviar enlace de recuperación")
         }
 
-        Spacer(modifier = Modifier.height(70.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         Text(
-            text = "Back to Login",
+            text = "Volver al inicio de sesión",
             color = Color(0xffFEFAE0),
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -97,13 +121,4 @@ fun ForgotPasswordScreen(
                 .clickable { onBackToLoginClick() }
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ForgotPasswordScreenPreview() {
-    ForgotPasswordScreen(
-        onSendResetClick = {},
-        onBackToLoginClick = {}
-    )
 }
