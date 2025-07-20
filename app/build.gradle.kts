@@ -74,6 +74,12 @@ dependencies {
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+
+    //Cloudinary
+    implementation ("com.cloudinary:cloudinary-android:1.30.0")
+    implementation ("com.cloudinary:kotlin-url-gen:1.11.0")
+
+
     // Seguridad
     implementation("org.mindrot:jbcrypt:0.4")
 
