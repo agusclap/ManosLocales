@@ -8,10 +8,10 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 import com.undef.manoslocales.ui.data.AuthManager
-import com.undef.manoslocales.ui.data.ProductManager
 import com.undef.manoslocales.ui.data.SessionManager
 import com.undef.manoslocales.ui.dataclasses.Product
 import java.util.UUID
@@ -22,10 +22,6 @@ class UserViewModel(
 ) : AndroidViewModel(application) {
 
     private val authManager = AuthManager()
-    val productManager = ProductManager()
-
-    var registrationSuccess = mutableStateOf<Boolean?>(null)
-        private set
 
     var loginSuccess = mutableStateOf<Boolean?>(null)
         private set
@@ -95,9 +91,6 @@ class UserViewModel(
         return sessionManager.isLoggedIn()
     }
 
-    fun getLoggedInUserEmail(): String? {
-        return sessionManager.getLoggedInUserEmail()
-    }
 
     fun getUserRole(onResult: (String?) -> Unit) {
         val uid = authManager.getCurrentUser()?.uid
@@ -145,6 +138,7 @@ class UserViewModel(
         price: Double,
         imageUrl: String,
         category: String,
+        city: String,
         onResult: (Boolean, String?) -> Unit
     ) {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -153,6 +147,8 @@ class UserViewModel(
             return
         }
 
+        val normalizedCity = city.trim().lowercase()
+
         val product = hashMapOf(
             "name" to name,
             "description" to description,
@@ -160,19 +156,18 @@ class UserViewModel(
             "imageUrl" to imageUrl,
             "providerId" to currentUser.uid,
             "createdAt" to System.currentTimeMillis(),
-            "category" to category
+            "category" to category,
+            "city" to normalizedCity
         )
 
         FirebaseFirestore.getInstance()
             .collection("products")
             .add(product)
-            .addOnSuccessListener {
-                onResult(true, null)
-            }
-            .addOnFailureListener { e ->
-                onResult(false, e.message)
-            }
+            .addOnSuccessListener { onResult(true, null) }
+            .addOnFailureListener { e -> onResult(false, e.message) }
     }
+
+
 
 
 
@@ -294,12 +289,35 @@ class UserViewModel(
             }
     }
 
+    fun getProviderIdsByName(query: String, onResult: (List<String>) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("role", "provider")
+            .get()
+            .addOnSuccessListener { result ->
+                val ids = result.documents.mapNotNull { doc ->
+                    val nombre = doc.getString("nombre") ?: ""
+                    val apellido = doc.getString("apellido") ?: ""
+                    val fullName = "$nombre $apellido"
+
+                    if (fullName.contains(query, ignoreCase = true)) {
+                        doc.id
+                    } else null
+                }
+                onResult(ids)
+            }
+            .addOnFailureListener { onResult(emptyList()) }
+    }
+
+
+
     fun updateProduct(product: Product, onResult: (Boolean, String?) -> Unit) {
         val data = mapOf(
             "name" to product.name,
             "description" to product.description,
             "price" to product.price,
-            "category" to product.category
+            "category" to product.category,
+            "city" to product.city
         )
 
         FirebaseFirestore.getInstance()
@@ -309,6 +327,7 @@ class UserViewModel(
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
+
 
     fun updateUserProfile(updated: User, onComplete: () -> Unit) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -326,6 +345,37 @@ class UserViewModel(
             .addOnFailureListener { /* manejar error si querés */ }
     }
 
+    fun getFilteredProducts(
+        categoria: String?,
+        ciudad: String?,
+        proveedorId: String?,
+        onComplete: (List<Product>) -> Unit
+    ) {
+        var query = FirebaseFirestore.getInstance().collection("products") as Query
+
+        categoria?.takeIf { it != "Todas" }?.let {
+            query = query.whereEqualTo("category", it)
+        }
+
+        ciudad?.takeIf { it.isNotBlank() }?.let {
+            query = query.whereEqualTo("city", it)
+        }
+
+        proveedorId?.takeIf { it.isNotBlank() }?.let {
+            query = query.whereEqualTo("providerId", it)
+        }
+
+        query.get().addOnSuccessListener { result ->
+            val products = result.documents.mapNotNull { doc ->
+                doc.toObject(Product::class.java)?.copy(id = doc.id)
+            }
+            onComplete(products)
+        }.addOnFailureListener {
+            onComplete(emptyList())
+        }
+    }
+
+
 
     fun getProducts(onResult: (List<Product>) -> Unit) {
         FirebaseFirestore.getInstance()
@@ -340,6 +390,7 @@ class UserViewModel(
                     val providerId = doc.getString("providerId")
                     val createdAt = doc.getLong("createdAt")
                     val category = doc.getString("category") ?: "Sin categoría"
+                    val city = doc.getString("city") ?: ""
 
                     if (name != null && description != null && price != null && imageUrl != null && providerId != null) {
                         Product(
@@ -350,14 +401,15 @@ class UserViewModel(
                             imageUrl = imageUrl,
                             providerId = providerId,
                             createdAt = createdAt ?: 0L,
-                            category = category
+                            category = category,
+                            city = city
                         )
-
                     } else null
                 }
                 onResult(products)
             }
     }
+
 
 
 }

@@ -8,7 +8,8 @@ data class Product(
     val imageUrl: String = "",
     val providerId: String = "",
     val createdAt: Long = 0L,
-    val category: String = ""
+    val category: String = "",
+    val city: String = ""
 )
 
 

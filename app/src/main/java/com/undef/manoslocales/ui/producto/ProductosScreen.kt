@@ -36,18 +36,38 @@ fun ProductosScreen(
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
+    var ciudad by remember { mutableStateOf("") }
+    var proveedor by remember { mutableStateOf("") }
     var selectedItem by remember { mutableIntStateOf(0) }
 
     val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        viewModel.getProducts { productos = it }
+    LaunchedEffect(selectedCategory, ciudad, proveedor) {
+        val ciudadNormalized = ciudad.trim().lowercase()
+
+        if (proveedor.isNotBlank()) {
+            viewModel.getProviderIdsByName(proveedor) { providerIds ->
+                viewModel.getFilteredProducts(
+                    categoria = if (selectedCategory == "Todas") null else selectedCategory,
+                    ciudad = if (ciudadNormalized.isBlank()) null else ciudadNormalized,
+                    proveedorId = null
+                ) { productosEncontrados ->
+                    productos = productosEncontrados.filter { it.providerId in providerIds }
+                }
+            }
+        } else {
+            viewModel.getFilteredProducts(
+                categoria = if (selectedCategory == "Todas") null else selectedCategory,
+                ciudad = if (ciudadNormalized.isBlank()) null else ciudadNormalized,
+                proveedorId = null
+            ) { productos = it }
+        }
     }
 
+
     val filteredList = productos.filter { producto ->
-        (selectedCategory == "Todas" || producto.category.equals(selectedCategory, ignoreCase = true)) &&
-                producto.name.contains(searchQuery, ignoreCase = true)
+        producto.name.contains(searchQuery, ignoreCase = true)
     }
 
     ManosLocalesTheme {
@@ -86,30 +106,46 @@ fun ProductosScreen(
                     categories = categories
                 )
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
 
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = { Text("Buscar producto", color = Color(0xFFFEFAE0)) },
+                    label = { Text("Buscar por nombre de producto", color = Color(0xFFFEFAE0)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
                     },
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color(0xFFFEFAE0),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedLabelColor = Color(0xFFFEFAE0),
-                        unfocusedLabelColor = Color.LightGray,
-                        focusedContainerColor = Color(0xFF5C4033),
-                        unfocusedContainerColor = Color(0xFF5C4033)
-                    )
+                    shape = RoundedCornerShape(12.dp),
+                    colors = getSearchColors()
                 )
+
+                Spacer(Modifier.height(8.dp))
+
+                TextField(
+                    value = ciudad,
+                    onValueChange = { ciudad = it },
+                    label = { Text("Buscar por ciudad", color = Color(0xFFFEFAE0)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = getSearchColors()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                TextField(
+                    value = proveedor,
+                    onValueChange = { proveedor = it },
+                    label = { Text("Buscar por ID de proveedor", color = Color(0xFFFEFAE0)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = getSearchColors()
+                )
+
+                Spacer(Modifier.height(16.dp))
 
                 LazyColumn(
                     modifier = Modifier
@@ -132,6 +168,20 @@ fun ProductosScreen(
         }
     }
 }
+
+@Composable
+private fun getSearchColors() = TextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    cursorColor = Color(0xFFFEFAE0),
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    focusedLabelColor = Color(0xFFFEFAE0),
+    unfocusedLabelColor = Color.LightGray,
+    focusedContainerColor = Color(0xFF5C4033),
+    unfocusedContainerColor = Color(0xFF5C4033)
+)
+
 
 @Composable
 fun ProductoItemFirestore(
