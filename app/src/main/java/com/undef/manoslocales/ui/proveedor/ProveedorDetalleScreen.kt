@@ -1,6 +1,8 @@
 package com.undef.manoslocales.ui.proveedor
 
-import androidx.compose.foundation.Image
+import android.content.Intent
+import android.widget.Toast
+import android.content.ActivityNotFoundException
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -30,6 +33,22 @@ fun ProveedorDetalleScreen(
     var proveedor by remember { mutableStateOf<User?>(null) }
     var productosProv by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    fun enviarCorreo(destinatario: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(destinatario))
+            putExtra(Intent.EXTRA_SUBJECT, "Consulta sobre tus productos")
+            putExtra(Intent.EXTRA_TEXT, "Hola, me gustaría saber más sobre tus productos publicados.")
+        }
+
+        try {
+            context.startActivity(Intent.createChooser(intent, "Enviar correo con..."))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, "No hay apps de correo instaladas", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(providerId) {
         viewModel.getUserByEmail(providerId) { proveedor = it }
@@ -97,6 +116,16 @@ fun ProveedorDetalleScreen(
                             )
                             Text(p.email, color = Color.LightGray)
                             Text(p.phone, color = Color.LightGray)
+
+                            // Botón para enviar correo
+                            Button(
+                                onClick = { enviarCorreo(p.email) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBC6C25)),
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text("Contactar por correo", color = Color.White)
+                            }
+
                             Spacer(modifier = Modifier.height(8.dp))
                             Divider(color = Color.Gray, thickness = 1.dp)
                             Spacer(modifier = Modifier.height(8.dp))
