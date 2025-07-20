@@ -53,6 +53,7 @@ class FavoritesRepository {
             val favoriteIdsSnapshot = db.collection("users").document(userId)
                 .collection("favoriteProviders").get().await()
             val favoriteProviderIds = favoriteIdsSnapshot.documents.map { it.id }
+            Log.d("FAV_REPO_DEBUG", "Buscando datos para ${favoriteProviderIds.size} proveedores favoritos.")
             if (favoriteProviderIds.isEmpty()) return emptyList()
             val providersSnapshot = db.collection("users")
                 .whereIn("__name__", favoriteProviderIds).get().await()

@@ -38,7 +38,6 @@ class FavoritosViewModel(
     private val _proveedoresFavoritos = MutableStateFlow<List<User>>(emptyList())
     val proveedoresFavoritos: StateFlow<List<User>> = _proveedoresFavoritos
 
-    // Listeners para los cambios en tiempo real
     private var priceListener: ListenerRegistration? = null
     private var newProductListener: ListenerRegistration? = null
     private val productPrices = mutableMapOf<String, Double>()
@@ -48,18 +47,25 @@ class FavoritosViewModel(
     fun loadFavoritesForCurrentUser() {
         val userId = sessionManager.getUserId()
         if (userId == null) {
-            clearFavorites() // Si no hay usuario, nos aseguramos de limpiar todo.
+            clearFavorites()
             return
         }
+
         viewModelScope.launch {
             try {
-                _productosFavoritos.value = favoritesRepository.getFavoriteProducts(userId)
-                _proveedoresFavoritos.value = favoritesRepository.getFavoriteProviders(userId)
-                Log.d("FAV_VM", "Favoritos cargados para: $userId")
+                // 1. Cargamos los favoritos y ESPERAMOS a que la operación termine.
+                val favoriteProducts = favoritesRepository.getFavoriteProducts(userId)
+                val favoriteProviders = favoritesRepository.getFavoriteProviders(userId)
 
-                // Una vez cargados los favoritos, iniciamos ambos "escuchas".
-                startPriceChangeListener()
-                startNewProductListener()
+                // 2. Actualizamos el estado de la UI.
+                _productosFavoritos.value = favoriteProducts
+                _proveedoresFavoritos.value = favoriteProviders
+                Log.d("FAV_VM", "Favoritos cargados. Productos: ${favoriteProducts.size}, Proveedores: ${favoriteProviders.size}")
+
+                // 3. SOLO DESPUÉS de tener los datos, iniciamos los "escuchas".
+                startPriceChangeListener(favoriteProducts)
+                startNewProductListener(favoriteProviders)
+
             } catch (e: Exception) {
                 Log.e("FAV_VM", "Error al cargar favoritos", e)
                 clearFavorites()
@@ -76,20 +82,19 @@ class FavoritosViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        // Es crucial detener los listeners cuando el ViewModel se destruye para evitar fugas de memoria.
         stopPriceChangeListener()
         stopNewProductListener()
     }
 
     // --- LÓGICA DE "ESCUCHAS" EN TIEMPO REAL ---
 
-    private fun startPriceChangeListener() {
-        val favoriteProducts = _productosFavoritos.value
+    // CORRECCIÓN: La función ahora acepta la lista como parámetro.
+    private fun startPriceChangeListener(favoriteProducts: List<Product>) {
         if (favoriteProducts.isEmpty()) {
-            Log.d("PriceListener", "No hay productos favoritos para vigilar precios.")
+            Log.d("PriceListener", "No hay productos favoritos para vigilar.")
             return
         }
-        stopPriceChangeListener() // Evitar listeners duplicados.
+        stopPriceChangeListener()
 
         val favoriteProductIds = favoriteProducts.map { product ->
             productPrices[product.id] = product.price
@@ -123,15 +128,13 @@ class FavoritosViewModel(
         Log.d("PriceListener", "Escucha de precios detenido.")
     }
 
-    // --- IMPLEMENTACIÓN DE LA LÓGICA FALTANTE ---
-
-    private fun startNewProductListener() {
-        val favoriteProviders = _proveedoresFavoritos.value
+    // CORRECCIÓN: La función ahora acepta la lista como parámetro.
+    private fun startNewProductListener(favoriteProviders: List<User>) {
         if (favoriteProviders.isEmpty()) {
             Log.d("NewProductListener", "No hay proveedores favoritos para vigilar.")
             return
         }
-        stopNewProductListener() // Evitar listeners duplicados.
+        stopNewProductListener()
 
         val favoriteProviderIds = favoriteProviders.map { it.id }
         val startTime = System.currentTimeMillis()
@@ -143,7 +146,6 @@ class FavoritosViewModel(
         ) { newProduct ->
             val provider = favoriteProviders.find { it.id == newProduct.providerId }
             val providerName = provider?.nombre ?: "Tu proveedor favorito"
-
             Log.i("NewProductListener", "¡NUEVO PRODUCTO DETECTADO! Notificando al usuario.")
             NotificationHelper.showNewProductNotification(
                 context = getApplication(),

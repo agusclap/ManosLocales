@@ -136,7 +136,8 @@ fun AppNavGraph(navController: NavHostController) {
         composable("proveedores") {
             ProveedoresScreen(
                 navController = navController,
-                favoritosViewModel = favoritosViewModel
+                favoritosViewModel = favoritosViewModel,
+                userViewModel = userViewModel
             )
         }
         composable("settings") {

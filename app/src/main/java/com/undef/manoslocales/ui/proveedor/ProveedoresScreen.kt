@@ -20,9 +20,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.google.firebase.firestore.FirebaseFirestore
 import com.undef.manoslocales.R
-import com.undef.manoslocales.ui.database.User
+import com.undef.manoslocales.ui.database.User // Asegúrate que la ruta sea la correcta
+import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
@@ -31,7 +31,9 @@ import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 @Composable
 fun ProveedoresScreen(
     navController: NavHostController,
-    favoritosViewModel: FavoritosViewModel
+    favoritosViewModel: FavoritosViewModel,
+    // CORRECCIÓN 1: Añadimos el UserViewModel como parámetro para poder usarlo.
+    userViewModel: UserViewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
@@ -42,35 +44,11 @@ fun ProveedoresScreen(
     val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
     var proveedores by remember { mutableStateOf<List<User>>(emptyList()) }
 
+    // CORRECCIÓN 2: Llamamos a getProviders en la INSTANCIA 'userViewModel'.
     LaunchedEffect(Unit) {
-        FirebaseFirestore.getInstance()
-            .collection("users")
-            .whereEqualTo("role", "provider")
-            .get()
-            .addOnSuccessListener { result ->
-                val lista = result.documents.mapNotNull { doc ->
-                    val nombre = doc.getString("nombre") ?: ""
-                    val apellido = doc.getString("apellido") ?: ""
-                    val fullName = "$nombre $apellido"
-                    val phone = doc.getString("phone") ?: ""
-                    val email = doc.getString("email") ?: ""
-                    val profileImageUrl = doc.getString("profileImageUrl") ?: ""
-                    val categoria = doc.getString("categoria") ?: ""
-                    val city = doc.getString("city") ?: ""
-                    User(
-                        nombre = fullName,
-                        apellido = apellido,
-                        phone = phone,
-                        email = email,
-                        password = "",
-                        profileImageUrl = profileImageUrl,
-                        categoria = categoria,
-                        city = city,
-                        role = "provider"
-                    )
-                }
-                proveedores = lista
-            }
+        userViewModel.getProviders { listaDeProveedores ->
+            proveedores = listaDeProveedores
+        }
     }
 
     val filteredList = proveedores.filter {
@@ -104,7 +82,6 @@ fun ProveedoresScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
-                        .width(180.dp)
                         .offset(y = (-18).dp)
                 )
 
@@ -163,10 +140,12 @@ fun ProveedoresScreen(
                     items(filteredList) { proveedor ->
                         ProveedorItem(
                             proveedor = proveedor,
-                            isFavorito = proveedoresFavoritos.any { it.email == proveedor.email },
+                            // CORRECCIÓN 3: Comparamos por ID, que es más robusto.
+                            isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
                             onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(proveedor) },
                             onVerDetallesClick = {
-                                navController.navigate("proveedorDetalle/${proveedor.email}")
+                                // CORRECCIÓN 4: Navegamos usando el ID (UID), que es más seguro.
+                                navController.navigate("proveedorDetalle/${proveedor.id}")
                             }
                         )
                     }

@@ -3,6 +3,7 @@ package com.undef.manoslocales.ui.database
 import android.app.Application
 import android.location.Location
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import com.cloudinary.android.MediaManager
@@ -86,6 +87,27 @@ class UserViewModel(
                 onResult(ids)
             }
             .addOnFailureListener { onResult(emptyList()) }
+    }
+
+    fun getProviders(onResult: (List<User>) -> Unit) {
+        firestore.collection("users").whereEqualTo("role", "provider")
+            .get()
+            .addOnSuccessListener { snap ->
+                val providerList = snap.documents.mapNotNull { doc ->
+                    try {
+                        val user = doc.toObject(User::class.java)
+                        user?.id = doc.id // La corrección clave
+                        user
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                onResult(providerList)
+            }
+            .addOnFailureListener {
+                Log.e("UserViewModel", "Error al obtener proveedores", it)
+                onResult(emptyList())
+            }
     }
 
     fun sendPasswordResetEmail(email: String, onResult: (Boolean, String?) -> Unit) {
