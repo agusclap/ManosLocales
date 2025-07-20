@@ -119,7 +119,9 @@ class UserViewModel(
         phone: String,
         role: String,
         categoria: String? = null,
-        ciudad: String? = null
+        ciudad: String? = null,
+        lat: Double? = null,
+        lng: Double? = null
     ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { ir ->
@@ -130,8 +132,10 @@ class UserViewModel(
                     "nombre" to nombre,
                     "apellido" to apellido,
                     "phone" to phone,
-                    "role" to role
+                    "role" to role,
                 )
+                lat?.let { map["lat"] = it }
+                lng?.let { map["lng"] = it }
                 categoria?.let { map["categoria"] = it }
                 ciudad?.let { map["city"] = it.trim().lowercase() }
                 firestore.collection("users").document(uid).set(map)
