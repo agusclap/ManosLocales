@@ -1,5 +1,6 @@
 package com.undef.manoslocales.ui.producto
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,13 +27,12 @@ import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
-import android.util.Log // Para depuración
 
 @Composable
 fun ProductosScreen(
     navController: NavHostController,
     viewModel: UserViewModel,
-    favoritosViewModel: FavoritosViewModel = viewModel() // Inyección del FavoritosViewModel
+    favoritosViewModel: FavoritosViewModel = viewModel()
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
@@ -42,13 +42,11 @@ fun ProductosScreen(
 
     val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
-
-    // Observa el StateFlow de productos favoritos del ViewModel
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
 
-    LaunchedEffect(selectedCategory, ciudad, proveedor) {
-        val ciudadNormalized = ciudad.trim().lowercase()
+    val ciudadNormalized = ciudad.trim().lowercase()
 
+    LaunchedEffect(selectedCategory, ciudadNormalized, proveedor) {
         if (proveedor.isNotBlank()) {
             viewModel.getProviderIdsByName(proveedor) { providerIds ->
                 viewModel.getFilteredProducts(
@@ -68,11 +66,9 @@ fun ProductosScreen(
         }
     }
 
-    val filteredList = productos.filter { producto ->
-        producto.name.contains(searchQuery, ignoreCase = true)
+    val filteredList = productos.filter {
+        it.name.contains(searchQuery, ignoreCase = true)
     }
-
-    Log.d("PROD_SCREEN", "Productos Favoritos en ProductosScreen (composable): ${productosFavoritos.size} elementos")
 
     ManosLocalesTheme {
         Scaffold(
@@ -129,7 +125,7 @@ fun ProductosScreen(
 
                 TextField(
                     value = ciudad,
-                    onValueChange = { ciudad = it },
+                    onValueChange = { ciudad = it.trim().lowercase() }, // Normalizar ciudad
                     label = { Text("Buscar por ciudad", color = Color(0xFFFEFAE0)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -142,7 +138,7 @@ fun ProductosScreen(
                 TextField(
                     value = proveedor,
                     onValueChange = { proveedor = it },
-                    label = { Text("Buscar por ID de proveedor", color = Color(0xFFFEFAE0)) },
+                    label = { Text("Buscar por proveedor", color = Color(0xFFFEFAE0)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -158,19 +154,13 @@ fun ProductosScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(filteredList) { producto ->
-                        // Determina si el producto actual es favorito usando su ID
-                        val isFavorito = productosFavoritos.any { favProduct ->
-                            favProduct.id == producto.id
-                        }
-                        Log.d("PROD_SCREEN", "Producto ${producto.name} (ID: ${producto.id}) es favorito: $isFavorito")
+                        val isFavorito = productosFavoritos.any { it.id == producto.id }
 
-                        // Usando ItemProduct aquí:
                         ItemProduct(
                             producto = producto,
                             isFavorito = isFavorito,
-                            onFavoritoClicked = { clickedProduct ->
-                                Log.d("PROD_SCREEN", "Click en favorito para: ${clickedProduct.name} (ID: ${clickedProduct.id})")
-                                favoritosViewModel.toggleProductoFavorito(clickedProduct)
+                            onFavoritoClicked = {
+                                favoritosViewModel.toggleProductoFavorito(it)
                             },
                             onVerDetallesClick = {
                                 navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")

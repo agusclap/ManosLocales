@@ -102,6 +102,44 @@ class UserViewModel(
         }
     }
 
+    fun uploadUserProfileImage(uri: Uri, onResult: (String?) -> Unit) {
+        val context = getApplication<Application>().applicationContext
+        val filePath = FileUtils.getPath(context, uri)
+
+        if (filePath != null) {
+            MediaManager.get().upload(filePath)
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String?) {}
+                    override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+                    override fun onSuccess(requestId: String?, resultData: Map<*, *>) {
+                        val imageUrl = resultData["secure_url"] as? String
+                        val uid = FirebaseAuth.getInstance().currentUser?.uid
+                        if (uid != null && imageUrl != null) {
+                            FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(uid)
+                                .update("profileImageUrl", imageUrl)
+                                .addOnSuccessListener { onResult(imageUrl) }
+                                .addOnFailureListener { onResult(null) }
+                        } else {
+                            onResult(null)
+                        }
+                    }
+
+                    override fun onError(requestId: String?, error: ErrorInfo?) {
+                        onResult(null)
+                    }
+
+                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+                        onResult(null)
+                    }
+                })
+                .dispatch()
+        } else {
+            onResult(null)
+        }
+    }
+
 
     fun loginUser(email: String, password: String) {
         authManager.loginUser(email, password) { success, user, error ->
@@ -301,11 +339,15 @@ class UserViewModel(
         val updates = mutableMapOf<String, Any>(
             "nombre" to updated.nombre,
             "apellido" to updated.apellido,
-            "phone" to updated.phone,
-            "role" to updated.role
+            "phone" to updated.phone
         )
+
+        updated.role.let { updates["role"] = it } // solo si está presente
         updated.categoria?.let { updates["categoria"] = it }
         updated.city?.let { updates["city"] = it.trim().lowercase() }
+        if (updated.profileImageUrl.isNotBlank()) {
+            updates["profileImageUrl"] = updated.profileImageUrl
+        }
 
         FirebaseFirestore.getInstance()
             .collection("users")
@@ -313,6 +355,8 @@ class UserViewModel(
             .update(updates)
             .addOnSuccessListener { onComplete() }
     }
+
+
 
     fun getFilteredProducts(
         categoria: String?,
