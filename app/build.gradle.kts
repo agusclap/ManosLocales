@@ -74,6 +74,13 @@ dependencies {
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+
+    //Cloudinary
+    implementation("com.cloudinary:cloudinary-android:1.30.0") {
+        exclude(group = "com.linkedin.android.litr", module = "litr")
+    }
+
+
     // Seguridad
     implementation("org.mindrot:jbcrypt:0.4")
 

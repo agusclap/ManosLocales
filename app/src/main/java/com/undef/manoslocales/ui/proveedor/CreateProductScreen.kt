@@ -164,19 +164,39 @@ fun CreateProductScreen(viewModel: UserViewModel) {
 
             Button(
                 onClick = {
-                    val priceDouble = price.toDoubleOrNull() ?: 0.0
+                    val priceDouble = price.toDoubleOrNull()
+                    if (priceDouble == null) {
+                        Toast.makeText(context, "Precio inválido", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     val normalizedCity = city.trim().lowercase()
 
                     if (imageUri != null) {
                         viewModel.uploadProductImage(imageUri!!) { imageUrl ->
-                            val finalUrl = imageUrl ?: placeholderImage
-                            viewModel.createProduct(
-                                name, description, priceDouble, finalUrl, selectedCategory, normalizedCity, ::handleCreateResult
-                            )
+                            if (imageUrl == null) {
+                                Toast.makeText(context, "Error subiendo imagen", Toast.LENGTH_SHORT).show()
+                            } else {
+                                viewModel.createProduct(
+                                    name,
+                                    description,
+                                    priceDouble,
+                                    imageUrl,
+                                    selectedCategory,
+                                    normalizedCity,
+                                    ::handleCreateResult
+                                )
+                            }
                         }
                     } else {
                         viewModel.createProduct(
-                            name, description, priceDouble, placeholderImage, selectedCategory, normalizedCity, ::handleCreateResult
+                            name,
+                            description,
+                            priceDouble,
+                            placeholderImage,
+                            selectedCategory,
+                            normalizedCity,
+                            ::handleCreateResult
                         )
                     }
                 },
@@ -194,6 +214,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
         }
     }
 }
+
 
 @Composable
 private fun textFieldColors() = TextFieldDefaults.colors(
