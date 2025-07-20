@@ -73,7 +73,11 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.10.1")
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
+    // Agregá la BoM de Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
 
+// Agregá la dependencia para Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     //Cloudinary
     implementation("com.cloudinary:cloudinary-android:1.30.0") {
