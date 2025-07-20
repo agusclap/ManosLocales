@@ -76,8 +76,9 @@ dependencies {
 
 
     //Cloudinary
-    implementation ("com.cloudinary:cloudinary-android:1.30.0")
-    implementation ("com.cloudinary:kotlin-url-gen:1.11.0")
+    implementation("com.cloudinary:cloudinary-android:1.30.0") {
+        exclude(group = "com.linkedin.android.litr", module = "litr")
+    }
 
 
     // Seguridad

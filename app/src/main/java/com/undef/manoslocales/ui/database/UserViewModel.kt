@@ -4,6 +4,9 @@ import android.app.Application
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,6 +16,9 @@ import com.undef.manoslocales.ui.data.AuthManager
 import com.undef.manoslocales.ui.data.SessionManager
 import com.undef.manoslocales.ui.dataclasses.Product
 import java.util.UUID
+import com.undef.manoslocales.utils.FileUtils
+
+
 
 class UserViewModel(
     application: Application,
@@ -66,6 +72,35 @@ class UserViewModel(
                 // manejar error
             }
     }
+
+    fun uploadProductImage(uri: Uri, onResult: (String?) -> Unit) {
+        val context = getApplication<Application>().applicationContext
+        val filePath = FileUtils.getPath(context, uri)
+
+        if (filePath != null) {
+            MediaManager.get().upload(filePath)
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String?) {}
+                    override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+                    override fun onSuccess(requestId: String?, resultData: Map<*, *>) {
+                        val imageUrl = resultData["secure_url"] as? String
+                        onResult(imageUrl)
+                    }
+
+                    override fun onError(requestId: String?, error: ErrorInfo?) {
+                        onResult(null)
+                    }
+
+                    override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+                        onResult(null)
+                    }
+                })
+                .dispatch()
+        } else {
+            onResult(null)
+        }
+    }
+
 
     fun loginUser(email: String, password: String) {
         authManager.loginUser(email, password) { success, user, error ->
@@ -154,29 +189,6 @@ class UserViewModel(
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-    fun uploadProductImage(imageUri: Uri, onResult: (String?) -> Unit) {
-        val context = getApplication<Application>().applicationContext
-        val fileName = "products/${UUID.randomUUID()}.jpg"
-        val storageRef = FirebaseStorage.getInstance().reference.child(fileName)
-
-        try {
-            val bytes = context.contentResolver.openInputStream(imageUri)?.readBytes()
-            if (bytes != null) {
-                storageRef.putBytes(bytes)
-                    .addOnSuccessListener {
-                        storageRef.downloadUrl.addOnSuccessListener { uri ->
-                            onResult(uri.toString())
-                        }.addOnFailureListener { onResult(null) }
-                    }
-                    .addOnFailureListener { onResult(null) }
-            } else {
-                onResult(null)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResult(null)
-        }
-    }
 
     fun fetchUserInfo(onResult: (User?) -> Unit) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return onResult(null)
