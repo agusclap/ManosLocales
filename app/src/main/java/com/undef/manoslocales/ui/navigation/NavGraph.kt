@@ -23,6 +23,7 @@ import com.undef.manoslocales.ui.proveedor.EditProductScreen
 import com.undef.manoslocales.ui.proveedor.MisProductosScreen
 import com.undef.manoslocales.ui.proveedor.ProveedorDetalleScreen
 import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
+import com.undef.manoslocales.ui.screens.ChangePasswordScreen
 import com.undef.manoslocales.ui.screens.EditProfileScreen
 import com.undef.manoslocales.ui.screens.FavoritosScreen
 import com.undef.manoslocales.ui.screens.HomeScreen
@@ -88,6 +89,14 @@ fun AppNavGraph(navController: NavHostController) {
                 favoritosViewModel = favoritosViewModel
             )
         }
+
+        composable("changePassword") {
+            ChangePasswordScreen(
+                navController = navController,
+                userViewModel = userViewModel
+            )
+        }
+
 
         composable("productoDetalle/{productId}/{providerId}") { backStack ->
             val pid = backStack.arguments?.getString("productId") ?: ""

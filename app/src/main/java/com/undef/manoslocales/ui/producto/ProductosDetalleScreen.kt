@@ -3,6 +3,7 @@ package com.undef.manoslocales.ui.producto
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -39,10 +40,20 @@ fun ProductoDetalleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = product?.name ?: "Detalle", color = Color.White) },
+                title = {
+                    Text(
+                        text = product?.name ?: "Detalle de producto",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF3E2C1C))
@@ -73,33 +84,72 @@ fun ProductoDetalleScreen(
                     AsyncImage(
                         model = p.imageUrl,
                         contentDescription = p.name,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(240.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        contentScale = ContentScale.Crop
+                            .clip(RoundedCornerShape(16.dp))
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = p.name, style = MaterialTheme.typography.titleLarge, color = Color.White)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Precio: \$${p.price}", style = MaterialTheme.typography.titleMedium, color = Color.LightGray)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = p.description, style = MaterialTheme.typography.bodyMedium, color = Color.White)
+
                     Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = p.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color(0xFFFFF5C0)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Precio: \$${p.price}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Divider(color = Color.LightGray.copy(alpha = 0.3f), thickness = 1.dp)
+
+                    InfoItem(label = "Descripción", value = p.description)
+                    InfoItem(label = "Categoría", value = p.category)
+                    InfoItem(label = "Ciudad", value = p.city)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Button(
                         onClick = {
                             navController.navigate("proveedorDetalle/$providerId")
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFEFAE0),
                             contentColor = Color(0xFF3E2C1C)
-                        )
+                        ),
+                        shape = RoundedCornerShape(50)
                     ) {
-                        Text("Ver proveedor")
+                        Text("Ver proveedor", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun InfoItem(label: String, value: String) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.LightGray
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White
+        )
     }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -370,4 +371,56 @@ class UserViewModel(
                 onResult(products)
             }
     }
+
+    fun changePassword(currentPassword: String, newPassword: String, onResult: (Boolean, String?) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email
+
+        if (user == null || email == null) {
+            onResult(false, "Usuario no autenticado")
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(email, currentPassword)
+
+        user.reauthenticate(credential)
+            .addOnSuccessListener {
+                user.updatePassword(newPassword)
+                    .addOnSuccessListener { onResult(true, null) }
+                    .addOnFailureListener { e -> onResult(false, e.message) }
+            }
+            .addOnFailureListener { e -> onResult(false, "Contraseña actual incorrecta") }
+    }
+
+
+    fun getUserById(uid: String, onResult: (User?) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val user = User(
+                        nombre = doc.getString("nombre") ?: "",
+                        apellido = doc.getString("apellido") ?: "",
+                        phone = doc.getString("phone") ?: "",
+                        email = doc.getString("email") ?: "",
+                        password = "", // nunca guardar esto en cliente
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        categoria = doc.getString("categoria"),
+                        city = doc.getString("city"),
+                        role = doc.getString("role") ?: ""
+                    )
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+
+
 }

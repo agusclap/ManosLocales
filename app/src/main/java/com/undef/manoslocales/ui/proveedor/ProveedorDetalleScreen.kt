@@ -51,7 +51,7 @@ fun ProveedorDetalleScreen(
     }
 
     LaunchedEffect(providerId) {
-        viewModel.getUserByEmail(providerId) { proveedor = it }
+        viewModel.getUserById(providerId) { proveedor = it }
         viewModel.getProductsByProvider(providerId) {
             productosProv = it
             isLoading = false

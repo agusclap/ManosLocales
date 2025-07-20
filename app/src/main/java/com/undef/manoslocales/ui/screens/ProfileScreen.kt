@@ -62,29 +62,29 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text("Nombre: ${it.nombre} ${it.apellido}", style = MaterialTheme.typography.headlineSmall, color = Color.White)
+                Text("Name: ${it.nombre} ${it.apellido}", style = MaterialTheme.typography.headlineSmall, color = Color.White)
                 Text("Email: ${it.email}", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Text("Teléfono: ${it.phone}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                Text("Cellphone: ${it.phone}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
 
                 Spacer(modifier = Modifier.height(40.dp))
-            } ?: Text("Cargando usuario...", color = Color.White)
+            } ?: Text("Loading User...", color = Color.White)
 
             Button(
                 onClick = { navController.navigate("editProfile") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Editar perfil", color = Color.Black)
+                Text("Edit Profile", color = Color.Black)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = { /* cambiar contraseña */ },
+                onClick = { navController.navigate("changePassword") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Cambiar contraseña", color = Color.Black)
+                Text("Change Password", color = Color.Black)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -99,7 +99,7 @@ fun ProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Cerrar sesión", color = Color.Black)
+                Text("Logout", color = Color.Black)
             }
         }
     }
