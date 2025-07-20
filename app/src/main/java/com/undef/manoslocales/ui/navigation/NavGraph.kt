@@ -24,6 +24,7 @@ import com.undef.manoslocales.ui.producto.ProductosScreen
 import com.undef.manoslocales.ui.proveedor.CreateProductScreen
 import com.undef.manoslocales.ui.proveedor.EditProductScreen
 import com.undef.manoslocales.ui.proveedor.MisProductosScreen
+import com.undef.manoslocales.ui.proveedor.NearbyProvidersScreen
 import com.undef.manoslocales.ui.proveedor.ProveedorDetalleScreen
 import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
 import com.undef.manoslocales.ui.screens.ChangePasswordScreen

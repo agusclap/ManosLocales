@@ -1,5 +1,6 @@
 package com.undef.manoslocales.ui.login
 
+import android.Manifest
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,20 +14,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.LocationServices
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
+import com.undef.manoslocales.ui.database.User
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun RegisterScreen(
     viewModel: UserViewModel,
     onRegisterSuccess: () -> Unit = {},
     onLoginClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -35,12 +51,35 @@ fun RegisterScreen(
     var ciudad by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("user") }
     var categoria by remember { mutableStateOf("") }
+    var lat by remember { mutableStateOf<Double?>(null) }
+    var lng by remember { mutableStateOf<Double?>(null) }
 
     val categorias = listOf("Tecnología", "Herramientas", "Alimentos")
     var expanded by remember { mutableStateOf(false) }
 
     val isFormValid = password.isNotBlank() && email.isNotBlank()
-    val context = LocalContext.current
+
+    // Solicitar permiso de ubicación al iniciar
+    LaunchedEffect(Unit) {
+        locationPermission.launchPermissionRequest()
+    }
+
+    // Observar ciclo de vida para actualizar permisos si cambian
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (locationPermission.status.isGranted && role == "provider") {
+                    val fused = LocationServices.getFusedLocationProviderClient(context)
+                    fused.lastLocation.addOnSuccessListener { loc ->
+                        lat = loc?.latitude
+                        lng = loc?.longitude
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Box(
         modifier = Modifier
@@ -194,6 +233,34 @@ fun RegisterScreen(
                             categoria = if (role == "provider") categoria else null,
                             ciudad = ciudad
                         )
+
+                        // Solo si es proveedor y se obtuvo ubicación
+                        if (role == "provider" && lat != null && lng != null) {
+                            val uid = viewModel.currentUser.value?.uid
+                            if (uid != null) {
+                                val updates = mapOf(
+                                    "lat" to lat!!,
+                                    "lng" to lng!!
+                                )
+                                viewModel.updateUserProfile(
+                                    updated = User(
+                                        nombre = nombre,
+                                        apellido = apellido,
+                                        phone = numerotel,
+                                        email = email,
+                                        password = password,
+                                        profileImageUrl = "",
+                                        categoria = categoria,
+                                        city = ciudad,
+                                        role = role,
+                                        lat = lat,
+                                        lng = lng
+                                    ),
+                                    onComplete = {}
+                                )
+                            }
+                        }
+
                         Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
                         onRegisterSuccess()
                     } else {
