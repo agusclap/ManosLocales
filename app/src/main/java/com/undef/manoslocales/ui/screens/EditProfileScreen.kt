@@ -1,8 +1,10 @@
 package com.undef.manoslocales.ui.screens
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.google.android.gms.location.LocationServices
 import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.database.UserViewModel
 
@@ -45,9 +48,8 @@ fun EditProfileScreen(
     var ciudad by remember { mutableStateOf(TextFieldValue("")) }
     var categoria by remember { mutableStateOf("") }
     var profileImageUrl by remember { mutableStateOf("") }
-
-    var showDropdown by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showDropdown by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -63,16 +65,19 @@ fun EditProfileScreen(
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                val intent = Intent(Intent.ACTION_PICK)
-                intent.type = "image/*"
-                imagePickerLauncher.launch(intent)
-            }
+    val imagePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "image/*"
+            imagePickerLauncher.launch(intent)
         }
-    )
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { /* No es necesario manejar el resultado explícitamente */ }
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUserInfo { fetchedUser ->
@@ -107,9 +112,9 @@ fun EditProfileScreen(
                     .background(Color.Gray)
                     .clickable {
                         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                            android.Manifest.permission.READ_MEDIA_IMAGES
+                            Manifest.permission.READ_MEDIA_IMAGES
                         else
-                            android.Manifest.permission.READ_EXTERNAL_STORAGE
+                            Manifest.permission.READ_EXTERNAL_STORAGE
 
                         val hasPermission = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
@@ -118,7 +123,7 @@ fun EditProfileScreen(
                             intent.type = "image/*"
                             imagePickerLauncher.launch(intent)
                         } else {
-                            permissionLauncher.launch(permission)
+                            imagePermissionLauncher.launch(permission)
                         }
                     },
                 contentScale = ContentScale.Crop
@@ -133,8 +138,8 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = profileFieldColors()
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
+            Spacer(modifier = Modifier.height(12.dp))
             TextField(
                 value = apellido,
                 onValueChange = { apellido = it },
@@ -142,8 +147,8 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = profileFieldColors()
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
+            Spacer(modifier = Modifier.height(12.dp))
             TextField(
                 value = telefono,
                 onValueChange = { telefono = it },
@@ -151,8 +156,8 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = profileFieldColors()
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
+            Spacer(modifier = Modifier.height(12.dp))
             TextField(
                 value = ciudad,
                 onValueChange = { ciudad = it },
@@ -160,8 +165,8 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = profileFieldColors()
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
+            Spacer(modifier = Modifier.height(12.dp))
             ExposedDropdownMenuBox(
                 expanded = showDropdown,
                 onExpandedChange = { showDropdown = !showDropdown }
@@ -199,18 +204,30 @@ fun EditProfileScreen(
 
             Button(
                 onClick = {
-                    user?.let {
-                        val updated = it.copy(
-                            nombre = nombre.text,
-                            apellido = apellido.text,
-                            phone = telefono.text,
-                            city = ciudad.text.trim().lowercase(),
-                            categoria = categoria,
-                            profileImageUrl = profileImageUrl
-                        )
-                        userViewModel.updateUserProfile(updated) {
-                            navController.popBackStack()
+                    val permission = Manifest.permission.ACCESS_FINE_LOCATION
+                    if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                        val fused = LocationServices.getFusedLocationProviderClient(context)
+                        fused.lastLocation.addOnSuccessListener { location: Location? ->
+                            val lat = location?.latitude
+                            val lng = location?.longitude
+                            user?.let {
+                                val updated = it.copy(
+                                    nombre = nombre.text,
+                                    apellido = apellido.text,
+                                    phone = telefono.text,
+                                    city = ciudad.text.trim().lowercase(),
+                                    categoria = categoria,
+                                    profileImageUrl = profileImageUrl,
+                                    lat = lat,
+                                    lng = lng
+                                )
+                                userViewModel.updateUserProfile(updated) {
+                                    navController.popBackStack()
+                                }
+                            }
                         }
+                    } else {
+                        locationPermissionLauncher.launch(permission)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),

@@ -20,6 +20,8 @@ data class User(
     val categoria: String? = null, // Este ya estaba bien, null es un valor por defecto válido
     val city: String? = null,      // Este también estaba bien
     val role: String = "",
+    val lat: Double? = null,
+    val lng: Double? = null,
 
     // ¡ADVERTENCIA DE SEGURIDAD!
     // El campo 'password' se ha excluido para que NUNCA se guarde en la base de datos de Firestore.

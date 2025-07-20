@@ -54,6 +54,8 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx") // ⬅ NO pongas versión explícita
 
     // Compose y navegación
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
     implementation("androidx.activity:activity-compose:1.7.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.9.0")
