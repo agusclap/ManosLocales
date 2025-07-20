@@ -28,10 +28,10 @@ fun CreateProductScreen(viewModel: UserViewModel) {
     var price by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedCategory by remember { mutableStateOf("Artesanías") }
+    var selectedCategory by remember { mutableStateOf("Tecnologia") }
     var expanded by remember { mutableStateOf(false) }
 
-    val categorias = listOf("Artesanías", "Textiles", "Alimentos")
+    val categorias = listOf("Tecnologia", "Herramienta", "Alimentos")
     val context = LocalContext.current
     val placeholderImage = "https://via.placeholder.com/150"
 

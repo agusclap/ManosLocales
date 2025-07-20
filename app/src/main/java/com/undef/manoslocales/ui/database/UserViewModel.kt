@@ -4,12 +4,10 @@ import android.app.Application
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 import com.undef.manoslocales.ui.data.AuthManager
 import com.undef.manoslocales.ui.data.SessionManager
@@ -32,7 +30,6 @@ class UserViewModel(
     var currentUser = mutableStateOf<FirebaseUser?>(null)
         private set
 
-    // ✅ Registro de usuario con teléfono
     fun registerUser(
         email: String,
         password: String,
@@ -40,7 +37,8 @@ class UserViewModel(
         apellido: String,
         phone: String,
         role: String,
-        categoria: String? = null
+        categoria: String? = null,
+        ciudad: String? = null
     ) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { authResult ->
@@ -54,9 +52,9 @@ class UserViewModel(
                     "role" to role
                 )
 
-                // solo agrega categoría si es proveedor
-                if (role == "provider" && categoria != null) {
-                    userMap["categoria"] = categoria
+                if (role == "provider") {
+                    categoria?.let { userMap["categoria"] = it }
+                    ciudad?.let { userMap["city"] = it.trim().lowercase() }
                 }
 
                 FirebaseFirestore.getInstance()
@@ -65,12 +63,10 @@ class UserViewModel(
                     .set(userMap)
             }
             .addOnFailureListener {
-                // manejar error de registro
+                // manejar error
             }
     }
 
-
-    // 🔑 Login
     fun loginUser(email: String, password: String) {
         authManager.loginUser(email, password) { success, user, error ->
             if (success && user != null) {
@@ -87,23 +83,17 @@ class UserViewModel(
         currentUser.value = null
     }
 
-    fun isUserLoggedIn(): Boolean {
-        return sessionManager.isLoggedIn()
-    }
-
+    fun isUserLoggedIn(): Boolean = sessionManager.isLoggedIn()
 
     fun getUserRole(onResult: (String?) -> Unit) {
         val uid = authManager.getCurrentUser()?.uid
         if (uid != null) {
-            Firebase.firestore.collection("users").document(uid)
+            FirebaseFirestore.getInstance().collection("users").document(uid)
                 .get()
-                .addOnSuccessListener { document ->
-                    val role = document.getString("role")
-                    onResult(role)
+                .addOnSuccessListener { doc ->
+                    onResult(doc.getString("role"))
                 }
-                .addOnFailureListener {
-                    onResult(null)
-                }
+                .addOnFailureListener { onResult(null) }
         } else {
             onResult(null)
         }
@@ -116,9 +106,7 @@ class UserViewModel(
             .whereEqualTo("providerId", uid)
             .get()
             .addOnSuccessListener { result ->
-                val list = result.documents.mapNotNull { doc ->
-                    doc.toObject(Product::class.java)?.copy(id = doc.id) // asumí que Product incluye campo 'id'
-                }
+                val list = result.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
                 onResult(list)
             }
     }
@@ -130,7 +118,6 @@ class UserViewModel(
             .addOnSuccessListener { onResult(true, null) }
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
-
 
     fun createProduct(
         name: String,
@@ -167,35 +154,24 @@ class UserViewModel(
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-
-
-
-
     fun uploadProductImage(imageUri: Uri, onResult: (String?) -> Unit) {
         val context = getApplication<Application>().applicationContext
         val fileName = "products/${UUID.randomUUID()}.jpg"
         val storageRef = FirebaseStorage.getInstance().reference.child(fileName)
 
         try {
-            val inputStream = context.contentResolver.openInputStream(imageUri)
-            val bytes = inputStream?.readBytes()
-
+            val bytes = context.contentResolver.openInputStream(imageUri)?.readBytes()
             if (bytes != null) {
                 storageRef.putBytes(bytes)
                     .addOnSuccessListener {
                         storageRef.downloadUrl.addOnSuccessListener { uri ->
                             onResult(uri.toString())
-                        }.addOnFailureListener {
-                            onResult(null)
-                        }
+                        }.addOnFailureListener { onResult(null) }
                     }
-                    .addOnFailureListener {
-                        onResult(null)
-                    }
+                    .addOnFailureListener { onResult(null) }
             } else {
                 onResult(null)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
             onResult(null)
@@ -207,48 +183,23 @@ class UserViewModel(
 
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .get()
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()) {
-                    val fullName = document.getString("name") ?: ""
-                    val parts = fullName.split(" ")
-
-                    val nombre = parts.getOrNull(0) ?: ""
-                    val apellido = parts.drop(1).joinToString(" ")
-
-                    val user = User(
-                        nombre = nombre,
-                        apellido = apellido,
-                        phone = document.getString("phone") ?: "",
-                        email = document.getString("email") ?: "",
-                        password = "", // No se guarda la contraseña en Firestore
-                        profileImageUrl = document.getString("profileImageUrl") ?: "",
-                        categoria = document.getString("categoria") ?: "",
-                        role = document.getString("rol") ?: ""
-                    )
-
-                    onResult(user)
-                } else {
-                    onResult(null)
-                }
-            }
-            .addOnFailureListener {
-                onResult(null)
-            }
-    }
-
-
-    fun getProductById(productId: String, onResult: (Product?) -> Unit) {
-        FirebaseFirestore.getInstance()
-            .collection("products")
-            .document(productId)
-            .get()
             .addOnSuccessListener { doc ->
-                val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
-                onResult(product)
+                if (doc.exists()) {
+                    val user = User(
+                        nombre = doc.getString("nombre") ?: "",
+                        apellido = doc.getString("apellido") ?: "",
+                        phone = doc.getString("phone") ?: "",
+                        email = doc.getString("email") ?: "",
+                        password = "", // no guardar
+                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
+                        categoria = doc.getString("categoria"),
+                        city = doc.getString("city"),
+                        role = doc.getString("role") ?: ""
+                    )
+                    onResult(user)
+                } else onResult(null)
             }
-            .addOnFailureListener {
-                onResult(null)
-            }
+            .addOnFailureListener { onResult(null) }
     }
 
     fun getUserByEmail(email: String, onResult: (User?) -> Unit) {
@@ -266,7 +217,8 @@ class UserViewModel(
                         email = doc.getString("email") ?: "",
                         password = doc.getString("password") ?: "",
                         profileImageUrl = doc.getString("profileImageUrl") ?: "",
-                        categoria = doc.getString("categoria") ?: "",
+                        categoria = doc.getString("categoria"),
+                        city = doc.getString("city"),
                         role = doc.getString("role") ?: ""
                     )
                     onResult(user)
@@ -275,6 +227,16 @@ class UserViewModel(
             .addOnFailureListener { onResult(null) }
     }
 
+    fun getProductById(productId: String, onResult: (Product?) -> Unit) {
+        FirebaseFirestore.getInstance()
+            .collection("products")
+            .document(productId)
+            .get()
+            .addOnSuccessListener { doc ->
+                onResult(doc.toObject(Product::class.java)?.copy(id = doc.id))
+            }
+            .addOnFailureListener { onResult(null) }
+    }
 
     fun getProductsByProvider(providerId: String, onResult: (List<Product>) -> Unit) {
         FirebaseFirestore.getInstance()
@@ -282,9 +244,7 @@ class UserViewModel(
             .whereEqualTo("providerId", providerId)
             .get()
             .addOnSuccessListener { result ->
-                val list = result.documents.mapNotNull { doc ->
-                    doc.toObject(Product::class.java)?.copy(id = doc.id)
-                }
+                val list = result.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
                 onResult(list)
             }
     }
@@ -299,17 +259,12 @@ class UserViewModel(
                     val nombre = doc.getString("nombre") ?: ""
                     val apellido = doc.getString("apellido") ?: ""
                     val fullName = "$nombre $apellido"
-
-                    if (fullName.contains(query, ignoreCase = true)) {
-                        doc.id
-                    } else null
+                    if (fullName.contains(query, ignoreCase = true)) doc.id else null
                 }
                 onResult(ids)
             }
             .addOnFailureListener { onResult(emptyList()) }
     }
-
-
 
     fun updateProduct(product: Product, onResult: (Boolean, String?) -> Unit) {
         val data = mapOf(
@@ -328,21 +283,22 @@ class UserViewModel(
             .addOnFailureListener { e -> onResult(false, e.message) }
     }
 
-
     fun updateUserProfile(updated: User, onComplete: () -> Unit) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val updates = mapOf(
+        val updates = mutableMapOf<String, Any>(
             "nombre" to updated.nombre,
             "apellido" to updated.apellido,
             "phone" to updated.phone,
-            "categoria" to updated.categoria
+            "role" to updated.role
         )
+        updated.categoria?.let { updates["categoria"] = it }
+        updated.city?.let { updates["city"] = it.trim().lowercase() }
+
         FirebaseFirestore.getInstance()
             .collection("users")
             .document(uid)
             .update(updates)
             .addOnSuccessListener { onComplete() }
-            .addOnFailureListener { /* manejar error si querés */ }
     }
 
     fun getFilteredProducts(
@@ -351,14 +307,14 @@ class UserViewModel(
         proveedorId: String?,
         onComplete: (List<Product>) -> Unit
     ) {
-        var query = FirebaseFirestore.getInstance().collection("products") as Query
+        var query: Query = FirebaseFirestore.getInstance().collection("products")
 
         categoria?.takeIf { it != "Todas" }?.let {
             query = query.whereEqualTo("category", it)
         }
 
         ciudad?.takeIf { it.isNotBlank() }?.let {
-            query = query.whereEqualTo("city", it)
+            query = query.whereEqualTo("city", it.trim().lowercase())
         }
 
         proveedorId?.takeIf { it.isNotBlank() }?.let {
@@ -366,16 +322,10 @@ class UserViewModel(
         }
 
         query.get().addOnSuccessListener { result ->
-            val products = result.documents.mapNotNull { doc ->
-                doc.toObject(Product::class.java)?.copy(id = doc.id)
-            }
+            val products = result.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
             onComplete(products)
-        }.addOnFailureListener {
-            onComplete(emptyList())
-        }
+        }.addOnFailureListener { onComplete(emptyList()) }
     }
-
-
 
     fun getProducts(onResult: (List<Product>) -> Unit) {
         FirebaseFirestore.getInstance()
@@ -391,7 +341,6 @@ class UserViewModel(
                     val createdAt = doc.getLong("createdAt")
                     val category = doc.getString("category") ?: "Sin categoría"
                     val city = doc.getString("city") ?: ""
-
                     if (name != null && description != null && price != null && imageUrl != null && providerId != null) {
                         Product(
                             id = doc.id,
@@ -409,7 +358,4 @@ class UserViewModel(
                 onResult(products)
             }
     }
-
-
-
 }

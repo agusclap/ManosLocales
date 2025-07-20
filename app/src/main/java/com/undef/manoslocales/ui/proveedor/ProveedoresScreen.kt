@@ -34,8 +34,9 @@ fun ProveedoresScreen(
     favoritosViewModel: FavoritosViewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
-    val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos")
+    val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
     var searchQuery by remember { mutableStateOf("") }
+    var searchCity by remember { mutableStateOf("") }
     var selectedItem by remember { mutableStateOf(1) }
 
     val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
@@ -55,6 +56,7 @@ fun ProveedoresScreen(
                     val email = doc.getString("email") ?: ""
                     val profileImageUrl = doc.getString("profileImageUrl") ?: ""
                     val categoria = doc.getString("categoria") ?: ""
+                    val city = doc.getString("city") ?: ""
                     User(
                         nombre = fullName,
                         apellido = apellido,
@@ -63,6 +65,7 @@ fun ProveedoresScreen(
                         password = "",
                         profileImageUrl = profileImageUrl,
                         categoria = categoria,
+                        city = city,
                         role = "provider"
                     )
                 }
@@ -72,7 +75,8 @@ fun ProveedoresScreen(
 
     val filteredList = proveedores.filter {
         (selectedCategory == "Todas" || it.categoria == selectedCategory) &&
-                it.nombre.contains(searchQuery, ignoreCase = true)
+                it.nombre.contains(searchQuery, ignoreCase = true) &&
+                (searchCity.isBlank() || it.city?.contains(searchCity, ignoreCase = true) == true)
     }
 
     ManosLocalesTheme {
@@ -122,23 +126,24 @@ fun ProveedoresScreen(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Buscar",
-                            tint = Color(0xFFFEFAE0)
-                        )
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
                     },
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color(0xFFFEFAE0),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedLabelColor = Color(0xFFFEFAE0),
-                        unfocusedLabelColor = Color.LightGray,
-                        focusedContainerColor = Color(0xFF5C4033),
-                        unfocusedContainerColor = Color(0xFF5C4033)
-                    )
+                    colors = searchFieldColors()
+                )
+
+                TextField(
+                    value = searchCity,
+                    onValueChange = { searchCity = it },
+                    label = { Text("Buscar por ciudad", color = Color(0xFFFEFAE0)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
+                    },
+                    colors = searchFieldColors()
                 )
 
                 LazyColumn(
@@ -148,8 +153,8 @@ fun ProveedoresScreen(
                     items(filteredList) { proveedor ->
                         ProveedorItem(
                             proveedor = proveedor,
-                            isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
-                            onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(it) },
+                            isFavorito = proveedoresFavoritos.any { it.email == proveedor.email },
+                            onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(proveedor) },
                             onVerDetallesClick = {
                                 navController.navigate("proveedorDetalle/${proveedor.email}")
                             }
@@ -160,6 +165,19 @@ fun ProveedoresScreen(
         }
     }
 }
+
+@Composable
+fun searchFieldColors() = TextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    cursorColor = Color(0xFFFEFAE0),
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    focusedLabelColor = Color(0xFFFEFAE0),
+    unfocusedLabelColor = Color.LightGray,
+    focusedContainerColor = Color(0xFF5C4033),
+    unfocusedContainerColor = Color(0xFF5C4033)
+)
 
 @Composable
 fun ProveedorItem(
@@ -200,21 +218,12 @@ fun ProveedorItem(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxHeight()
             ) {
-                Text(
-                    text = proveedor.nombre,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
-                )
-                Text(
-                    text = proveedor.categoria ?: "Sin categoría",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.LightGray
-                )
-                Text(
-                    text = proveedor.email,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Text(proveedor.nombre, style = MaterialTheme.typography.titleMedium, color = Color.White)
+                Text(proveedor.categoria ?: "Sin categoría", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
+                Text(proveedor.email, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                proveedor.city?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFEFAE0))
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -225,7 +234,6 @@ fun ProveedorItem(
                     TextButton(onClick = onVerDetallesClick) {
                         Text("Ver detalles", color = Color.White)
                     }
-
                     IconButton(onClick = { onFavoritoClicked(proveedor) }) {
                         Icon(
                             imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,

@@ -73,11 +73,6 @@ dependencies {
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
 
-    // Room (base de datos local)
-    implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-
     // Seguridad
     implementation("org.mindrot:jbcrypt:0.4")
 

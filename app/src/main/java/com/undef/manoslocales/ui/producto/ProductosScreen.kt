@@ -40,7 +40,7 @@ fun ProductosScreen(
     var proveedor by remember { mutableStateOf("") }
     var selectedItem by remember { mutableIntStateOf(0) }
 
-    val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
+    val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
 
     LaunchedEffect(selectedCategory, ciudad, proveedor) {
