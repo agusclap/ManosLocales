@@ -3,6 +3,7 @@ package com.undef.manoslocales.ui.navigation
 
 import android.app.Application
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,7 +17,7 @@ import com.undef.manoslocales.ui.login.ForgotPasswordScreen
 import com.undef.manoslocales.ui.login.LoginScreen
 import com.undef.manoslocales.ui.login.RegisterScreen
 import com.undef.manoslocales.ui.login.ResetLinkScreen
-import com.undef.manoslocales.ui.notifications.FavoritesRepository // Asegúrate de tener esta clase
+import com.undef.manoslocales.ui.notifications.FavoritesRepository
 import com.undef.manoslocales.ui.notifications.FavoritosViewModelFactory
 import com.undef.manoslocales.ui.producto.ProductoDetalleScreen
 import com.undef.manoslocales.ui.producto.ProductosScreen
@@ -37,35 +38,28 @@ fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
-    // --- Dependencias para los ViewModels ---
-    // Usamos 'remember' para que no se creen en cada recomposición.
-
-    // 1. Tu SessionManager (idealmente la versión mejorada que usa Firebase por dentro).
     val sessionManager = remember { SessionManager(application) }
-
-    // 2. El repositorio para los favoritos.
     val favoritesRepository = remember { FavoritesRepository() }
 
-    // 3. La FÁBRICA para el FavoritosViewModel.
     val favoritosViewModelFactory = remember {
-        FavoritosViewModelFactory(favoritesRepository, sessionManager)
+        FavoritosViewModelFactory(application, favoritesRepository, sessionManager)
     }
 
-    // --- Creación de los ViewModels ---
-
-    // Tu UserViewModel se mantiene igual.
     val userViewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory(application, sessionManager)
     )
-
-    // AHORA CREAMOS EL FAVORITOSVIEWMODEL USANDO SU FÁBRICA.
-    // Esta instancia se compartirá entre todas las pantallas que la necesiten.
     val favoritosViewModel: FavoritosViewModel = viewModel(factory = favoritosViewModelFactory)
 
+    LaunchedEffect(key1 = sessionManager.isLoggedIn()) {
+        if (sessionManager.isLoggedIn()) {
+            favoritosViewModel.loadFavoritesForCurrentUser()
+        } else {
+            favoritosViewModel.clearFavorites()
+        }
+    }
 
-    // --- Lógica de Navegación ---
-    // Usamos la versión de SessionManager que consulta a Firebase para más seguridad.
     val startDestination = if (sessionManager.isLoggedIn()) "home" else "login"
+
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("register") {
@@ -98,7 +92,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
         composable("productos") {
-            // Ahora se pasa la instancia correcta del ViewModel.
             ProductosScreen(
                 navController = navController,
                 viewModel = userViewModel,
@@ -106,7 +99,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
         composable("favoritos") {
-            // Ahora se pasa la instancia correcta del ViewModel.
             FavoritosScreen(
                 navController = navController,
                 favoritosViewModel = favoritosViewModel
@@ -138,7 +130,6 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
         composable("proveedores") {
-            // Ahora se pasa la instancia correcta del ViewModel.
             ProveedoresScreen(
                 navController = navController,
                 favoritosViewModel = favoritosViewModel
