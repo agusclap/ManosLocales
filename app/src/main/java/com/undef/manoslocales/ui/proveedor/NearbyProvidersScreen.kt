@@ -1,4 +1,4 @@
-package com.undef.manoslocales.ui.navigation
+package com.undef.manoslocales.ui.proveedor
 
 import android.Manifest
 import android.content.pm.PackageManager
