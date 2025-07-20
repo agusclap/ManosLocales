@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken // ¡IMPORTACIÓN CORRECTA DE GSON!
+import com.google.gson.reflect.TypeToken // ¡Importación correcta de Gson!
 import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.dataclasses.Product
 import kotlinx.coroutines.Dispatchers
@@ -33,10 +33,10 @@ class FavoritosViewModel(application: Application) : AndroidViewModel(applicatio
         loadFavorites()
         viewModelScope.launch {
             productosFavoritos.collect {
-                Log.d("FavoritosViewModel", "Productos Favoritos Actualizados (Flow): ${it.size} elementos")
+                Log.d("FAV_VM", "Productos Favoritos Actualizados (Flow): ${it.size} elementos. Contenido: ${it.map { p -> p.name }}")
             }
             proveedoresFavoritos.collect {
-                Log.d("FavoritosViewModel", "Proveedores Favoritos Actualizados (Flow): ${it.size} elementos")
+                Log.d("FAV_VM", "Proveedores Favoritos Actualizados (Flow): ${it.size} elementos. Contenido: ${it.map { u -> u.nombre }}")
             }
         }
     }
@@ -50,13 +50,13 @@ class FavoritosViewModel(application: Application) : AndroidViewModel(applicatio
                     val type = object : TypeToken<List<Product>>() {}.type
                     val loadedProducts = gson.fromJson<List<Product>>(productsJson, type)
                     _productosFavoritos.value = loadedProducts
-                    Log.d("FavoritosViewModel", "Productos cargados desde SharedPreferences: ${loadedProducts.size} elementos")
+                    Log.d("FAV_VM", "Productos cargados desde SharedPreferences: ${loadedProducts.size} elementos. Contenido: ${loadedProducts.map { p -> p.name }}")
                 } catch (e: Exception) {
-                    Log.e("FavoritosViewModel", "Error al deserializar productos: ${e.message}", e)
+                    Log.e("FAV_VM", "Error al deserializar productos: ${e.message}", e)
                     _productosFavoritos.value = emptyList() // Asegura que la lista esté vacía en caso de error
                 }
             } else {
-                Log.d("FavoritosViewModel", "No hay productos favoritos guardados en SharedPreferences.")
+                Log.d("FAV_VM", "No hay productos favoritos guardados en SharedPreferences.")
             }
 
             // Cargar proveedores
@@ -66,13 +66,13 @@ class FavoritosViewModel(application: Application) : AndroidViewModel(applicatio
                     val type = object : TypeToken<List<User>>() {}.type
                     val loadedProviders = gson.fromJson<List<User>>(providersJson, type)
                     _proveedoresFavoritos.value = loadedProviders
-                    Log.d("FavoritosViewModel", "Proveedores cargados desde SharedPreferences: ${loadedProviders.size} elementos")
+                    Log.d("FAV_VM", "Proveedores cargados desde SharedPreferences: ${loadedProviders.size} elementos. Contenido: ${loadedProviders.map { u -> u.nombre }}")
                 } catch (e: Exception) {
-                    Log.e("FavoritosViewModel", "Error al deserializar proveedores: ${e.message}", e)
+                    Log.e("FAV_VM", "Error al deserializar proveedores: ${e.message}", e)
                     _proveedoresFavoritos.value = emptyList() // Asegura que la lista esté vacía en caso de error
                 }
             } else {
-                Log.d("FavoritosViewModel", "No hay proveedores favoritos guardados en SharedPreferences.")
+                Log.d("FAV_VM", "No hay proveedores favoritos guardados en SharedPreferences.")
             }
         }
     }
@@ -90,24 +90,30 @@ class FavoritosViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun toggleProductoFavorito(producto: Product) {
+        Log.d("FAV_VM", "toggleProductoFavorito llamado para: ${producto.name} (ID: ${producto.id})")
         val current = _productosFavoritos.value.toMutableList()
-        // Usa el ID del producto si lo tienes para una identificación más robusta
-        if (current.any { it.id == producto.id }) { // Asumiendo que Product tiene un 'id' único
-            current.removeAll { it.id == producto.id }
+        val isCurrentlyFavorite = current.any { it.id == producto.id } // ¡Usamos el ID para comparar!
+        if (isCurrentlyFavorite) {
+            current.removeAll { it.id == producto.id } // ¡Usamos el ID para remover!
+            Log.d("FAV_VM", "Producto removido. Nueva lista: ${current.size}")
         } else {
             current.add(producto)
+            Log.d("FAV_VM", "Producto añadido. Nueva lista: ${current.size}")
         }
         _productosFavoritos.value = current
         saveFavorites() // Guarda el estado después de cada cambio
     }
 
     fun toggleProveedorFavorito(proveedor: User) {
+        Log.d("FAV_VM", "toggleProveedorFavorito llamado para: ${proveedor.nombre} (Email: ${proveedor.email})")
         val current = _proveedoresFavoritos.value.toMutableList()
 
-        if (current.any { it.email == proveedor.email }) {
+        if (current.any { it.email == proveedor.email }) { // El email suele ser un buen ID único para usuarios
             current.removeAll { it.email == proveedor.email }
+            Log.d("FAV_VM", "Proveedor removido. Nueva lista: ${current.size}")
         } else {
             current.add(proveedor)
+            Log.d("FAV_VM", "Proveedor añadido. Nueva lista: ${current.size}")
         }
 
         _proveedoresFavoritos.value = current

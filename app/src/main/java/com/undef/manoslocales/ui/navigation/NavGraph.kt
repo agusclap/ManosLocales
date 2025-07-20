@@ -79,6 +79,7 @@ fun AppNavGraph(navController: NavHostController) {
             ProductosScreen(
                 navController = navController,
                 viewModel = userViewModel,
+                favoritosViewModel = favoritosViewModel
             )
         }
         composable("favoritos") {

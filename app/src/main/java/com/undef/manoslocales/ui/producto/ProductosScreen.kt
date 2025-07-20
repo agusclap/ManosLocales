@@ -26,6 +26,7 @@ import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import android.util.Log // Para depuración
 
 @Composable
 fun ProductosScreen(
@@ -70,6 +71,8 @@ fun ProductosScreen(
     val filteredList = productos.filter { producto ->
         producto.name.contains(searchQuery, ignoreCase = true)
     }
+
+    Log.d("PROD_SCREEN", "Productos Favoritos en ProductosScreen (composable): ${productosFavoritos.size} elementos")
 
     ManosLocalesTheme {
         Scaffold(
@@ -155,17 +158,18 @@ fun ProductosScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(filteredList) { producto ->
-                        // Determina si el producto actual es favorito
+                        // Determina si el producto actual es favorito usando su ID
                         val isFavorito = productosFavoritos.any { favProduct ->
-                            // Idealmente: favProduct.id == producto.id
-                            favProduct.name == producto.name && favProduct.description == producto.description
+                            favProduct.id == producto.id
                         }
+                        Log.d("PROD_SCREEN", "Producto ${producto.name} (ID: ${producto.id}) es favorito: $isFavorito")
 
                         // Usando ItemProduct aquí:
                         ItemProduct(
                             producto = producto,
                             isFavorito = isFavorito,
                             onFavoritoClicked = { clickedProduct ->
+                                Log.d("PROD_SCREEN", "Click en favorito para: ${clickedProduct.name} (ID: ${clickedProduct.id})")
                                 favoritosViewModel.toggleProductoFavorito(clickedProduct)
                             },
                             onVerDetallesClick = {

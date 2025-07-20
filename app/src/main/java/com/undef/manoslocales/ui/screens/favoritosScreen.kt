@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.producto.ItemProduct // ¡IMPORTACIÓN CLAVE!
+import com.undef.manoslocales.ui.producto.ItemProduct // ¡IMPORTACIÓN CLAVE para el ItemProduct unificado!
 import com.undef.manoslocales.ui.proveedor.ProveedorItem
 import kotlin.collections.isNotEmpty
 import android.util.Log // Para depuración
@@ -26,8 +26,12 @@ fun FavoritosScreen(
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
     val proveedoresFavoritos by favoritosViewModel.proveedoresFavoritos.collectAsState()
 
-    Log.d("FavoritosScreen", "Composable Productos Favoritos (antes de LazyColumn): ${productosFavoritos.size} elementos")
-    Log.d("FavoritosScreen", "Composable Proveedores Favoritos (antes de LazyColumn): ${proveedoresFavoritos.size} elementos")
+    Log.d("FAV_SCREEN", "FavoritosScreen recompuesta. Productos: ${productosFavoritos.size}, Proveedores: ${proveedoresFavoritos.size}")
+    if (productosFavoritos.isNotEmpty()) {
+        Log.d("FAV_SCREEN", "Productos Favoritos en Composable (contenido): ${productosFavoritos.map { it.name }}")
+    } else {
+        Log.d("FAV_SCREEN", "Productos Favoritos en Composable: ¡Lista vacía!")
+    }
 
     Scaffold(
         bottomBar = {
@@ -72,6 +76,7 @@ fun FavoritosScreen(
                             producto = producto,
                             isFavorito = true, // Siempre es true en la pantalla de favoritos
                             onFavoritoClicked = { clickedProduct ->
+                                Log.d("FAV_SCREEN", "Click en favorito en pantalla de favoritos para: ${clickedProduct.name}")
                                 favoritosViewModel.toggleProductoFavorito(clickedProduct)
                             },
                             onVerDetallesClick = {

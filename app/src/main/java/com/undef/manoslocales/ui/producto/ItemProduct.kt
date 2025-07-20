@@ -23,10 +23,10 @@ import coil.compose.AsyncImage
 import com.undef.manoslocales.ui.dataclasses.Product // Asegúrate de esta importación
 
 @Composable
-fun ItemProduct( // Nombre del composable
+fun ItemProduct( // Nombre del composable unificado
     producto: Product,
     isFavorito: Boolean,
-    onFavoritoClicked: (Product) -> Unit, // ¡Firma correcta! Recibe el Product
+    onFavoritoClicked: (Product) -> Unit, // ¡Firma correcta: recibe un Product!
     onVerDetallesClick: () -> Unit
 ) {
     Card(
