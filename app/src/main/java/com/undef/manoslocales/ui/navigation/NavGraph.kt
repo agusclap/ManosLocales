@@ -128,15 +128,10 @@ fun AppNavGraph(navController: NavHostController) {
         composable("editProfile") {
             EditProfileScreen(navController = navController, userViewModel = userViewModel)
         }
-        composable("providers") {
-            ProveedoresScreen(navController = navController, userViewModel = userViewModel)
-        }
+
         composable("nearby") {
             NearbyProvidersScreen(viewModel = userViewModel)
         }
-
-
-
 
         composable("proveedores") {
             ProveedoresScreen(

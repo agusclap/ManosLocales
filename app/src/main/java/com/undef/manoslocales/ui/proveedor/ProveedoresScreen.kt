@@ -146,6 +146,16 @@ fun ProveedoresScreen(
                     colors = searchFieldColors()
                 )
 
+                Button(
+                    onClick = { navController.navigate("nearby") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5C4033))
+                ) {
+                    Text("Ver proveedores cercanos", color = Color.White)
+                }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
