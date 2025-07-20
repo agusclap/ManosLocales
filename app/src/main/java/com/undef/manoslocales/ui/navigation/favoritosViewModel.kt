@@ -26,11 +26,14 @@ class FavoritosViewModel : ViewModel() {
 
     fun toggleProveedorFavorito(proveedor: User) {
         val current = _proveedoresFavoritos.value.toMutableList()
-        if (current.any { it.id == proveedor.id }) {
-            current.removeAll { it.id == proveedor.id }
+
+        if (current.any { it.email == proveedor.email }) {
+            current.removeAll { it.email == proveedor.email }
         } else {
             current.add(proveedor)
         }
+
         _proveedoresFavoritos.value = current
     }
+
 }

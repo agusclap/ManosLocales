@@ -32,6 +32,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var numerotel by remember { mutableStateOf("") }
+    var ciudad by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("user") }
     var categoria by remember { mutableStateOf("") }
 
@@ -54,8 +55,7 @@ fun RegisterScreen(
                 .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
-        )
-        {
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
                 contentDescription = null,
@@ -74,29 +74,64 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            TextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
+            TextField(
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Nombre") },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = apellido, onValueChange = { apellido = it }, label = { Text("Apellido") },
-                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
+            TextField(
+                value = apellido,
+                onValueChange = { apellido = it },
+                label = { Text("Apellido") },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = numerotel, onValueChange = { numerotel = it }, label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
+            TextField(
+                value = numerotel,
+                onValueChange = { numerotel = it },
+                label = { Text("Teléfono") },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = email, onValueChange = { email = it }, label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
+            TextField(
+                value = ciudad,
+                onValueChange = { ciudad = it },
+                label = { Text("Ciudad") },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(value = password, onValueChange = { password = it }, label = { Text("Password") },
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth().background(Color.White), singleLine = true)
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -156,7 +191,8 @@ fun RegisterScreen(
                             apellido = apellido,
                             role = role,
                             phone = numerotel,
-                            categoria = if (role == "provider") categoria else null
+                            categoria = if (role == "provider") categoria else null,
+                            ciudad = ciudad
                         )
                         Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
                         onRegisterSuccess()
