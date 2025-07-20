@@ -1,5 +1,7 @@
 package com.undef.manoslocales.ui.producto
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -28,21 +31,45 @@ import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import com.undef.manoslocales.util.showNotification
 
 @Composable
 fun ProductosScreen(
     navController: NavHostController,
-    viewModel: UserViewModel
+    viewModel: UserViewModel,
+    favoritosViewModel: FavoritosViewModel
 ) {
+    val context = LocalContext.current
+    val sharedPreferences: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val notificacionesHabilitadas = sharedPreferences.getBoolean("notificaciones_activadas", false)
+
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
     var selectedItem by remember { mutableIntStateOf(0) }
 
+    val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
     val categories = listOf("Todas", "Artesanías", "Textiles", "Alimentos")
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var productosViejos by remember { mutableStateOf<List<Product>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        viewModel.getProducts { productos = it }
+        viewModel.getProducts { nuevosProductos ->
+            if (notificacionesHabilitadas && productosViejos.isNotEmpty()) {
+                val nuevosDeFavoritos = nuevosProductos.filter { nuevo ->
+                    productosViejos.none { viejo -> viejo.id == nuevo.id } &&
+                            productosFavoritos.any { favorito -> favorito.id == nuevo.id }
+                }
+                if (nuevosDeFavoritos.isNotEmpty()) {
+                    showNotification(
+                        context,
+                        "¡Nuevas publicaciones!",
+                        "Hay novedades de tus productores favoritos."
+                    )
+                }
+            }
+            productosViejos = productos
+            productos = nuevosProductos
+        }
     }
 
     val filteredList = productos.filter { producto ->

@@ -51,7 +51,7 @@ dependencies {
 
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx") // ⬅️ NO pongas versión explícita
+    implementation("com.google.firebase:firebase-storage-ktx") // ⬅ NO pongas versión explícita
 
     // Compose y navegación
     implementation("androidx.activity:activity-compose:1.7.2")
@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material3:material3:1.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
     // Coil (carga de imágenes)
     implementation("io.coil-kt:coil-compose:2.4.0")
