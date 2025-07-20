@@ -26,9 +26,11 @@ fun CreateProductScreen(viewModel: UserViewModel) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedCategory by remember { mutableStateOf("Artesanías") }
     var expanded by remember { mutableStateOf(false) }
+
     val categorias = listOf("Artesanías", "Textiles", "Alimentos")
     val context = LocalContext.current
     val placeholderImage = "https://via.placeholder.com/150"
@@ -44,6 +46,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
             name = ""
             description = ""
             price = ""
+            city = ""
             imageUri = null
         } else {
             Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
@@ -63,12 +66,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
                 .padding(top = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Crear Producto",
-                fontSize = 28.sp,
-                color = Color(0xFFFFF5C0),
-                style = MaterialTheme.typography.headlineSmall
-            )
+            Text("Crear Producto", fontSize = 28.sp, color = Color(0xFFFFF5C0), style = MaterialTheme.typography.headlineSmall)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -102,21 +100,24 @@ fun CreateProductScreen(viewModel: UserViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            OutlinedTextField(
+                value = city,
+                onValueChange = { city = it },
+                label = { Text("Ciudad") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = textFieldColors()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                 OutlinedTextField(
                     value = selectedCategory,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Categoría") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
                     colors = textFieldColors()
                 )
 
@@ -140,9 +141,7 @@ fun CreateProductScreen(viewModel: UserViewModel) {
 
             Button(
                 onClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
+                    photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFEFAE0),
@@ -166,27 +165,18 @@ fun CreateProductScreen(viewModel: UserViewModel) {
             Button(
                 onClick = {
                     val priceDouble = price.toDoubleOrNull() ?: 0.0
+                    val normalizedCity = city.trim().lowercase()
 
                     if (imageUri != null) {
                         viewModel.uploadProductImage(imageUri!!) { imageUrl ->
                             val finalUrl = imageUrl ?: placeholderImage
                             viewModel.createProduct(
-                                name,
-                                description,
-                                priceDouble,
-                                finalUrl,
-                                selectedCategory,
-                                ::handleCreateResult
+                                name, description, priceDouble, finalUrl, selectedCategory, normalizedCity, ::handleCreateResult
                             )
                         }
                     } else {
                         viewModel.createProduct(
-                            name,
-                            description,
-                            priceDouble,
-                            placeholderImage,
-                            selectedCategory,
-                            ::handleCreateResult
+                            name, description, priceDouble, placeholderImage, selectedCategory, normalizedCity, ::handleCreateResult
                         )
                     }
                 },
