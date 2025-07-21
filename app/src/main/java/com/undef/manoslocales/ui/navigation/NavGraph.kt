@@ -143,8 +143,7 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("settings") {
             SettingScreen(
-                navController = navController,
-                userViewModel = userViewModel
+                navController = navController
             )
         }
         composable("profile") {
