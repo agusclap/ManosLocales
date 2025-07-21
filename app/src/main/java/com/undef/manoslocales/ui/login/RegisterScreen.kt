@@ -1,6 +1,7 @@
 package com.undef.manoslocales.ui.login
 
 import android.Manifest
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -28,9 +28,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
-import com.undef.manoslocales.ui.database.User
-
-
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -59,12 +56,10 @@ fun RegisterScreen(
 
     val isFormValid = password.isNotBlank() && email.isNotBlank()
 
-    // Solicitar permiso de ubicación al iniciar
     LaunchedEffect(Unit) {
         locationPermission.launchPermissionRequest()
     }
 
-    // Observar ciclo de vida para actualizar permisos si cambian
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -73,6 +68,7 @@ fun RegisterScreen(
                     fused.lastLocation.addOnSuccessListener { loc ->
                         lat = loc?.latitude
                         lng = loc?.longitude
+                        Log.d("RegisterScreen", "Ubicación obtenida: $lat, $lng")
                     }
                 }
             }
@@ -231,38 +227,17 @@ fun RegisterScreen(
                             role = role,
                             phone = numerotel,
                             categoria = if (role == "provider") categoria else null,
-                            ciudad = ciudad
-                        )
-
-                        // Solo si es proveedor y se obtuvo ubicación
-                        if (role == "provider" && lat != null && lng != null) {
-                            val uid = viewModel.currentUser.value?.uid
-                            if (uid != null) {
-                                val updates = mapOf(
-                                    "lat" to lat!!,
-                                    "lng" to lng!!
-                                )
-                                viewModel.updateUserProfile(
-                                    updated = User(
-                                        nombre = nombre,
-                                        apellido = apellido,
-                                        phone = numerotel,
-                                        email = email,
-                                        password = password,
-                                        profileImageUrl = "",
-                                        categoria = categoria,
-                                        city = ciudad,
-                                        role = role,
-                                        lat = lat,
-                                        lng = lng
-                                    ),
-                                    onComplete = {}
-                                )
+                            ciudad = ciudad,
+                            lat = if (role == "provider") lat else null,
+                            lng = if (role == "provider") lng else null
+                        ) { success ->
+                            if (success) {
+                                Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
+                                onRegisterSuccess()
+                            } else {
+                                Toast.makeText(context, "Error al registrar", Toast.LENGTH_SHORT).show()
                             }
                         }
-
-                        Toast.makeText(context, "Registrado como $role", Toast.LENGTH_SHORT).show()
-                        onRegisterSuccess()
                     } else {
                         Toast.makeText(context, "Verificá tu email o contraseña", Toast.LENGTH_SHORT).show()
                     }

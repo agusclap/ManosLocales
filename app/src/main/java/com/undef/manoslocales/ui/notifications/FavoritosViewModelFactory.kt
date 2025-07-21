@@ -18,6 +18,7 @@ class FavoritosViewModelFactory(
     private val sessionManager: SessionManager
 ) : ViewModelProvider.Factory {
 
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FavoritosViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

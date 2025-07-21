@@ -150,11 +150,14 @@ class UserViewModel(
         categoria: String? = null,
         ciudad: String? = null,
         lat: Double? = null,
-        lng: Double? = null
+        lng: Double? = null,
+        onResult: (Boolean) -> Unit
     ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { ir ->
-                val uid = ir.user?.uid ?: return@addOnSuccessListener
+                val user = ir.user ?: return@addOnSuccessListener
+                currentUser.value = user // <- ACTUALIZAMOS EL CURRENT USER
+
                 val map = mutableMapOf<String, Any>(
                     "email" to email,
                     "password" to password,
@@ -167,9 +170,15 @@ class UserViewModel(
                 lng?.let { map["lng"] = it }
                 categoria?.let { map["categoria"] = it }
                 ciudad?.let { map["city"] = it.trim().lowercase() }
-                firestore.collection("users").document(uid).set(map)
+
+                firestore.collection("users").document(user.uid)
+                    .set(map)
+                    .addOnSuccessListener { onResult(true) }
+                    .addOnFailureListener { onResult(false) }
             }
+            .addOnFailureListener { onResult(false) }
     }
+
 
     fun uploadUserProfileImage(uri: Uri, onResult: (String?) -> Unit) {
         val path = FileUtils.getPath(getApplication(), uri)
