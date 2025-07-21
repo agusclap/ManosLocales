@@ -42,15 +42,21 @@ class UserViewModel(
     fun loginUser(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
-                sessionManager.saveLoginState(true, email)
-                currentUser.value = result.user
-                loginSuccess.value = true
+                val user = result.user
+                if (user != null) {
+                    sessionManager.saveLoginState(true, user.uid) // GUARDAMOS EL UID, NO EL EMAIL
+                    currentUser.value = user
+                    loginSuccess.value = true
+                } else {
+                    loginSuccess.value = false
+                }
             }
             .addOnFailureListener { e ->
                 loginSuccess.value = false
                 authErrorMessage.value = e.message
             }
     }
+
 
     fun logoutUser() {
         sessionManager.logout()
@@ -71,6 +77,7 @@ class UserViewModel(
                 .addOnFailureListener { onResult(null) }
         } else onResult(null)
     }
+
 
     fun getProviderIdsByName(query: String, onResult: (List<String>) -> Unit) {
         FirebaseFirestore.getInstance()

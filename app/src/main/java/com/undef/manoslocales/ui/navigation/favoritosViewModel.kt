@@ -1,31 +1,19 @@
 package com.undef.manoslocales.ui.navigation
 
 import android.app.Application
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.undef.manoslocales.ui.data.SessionManager // Importa TU SessionManager
-import com.undef.manoslocales.ui.dataclasses.Product
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import com.google.firebase.firestore.ListenerRegistration
+import androidx.lifecycle.viewModelScope
+import com.undef.manoslocales.ui.data.SessionManager
+import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.notifications.FavoritesRepository
 import com.undef.manoslocales.ui.notifications.NotificationHelper
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-/**
- * ViewModel para gestionar el estado de los productos y proveedores favoritos.
- *
- * Esta clase ya NO usa SharedPreferences directamente. En su lugar:
- * 1.  Le pide a `SessionManager` el identificador del usuario logueado.
- * 2.  Usa `FavoritesRepository` para comunicarse con el servidor (backend).
- * 3.  Mantiene el estado de los favoritos en StateFlows para que la UI reaccione a los cambios.
- *
- * @param favoritesRepository El repositorio que maneja la comunicación de red para los favoritos.
- * @param sessionManager Tu gestor de sesión para saber quién está logueado.
- */
 class FavoritosViewModel(
     application: Application,
     private val favoritesRepository: FavoritesRepository,
@@ -42,8 +30,6 @@ class FavoritosViewModel(
     private var newProductListener: ListenerRegistration? = null
     private val productPrices = mutableMapOf<String, Double>()
 
-    // --- CICLO DE VIDA Y CARGA DE DATOS ---
-
     fun loadFavoritesForCurrentUser() {
         val userId = sessionManager.getUserId()
         if (userId == null) {
@@ -53,19 +39,16 @@ class FavoritosViewModel(
 
         viewModelScope.launch {
             try {
-                // 1. Cargamos los favoritos y ESPERAMOS a que la operación termine.
                 val favoriteProducts = favoritesRepository.getFavoriteProducts(userId)
                 val favoriteProviders = favoritesRepository.getFavoriteProviders(userId)
 
-                // 2. Actualizamos el estado de la UI.
                 _productosFavoritos.value = favoriteProducts
                 _proveedoresFavoritos.value = favoriteProviders
-                Log.d("FAV_VM", "Favoritos cargados. Productos: ${favoriteProducts.size}, Proveedores: ${favoriteProviders.size}")
 
-                // 3. SOLO DESPUÉS de tener los datos, iniciamos los "escuchas".
                 startPriceChangeListener(favoriteProducts)
                 startNewProductListener(favoriteProviders)
 
+                Log.d("FAV_VM", "Favoritos cargados. Productos: ${favoriteProducts.size}, Proveedores: ${favoriteProviders.size}")
             } catch (e: Exception) {
                 Log.e("FAV_VM", "Error al cargar favoritos", e)
                 clearFavorites()
@@ -86,9 +69,6 @@ class FavoritosViewModel(
         stopNewProductListener()
     }
 
-    // --- LÓGICA DE "ESCUCHAS" EN TIEMPO REAL ---
-
-    // CORRECCIÓN: La función ahora acepta la lista como parámetro.
     private fun startPriceChangeListener(favoriteProducts: List<Product>) {
         if (favoriteProducts.isEmpty()) {
             Log.d("PriceListener", "No hay productos favoritos para vigilar.")
@@ -105,10 +85,7 @@ class FavoritosViewModel(
         priceListener = favoritesRepository.listenToProductChanges(favoriteProductIds) { updatedProduct ->
             val oldPrice = productPrices[updatedProduct.id]
             val newPrice = updatedProduct.price
-            Log.d("PriceListener", "Cambio detectado para ${updatedProduct.name}. Antes: $oldPrice, Ahora: $newPrice")
-
             if (oldPrice != null && newPrice != oldPrice) {
-                Log.i("PriceListener", "¡CAMBIO DE PRECIO! Notificando al usuario.")
                 val changeType = if (newPrice > oldPrice) "subió" else "bajó"
                 NotificationHelper.showPriceChangeNotification(
                     context = getApplication(),
@@ -125,10 +102,8 @@ class FavoritosViewModel(
         priceListener?.remove()
         priceListener = null
         productPrices.clear()
-        Log.d("PriceListener", "Escucha de precios detenido.")
     }
 
-    // CORRECCIÓN: La función ahora acepta la lista como parámetro.
     private fun startNewProductListener(favoriteProviders: List<User>) {
         if (favoriteProviders.isEmpty()) {
             Log.d("NewProductListener", "No hay proveedores favoritos para vigilar.")
@@ -139,14 +114,11 @@ class FavoritosViewModel(
         val favoriteProviderIds = favoriteProviders.map { it.id }
         val startTime = System.currentTimeMillis()
 
-        Log.d("NewProductListener", "Iniciando escucha para nuevos productos de ${favoriteProviderIds.size} proveedores.")
         newProductListener = favoritesRepository.listenToNewProductsFromProviders(
-            favoriteProviderIds,
-            startTime
+            favoriteProviderIds, startTime
         ) { newProduct ->
             val provider = favoriteProviders.find { it.id == newProduct.providerId }
             val providerName = provider?.nombre ?: "Tu proveedor favorito"
-            Log.i("NewProductListener", "¡NUEVO PRODUCTO DETECTADO! Notificando al usuario.")
             NotificationHelper.showNewProductNotification(
                 context = getApplication(),
                 providerName = providerName,
@@ -158,7 +130,6 @@ class FavoritosViewModel(
     private fun stopNewProductListener() {
         newProductListener?.remove()
         newProductListener = null
-        Log.d("NewProductListener", "Escucha de nuevos productos detenido.")
     }
 
     fun toggleProductoFavorito(producto: Product) {
@@ -168,62 +139,43 @@ class FavoritosViewModel(
             val currentList = _productosFavoritos.value.toMutableList()
             val isCurrentlyFavorite = currentList.any { it.id == producto.id }
 
-            if (isCurrentlyFavorite) {
-                currentList.removeAll { it.id == producto.id }
-            } else {
-                currentList.add(producto)
-            }
+            if (isCurrentlyFavorite) currentList.removeAll { it.id == producto.id }
+            else currentList.add(producto)
+
             _productosFavoritos.value = currentList
 
             try {
-                if (isCurrentlyFavorite) {
+                if (isCurrentlyFavorite)
                     favoritesRepository.removeProductFromFavorites(userId, producto.id)
-                } else {
+                else
                     favoritesRepository.addProductToFavorites(userId, producto.id)
-                }
             } catch (e: Exception) {
-                Log.e("FAV_VM", "Error de red al actualizar producto favorito. Revirtiendo.", e)
-                // Reversión
-                if (isCurrentlyFavorite) _productosFavoritos.value += producto
-                else _productosFavoritos.value = _productosFavoritos.value.filter { it.id != producto.id }
+                Log.e("FAV_VM", "Error al actualizar producto favorito. Revirtiendo.", e)
+                loadFavoritesForCurrentUser() // recargamos para sincronizar consistencia
             }
         }
     }
 
     fun toggleProveedorFavorito(proveedor: User) {
         viewModelScope.launch {
-            // CORRECCIÓN: Usamos getUserId() en lugar de getLoggedInUserEmail()
-            val userId = sessionManager.getUserId()
-            if (userId == null) {
-                Log.e("FAV_VM", "No se puede modificar favoritos. Usuario no logueado.")
-                return@launch
-            }
-
-            // CORRECCIÓN: Usamos el ID (UID) del proveedor, no su email
-            val providerId = proveedor.id
+            val userId = sessionManager.getUserId() ?: return@launch
 
             val currentList = _proveedoresFavoritos.value.toMutableList()
-            // CORRECCIÓN: Comparamos por ID, no por email
-            val isCurrentlyFavorite = currentList.any { it.id == providerId }
+            val isCurrentlyFavorite = currentList.any { it.id == proveedor.id }
 
-            if (isCurrentlyFavorite) {
-                currentList.removeAll { it.id == providerId }
-            } else {
-                currentList.add(proveedor)
-            }
+            if (isCurrentlyFavorite) currentList.removeAll { it.id == proveedor.id }
+            else currentList.add(proveedor)
+
             _proveedoresFavoritos.value = currentList
 
             try {
-                if (isCurrentlyFavorite) {
-                    // CORRECCIÓN: Pasamos los UID (userId y providerId) al repositorio
-                    favoritesRepository.removeProviderFromFavorites(userId, providerId)
-                } else {
-                    // CORRECCIÓN: Pasamos los UID (userId y providerId) al repositorio
-                    favoritesRepository.addProviderToFavorites(userId, providerId)
-                }
+                if (isCurrentlyFavorite)
+                    favoritesRepository.removeProviderFromFavorites(userId, proveedor.id)
+                else
+                    favoritesRepository.addProviderToFavorites(userId, proveedor.id)
             } catch (e: Exception) {
-                Log.e("FAV_VM", "Error de red al actualizar proveedor favorito. Revirtiendo.", e)
-                // Reversión...
+                Log.e("FAV_VM", "Error al actualizar proveedor favorito. Revirtiendo.", e)
+                loadFavoritesForCurrentUser()
             }
         }
     }
