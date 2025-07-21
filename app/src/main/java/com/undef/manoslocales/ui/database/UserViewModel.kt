@@ -151,32 +151,33 @@ class UserViewModel(
         ciudad: String? = null,
         lat: Double? = null,
         lng: Double? = null,
-        onResult: (Boolean) -> Unit
+        onComplete: (Boolean) -> Unit
     ) {
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { ir ->
-                val user = ir.user ?: return@addOnSuccessListener
-                currentUser.value = user // <- ACTUALIZAMOS EL CURRENT USER
+            .addOnSuccessListener { authResult ->
+                val uid = authResult.user?.uid ?: return@addOnSuccessListener
 
-                val map = mutableMapOf<String, Any>(
+                val userMap = mutableMapOf<String, Any>(
                     "email" to email,
-                    "password" to password,
                     "nombre" to nombre,
                     "apellido" to apellido,
                     "phone" to phone,
-                    "role" to role,
+                    "role" to role
                 )
-                lat?.let { map["lat"] = it }
-                lng?.let { map["lng"] = it }
-                categoria?.let { map["categoria"] = it }
-                ciudad?.let { map["city"] = it.trim().lowercase() }
 
-                firestore.collection("users").document(user.uid)
-                    .set(map)
-                    .addOnSuccessListener { onResult(true) }
-                    .addOnFailureListener { onResult(false) }
+                categoria?.let { userMap["categoria"] = it }
+                ciudad?.let { userMap["city"] = it.trim().lowercase() }
+                lat?.let { userMap["lat"] = it }
+                lng?.let { userMap["lng"] = it }
+
+                firestore.collection("users").document(uid).set(userMap)
+                    .addOnSuccessListener { onComplete(true) }
+                    .addOnFailureListener { onComplete(false) }
             }
-            .addOnFailureListener { onResult(false) }
+            .addOnFailureListener {
+                Log.e("UserViewModel", "Error al crear usuario en Auth", it)
+                onComplete(false)
+            }
     }
 
 
@@ -228,20 +229,13 @@ class UserViewModel(
         firestore.collection("users").document(uid)
             .get()
             .addOnSuccessListener { doc ->
-                val u = User(
-                    nombre = doc.getString("nombre") ?: "",
-                    apellido = doc.getString("apellido") ?: "",
-                    phone = doc.getString("phone") ?: "",
-                    email = doc.getString("email") ?: "",
-                    password = "",
-                    profileImageUrl = doc.getString("profileImageUrl") ?: "",
-                    categoria = doc.getString("categoria"),
-                    city = doc.getString("city"),
-                    role = doc.getString("role") ?: "",
-                    lat = doc.getDouble("lat"),
-                    lng = doc.getDouble("lng")
-                )
-                onResult(u)
+                if (doc.exists()) {
+                    val user = doc.toObject(User::class.java)
+                    user?.id = doc.id // Asignamos el ID
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
             }
             .addOnFailureListener { onResult(null) }
     }
@@ -352,31 +346,18 @@ class UserViewModel(
 
     /*** GEO ***/
     fun getUserById(uid: String, onResult: (User?) -> Unit) {
-        FirebaseFirestore.getInstance()
-            .collection("users")
-            .document(uid)
+        firestore.collection("users").document(uid)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    val user = User(
-                        nombre = doc.getString("nombre") ?: "",
-                        apellido = doc.getString("apellido") ?: "",
-                        phone = doc.getString("phone") ?: "",
-                        email = doc.getString("email") ?: "",
-                        password = "", // nunca guardar esto en cliente
-                        profileImageUrl = doc.getString("profileImageUrl") ?: "",
-                        categoria = doc.getString("categoria"),
-                        city = doc.getString("city"),
-                        role = doc.getString("role") ?: ""
-                    )
+                    val user = doc.toObject(User::class.java)
+                    user?.id = doc.id // Asignamos el ID
                     onResult(user)
                 } else {
                     onResult(null)
                 }
             }
-            .addOnFailureListener {
-                onResult(null)
-            }
+            .addOnFailureListener { onResult(null) }
     }
 
     fun fetchNearbyProviders(lat: Double, lng: Double, onResult: (List<User>) -> Unit) {
@@ -388,22 +369,12 @@ class UserViewModel(
                     val ulat = doc.getDouble("lat")
                     val ulng = doc.getDouble("lng")
                     if (ulat != null && ulng != null) {
-                        val d = FloatArray(1)
-                        Location.distanceBetween(lat, lng, ulat, ulng, d)
-                        if (d[0] <= 20000) {
-                            User(
-                                nombre = doc.getString("nombre") ?: "",
-                                apellido = doc.getString("apellido") ?: "",
-                                phone = doc.getString("phone") ?: "",
-                                email = doc.getString("email") ?: "",
-                                password = "",
-                                profileImageUrl = doc.getString("profileImageUrl") ?: "",
-                                categoria = doc.getString("categoria"),
-                                city = doc.getString("city"),
-                                role = doc.getString("role") ?: "",
-                                lat = ulat,
-                                lng = ulng
-                            )
+                        val distance = FloatArray(1)
+                        Location.distanceBetween(lat, lng, ulat, ulng, distance)
+                        if (distance[0] <= 20000) { // 20km radius
+                            val user = doc.toObject(User::class.java)
+                            user?.id = doc.id // Asignamos el ID
+                            user
                         } else null
                     } else null
                 }
@@ -412,3 +383,5 @@ class UserViewModel(
             .addOnFailureListener { onResult(emptyList()) }
     }
 }
+
+
