@@ -17,7 +17,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -46,54 +45,50 @@ android {
 }
 
 dependencies {
-    // Firebase BoM (gestiona versiones automáticamente)
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-
+    // ✅ Firebase BoM (una sola vez y al principio)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx") // ⬅ NO pongas versión explícita
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
-    // Compose y navegación
-    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    // ✅ Google Play Services (ubicación)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
-    implementation ("com.google.accompanist:accompanist-permissions:0.28.0")
-    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+    // ✅ Accompanist y lifecycle
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
+    // ✅ Compose y UI
     implementation("androidx.activity:activity-compose:1.7.2")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("com.google.android.material:material:1.8.0")
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material3:material3:1.2.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation ("com.google.code.gson:gson:2.10.1")
-    // Coil (carga de imágenes)
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    // Agregá la BoM de Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-// Agregá la dependencia para Firebase Cloud Messaging
-    implementation("com.google.firebase:firebase-messaging-ktx")
 
-    //Cloudinary
+    // ✅ Imágenes
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // ✅ DataStore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // ✅ Cloudinary (excluye conflicto con Litr)
     implementation("com.cloudinary:cloudinary-android:1.30.0") {
         exclude(group = "com.linkedin.android.litr", module = "litr")
     }
 
-
-    // Seguridad
+    // ✅ Seguridadd
     implementation("org.mindrot:jbcrypt:0.4")
 
-    // Tests
+    // ✅ Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
