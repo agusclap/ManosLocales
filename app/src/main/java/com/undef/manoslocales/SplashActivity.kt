@@ -69,21 +69,14 @@ private fun SplashRoute(viewModel: SplashViewModel = viewModel()) {
 
     SplashScreen(
         uiState = uiState,
-        onRetry = { viewModel.startInitialLoad() },
-        onContinue = {
-            context.startActivity(Intent(context, MainActivity::class.java))
-            if (context is Activity) {
-                context.finish()
-            }
-        }
+        onRetry = { viewModel.startInitialLoad() }
     )
 }
 
 @Composable
 private fun SplashScreen(
     uiState: SplashViewModel.UiState,
-    onRetry: () -> Unit,
-    onContinue: () -> Unit
+    onRetry: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -119,12 +112,6 @@ private fun SplashScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = onRetry) {
                     Text(text = "Reintentar")
-                }
-                if (uiState.canContinue) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = onContinue) {
-                        Text(text = "Continuar")
-                    }
                 }
             }
 

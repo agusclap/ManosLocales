@@ -22,7 +22,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
     sealed class UiState {
         data object Loading : UiState()
         data class Success(val isLoggedIn: Boolean) : UiState()
-        data class Error(val message: String, val canContinue: Boolean) : UiState()
+        data class Error(val message: String) : UiState()
     }
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -34,10 +34,6 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = UiState.Loading
             val sessionManager = SessionManager(getApplication())
             val isLoggedIn = sessionManager.isLoggedIn()
-            if (!isLoggedIn) {
-                _uiState.value = UiState.Success(isLoggedIn = false)
-                return@launch
-            }
             val result = runCatching {
                 withTimeout(8_000L) {
                     val products = async { fetchProducts() }
@@ -49,10 +45,7 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
             _uiState.value = result.fold(
                 onSuccess = { UiState.Success(isLoggedIn) },
                 onFailure = {
-                    UiState.Error(
-                        message = "No pudimos cargar los datos iniciales. Reintentá.",
-                        canContinue = true
-                    )
+                    UiState.Error("No pudimos cargar los datos iniciales. Reintentá.")
                 }
             )
         }
