@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "464823087689",
-    "project_id": "manoslocales-1a96d",
-    "storage_bucket": "manoslocales-1a96d.firebasestorage.app"
+    "project_number": "751443585058",
+    "project_id": "manos-locales-29c68",
+    "storage_bucket": "manos-locales-29c68.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:464823087689:android:52ca74e08cf8b976880598",
+        "mobilesdk_app_id": "1:751443585058:android:64c9f3223269d03bcac27b",
         "android_client_info": {
           "package_name": "com.undef.manoslocales"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "751443585058-0a1mon789916t0nun5tiur1qm5ou1nub.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.undef.manoslocales",
+            "certificate_hash": "91f273c52af8497adf981a459f779f077f883899"
+          }
+        },
+        {
+          "client_id": "751443585058-avprt5kgk7pj5qfusvs6ucq1794nh7ii.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDdLZQuqg2w-a4Q7GFulMpL42Mjj9Lk56Q"
+          "current_key": "AIzaSyDg3i_xDcN1UThKduFeVgfSILVNaCcGuHA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "751443585058-avprt5kgk7pj5qfusvs6ucq1794nh7ii.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

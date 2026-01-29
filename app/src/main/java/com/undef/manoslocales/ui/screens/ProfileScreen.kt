@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.database.User // ✅ Asegurate de usar esta clase
@@ -52,7 +53,7 @@ fun ProfileScreen(
         ) {
             user?.let {
                 Image(
-                    painter = rememberImagePainter(it.profileImageUrl),
+                    painter = rememberAsyncImagePainter(it.profileImageUrl),
                     contentDescription = "Foto de perfil",
                     modifier = Modifier
                         .size(140.dp)

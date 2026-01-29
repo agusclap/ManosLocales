@@ -182,9 +182,9 @@ fun EditProfileScreen(
                         Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = Color.White)
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    colors = profileFieldColors()
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth(),
+                        colors = profileFieldColors()
                 )
                 ExposedDropdownMenu(
                     expanded = showDropdown,

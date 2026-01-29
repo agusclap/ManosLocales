@@ -46,7 +46,7 @@ android {
 
 dependencies {
     // ✅ Firebase BoM (una sola vez y al principio)
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
@@ -87,6 +87,7 @@ dependencies {
 
     // ✅ Seguridadd
     implementation("org.mindrot:jbcrypt:0.4")
+    implementation(libs.firebase.database)
 
     // ✅ Tests
     testImplementation(libs.junit)
