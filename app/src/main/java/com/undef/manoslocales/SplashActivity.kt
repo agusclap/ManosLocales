@@ -14,20 +14,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.undef.manoslocales.ui.theme.ManosLocalesTheme
-import kotlinx.coroutines.delay
 
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,22 +50,34 @@ class SplashActivity : ComponentActivity() {
 }
 
 @Composable
-private fun SplashRoute() {
+private fun SplashRoute(viewModel: SplashViewModel = viewModel()) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        delay(1_000L)
-        context.startActivity(Intent(context, MainActivity::class.java))
-        if (context is Activity) {
-            context.finish()
+        viewModel.startInitialLoad()
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is SplashViewModel.UiState.Success) {
+            context.startActivity(Intent(context, MainActivity::class.java))
+            if (context is Activity) {
+                context.finish()
+            }
         }
     }
 
-    SplashScreen()
+    SplashScreen(
+        uiState = uiState,
+        onRetry = { viewModel.startInitialLoad() }
+    )
 }
 
 @Composable
-private fun SplashScreen() {
+private fun SplashScreen(
+    uiState: SplashViewModel.UiState,
+    onRetry: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,12 +92,36 @@ private fun SplashScreen() {
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Cargando…",
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        CircularProgressIndicator()
+        when (uiState) {
+            is SplashViewModel.UiState.Loading -> {
+                Text(
+                    text = "Cargando información inicial…",
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                CircularProgressIndicator()
+            }
+
+            is SplashViewModel.UiState.Error -> {
+                Text(
+                    text = uiState.message,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onRetry) {
+                    Text(text = "Reintentar")
+                }
+            }
+
+            is SplashViewModel.UiState.Success -> {
+                Text(
+                    text = "¡Bienvenido!",
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
