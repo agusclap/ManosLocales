@@ -32,7 +32,7 @@ import com.undef.manoslocales.ui.theme.ManosLocalesTheme
 fun ProductosScreen(
     navController: NavHostController,
     viewModel: UserViewModel,
-    favoritosViewModel: FavoritosViewModel = viewModel()
+    favoritosViewModel: FavoritosViewModel
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
@@ -41,12 +41,17 @@ fun ProductosScreen(
     var selectedItem by remember { mutableIntStateOf(0) }
 
     val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
+
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
 
     val ciudadNormalized = ciudad.trim().lowercase()
 
     LaunchedEffect(selectedCategory, ciudadNormalized, proveedor) {
+        isLoading = true
+
         if (proveedor.isNotBlank()) {
             viewModel.getProviderIdsByName(proveedor) { providerIds ->
                 viewModel.getFilteredProducts(
@@ -55,6 +60,7 @@ fun ProductosScreen(
                     proveedorId = null
                 ) { productosEncontrados ->
                     productos = productosEncontrados.filter { it.providerId in providerIds }
+                    isLoading = false
                 }
             }
         } else {
@@ -62,7 +68,10 @@ fun ProductosScreen(
                 categoria = if (selectedCategory == "Todas") null else selectedCategory,
                 ciudad = if (ciudadNormalized.isBlank()) null else ciudadNormalized,
                 proveedorId = null
-            ) { productos = it }
+            ) {
+                productos = it
+                isLoading = false
+            }
         }
     }
 
@@ -81,6 +90,7 @@ fun ProductosScreen(
             },
             containerColor = Color(0xff3E2C1C)
         ) { paddingValues ->
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -125,7 +135,7 @@ fun ProductosScreen(
 
                 TextField(
                     value = ciudad,
-                    onValueChange = { ciudad = it.trim().lowercase() }, // Normalizar ciudad
+                    onValueChange = { ciudad = it }, // <-- no normalices acá
                     label = { Text("Buscar por ciudad", color = Color(0xFFFEFAE0)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -147,25 +157,40 @@ fun ProductosScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xff3E2C1C)),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    items(filteredList) { producto ->
-                        val isFavorito = productosFavoritos.any { it.id == producto.id }
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(12.dp))
+                        Text("Cargando productos...", color = Color(0xFFFEFAE0))
+                    }
 
-                        ItemProduct(
-                            producto = producto,
-                            isFavorito = isFavorito,
-                            onFavoritoClicked = {
-                                favoritosViewModel.toggleProductoFavorito(it)
-                            },
-                            onVerDetallesClick = {
-                                navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
-                            }
+                    filteredList.isEmpty() -> {
+                        Text(
+                            text = "No hay resultados con esos filtros.",
+                            color = Color(0xFFFEFAE0)
                         )
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            items(filteredList) { producto ->
+                                val isFavorito = productosFavoritos.any { it.id == producto.id }
+
+                                ItemProduct(
+                                    producto = producto,
+                                    isFavorito = isFavorito,
+                                    onFavoritoClicked = {
+                                        favoritosViewModel.toggleProductoFavorito(it)
+                                    },
+                                    onVerDetallesClick = {
+                                        navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -33,6 +33,7 @@ import com.undef.manoslocales.ui.screens.FavoritosScreen
 import com.undef.manoslocales.ui.screens.HomeScreen
 import com.undef.manoslocales.ui.screens.ProfileScreen
 import com.undef.manoslocales.ui.screens.SettingScreen
+import com.undef.manoslocales.ui.splash.SplashScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -59,10 +60,14 @@ fun AppNavGraph(navController: NavHostController) {
         }
     }
 
-    val startDestination = if (sessionManager.isLoggedIn()) "home" else "login"
+    val startDestination = "splash"
 
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable("splash") {
+            SplashScreen(navController, sessionManager)
+        }
+
         composable("register") {
             RegisterScreen(
                 viewModel = userViewModel,

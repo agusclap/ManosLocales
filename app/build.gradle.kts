@@ -88,6 +88,7 @@ dependencies {
     // ✅ Seguridadd
     implementation("org.mindrot:jbcrypt:0.4")
     implementation(libs.firebase.database)
+    implementation(libs.androidx.compose.runtime)
 
     // ✅ Tests
     testImplementation(libs.junit)
