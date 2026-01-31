@@ -7,6 +7,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -14,7 +22,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,7 +60,7 @@ fun HomeScreen(
         }
     }
 
-    Scaffold(
+        Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
@@ -74,71 +85,88 @@ fun HomeScreen(
                 navController = navController
             )
         },
-        containerColor = Color(0xff3E2C1C)
+        containerColor = com.undef.manoslocales.ui.theme.CafeOscuro
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // Logo mejorado
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .offset(y = (-20).dp)
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Fit
             )
 
-            ProductosCard(onClick = { onProductosClick() })
-            Spacer(modifier = Modifier.height(20.dp))
-            ProveedoresCard(onClick = { onProveedoresClick() })
-            Spacer(modifier = Modifier.height(20.dp))
+            // Cards de navegación principal
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ProductosCard(
+                    onClick = { onProductosClick() },
+                    modifier = Modifier.weight(1f)
+                )
+                ProveedoresCard(
+                    onClick = { onProveedoresClick() },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
+            // Botones para proveedores
             if (userRole == "provider") {
-                Button(
-                    onClick = { navController.navigate("misproductos") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(65.dp)
-                        .padding(top = 16.dp)
-                        .offset(y = (-30).dp),
-                    shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xffFEFAE0),
-                        contentColor = Color(0xff3E2C1C)
-                    )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Mis Productos",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
-                }
+                    ExtendedFloatingActionButton(
+                        onClick = { navController.navigate("misproductos") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        containerColor = com.undef.manoslocales.ui.theme.Crema,
+                        contentColor = com.undef.manoslocales.ui.theme.Cafe,
+                        elevation = FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Mis Productos",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
 
-                Button(
-                    onClick = onCreateProductClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(65.dp)
-                        .padding(top = 16.dp)
-                        .offset(y = (-30).dp),
-                    shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xffFEFAE0),
-                        contentColor = Color(0xff3E2C1C)
-                    )
-                ) {
-                    Text(
-                        text = "Crear Producto",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
+                    ExtendedFloatingActionButton(
+                        onClick = onCreateProductClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        containerColor = com.undef.manoslocales.ui.theme.Crema,
+                        contentColor = com.undef.manoslocales.ui.theme.Cafe,
+                        elevation = FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Crear Producto",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                 }
             }
 
@@ -148,68 +176,122 @@ fun HomeScreen(
 }
 
 @Composable
-fun ProductosCard(onClick: () -> Unit) {
+fun ProductosCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
+        label = "scale"
+    )
+
     Card(
-        modifier = Modifier
-            .size(220.dp)
-            .padding(8.dp)
-            .offset(y = (-30).dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .height(200.dp)
+            .scale(scale)
+            .clickable(
+                onClick = {
+                    isPressed = true
+                    onClick()
+                },
+                onClickLabel = "Ver productos"
+            ),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFEFAE0)
+            containerColor = com.undef.manoslocales.ui.theme.Crema
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f)
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_emprendedores),
                 contentDescription = "Icono Productos",
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(160.dp)
-                    .padding(bottom = 3.dp)
-                    .offset(y = (2.5).dp)
+                tint = com.undef.manoslocales.ui.theme.Cafe,
+                modifier = Modifier.size(140.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Productos",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                ),
+                color = com.undef.manoslocales.ui.theme.Cafe
             )
         }
     }
 }
 
 @Composable
-fun ProveedoresCard(onClick: () -> Unit) {
+fun ProveedoresCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
+        label = "scale"
+    )
+
     Card(
-        modifier = Modifier
-            .size(220.dp)
-            .padding(8.dp)
-            .offset(y = (-30).dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .height(200.dp)
+            .scale(scale)
+            .clickable(
+                onClick = {
+                    isPressed = true
+                    onClick()
+                },
+                onClickLabel = "Ver proveedores"
+            ),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFEFAE0)
+            containerColor = com.undef.manoslocales.ui.theme.Crema
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f)
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_proveedores),
                 contentDescription = "Icono Proveedores",
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(160.dp)
-                    .padding(bottom = 3.dp)
-                    .offset(y = (2.6).dp)
+                tint = com.undef.manoslocales.ui.theme.Cafe,
+                modifier = Modifier.size(140.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Proveedores",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                ),
+                color = com.undef.manoslocales.ui.theme.Cafe
             )
         }
     }
@@ -217,24 +299,23 @@ fun ProveedoresCard(onClick: () -> Unit) {
 
 @Composable
 fun PerfilButton(navController: NavHostController) {
-    Button(
+    ExtendedFloatingActionButton(
         onClick = { navController.navigate("profile") },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(65.dp)
-            .padding(top = 16.dp)
-            .offset(y = (-30).dp),
-        shape = RoundedCornerShape(50.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xffFEFAE0),
-            contentColor = Color(0xff3E2C1C)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        containerColor = com.undef.manoslocales.ui.theme.Crema,
+        contentColor = com.undef.manoslocales.ui.theme.Cafe,
+        elevation = FloatingActionButtonDefaults.elevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
         )
     ) {
         Text(
-            text = "My Profile",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = Color.Black
+            text = "Mi Perfil",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            ),
+            modifier = Modifier.padding(vertical = 8.dp)
         )
     }
 }

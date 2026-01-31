@@ -23,12 +23,26 @@ fun BottomNavigationBar(
 ) {
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xffFEFAE0)
+        containerColor = com.undef.manoslocales.ui.theme.Crema.copy(alpha = 0.95f), // Fondo crema translúcido
+        tonalElevation = 8.dp
     ) {
         // Home
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home", color = Color.Black, fontWeight = FontWeight.Bold) },
+            icon = { 
+                Icon(
+                    Icons.Default.Home, 
+                    contentDescription = "Home",
+                    tint = if (selectedItem == 0) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
+                ) 
+            },
+            label = { 
+                Text(
+                    "Home", 
+                    color = if (selectedItem == 0) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
+                    fontWeight = if (selectedItem == 0) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.labelMedium
+                ) 
+            },
             selected = selectedItem == 0,
             onClick = {
                 onItemSelected(0)
@@ -38,13 +52,33 @@ fun BottomNavigationBar(
                         launchSingleTop = true
                     }
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = com.undef.manoslocales.ui.theme.Cafe,
+                selectedTextColor = com.undef.manoslocales.ui.theme.Cafe,
+                indicatorColor = com.undef.manoslocales.ui.theme.Cafe.copy(alpha = 0.2f), // Indicador tonal café
+                unselectedIconColor = com.undef.manoslocales.ui.theme.GrisSuave,
+                unselectedTextColor = com.undef.manoslocales.ui.theme.GrisSuave
+            )
         )
 
         // Favoritos
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favoritos") },
-            label = { Text("Favoritos", color = Color.Black, fontWeight = FontWeight.Bold) },
+            icon = { 
+                Icon(
+                    Icons.Filled.Favorite, 
+                    contentDescription = "Favoritos",
+                    tint = if (selectedItem == 1) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
+                ) 
+            },
+            label = { 
+                Text(
+                    "Favoritos", 
+                    color = if (selectedItem == 1) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
+                    fontWeight = if (selectedItem == 1) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.labelMedium
+                ) 
+            },
             selected = selectedItem == 1,
             onClick = {
                 onItemSelected(1)
@@ -54,13 +88,33 @@ fun BottomNavigationBar(
                         launchSingleTop = true
                     }
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = com.undef.manoslocales.ui.theme.Cafe,
+                selectedTextColor = com.undef.manoslocales.ui.theme.Cafe,
+                indicatorColor = com.undef.manoslocales.ui.theme.Cafe.copy(alpha = 0.2f),
+                unselectedIconColor = com.undef.manoslocales.ui.theme.GrisSuave,
+                unselectedTextColor = com.undef.manoslocales.ui.theme.GrisSuave
+            )
         )
 
         // Settings
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-            label = { Text("Settings", color = Color.Black, fontWeight = FontWeight.Bold) },
+            icon = { 
+                Icon(
+                    Icons.Filled.Settings, 
+                    contentDescription = "Settings",
+                    tint = if (selectedItem == 2) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
+                ) 
+            },
+            label = { 
+                Text(
+                    "Settings", 
+                    color = if (selectedItem == 2) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
+                    fontWeight = if (selectedItem == 2) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.labelMedium
+                ) 
+            },
             selected = selectedItem == 2,
             onClick = {
                 onItemSelected(2)
@@ -70,7 +124,14 @@ fun BottomNavigationBar(
                         launchSingleTop = true
                     }
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = com.undef.manoslocales.ui.theme.Cafe,
+                selectedTextColor = com.undef.manoslocales.ui.theme.Cafe,
+                indicatorColor = com.undef.manoslocales.ui.theme.Cafe.copy(alpha = 0.2f),
+                unselectedIconColor = com.undef.manoslocales.ui.theme.GrisSuave,
+                unselectedTextColor = com.undef.manoslocales.ui.theme.GrisSuave
+            )
         )
     }
 }

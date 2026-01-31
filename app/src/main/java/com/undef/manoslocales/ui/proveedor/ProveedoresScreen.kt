@@ -2,11 +2,14 @@ package com.undef.manoslocales.ui.proveedor
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
@@ -14,19 +17,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.undef.manoslocales.R
-import com.undef.manoslocales.ui.database.User // Asegúrate que la ruta sea la correcta
+import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 import com.undef.manoslocales.ui.navigation.CategoryDropdown
 import com.undef.manoslocales.ui.navigation.FavoritosViewModel
-import com.undef.manoslocales.ui.theme.ManosLocalesTheme
+import com.undef.manoslocales.ui.theme.*
 
 @Composable
 fun ProveedoresScreen(
@@ -57,6 +63,8 @@ fun ProveedoresScreen(
                 (searchCity.isBlank() || it.city?.contains(searchCity, ignoreCase = true) == true)
     }
 
+    var isSearchActive by remember { mutableStateOf(false) }
+
     ManosLocalesTheme {
         Scaffold(
             bottomBar = {
@@ -66,88 +74,187 @@ fun ProveedoresScreen(
                     navController = navController
                 )
             },
-            containerColor = Color(0xff3E2C1C)
+            containerColor = CafeOscuro
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(Color(0xff3E2C1C))
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .background(CafeOscuro)
             ) {
+                // Header con logo
                 Image(
                     painter = painterResource(id = R.drawable.manoslocales),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
-                        .offset(y = (-18).dp)
+                        .height(140.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Fit
                 )
 
-                CategoryDropdown(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it },
-                    categories = categories
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Buscar proveedor", color = Color(0xFFFEFAE0)) },
+                // DockedSearchBar moderno
+                @OptIn(ExperimentalMaterial3Api::class)
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { },
+                    active = isSearchActive,
+                    onActiveChange = { isSearchActive = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = {
+                        Text(
+                            "Buscar proveedores...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = GrisSuave
+                        )
                     },
-                    colors = searchFieldColors()
-                )
-
-                TextField(
-                    value = searchCity,
-                    onValueChange = { searchCity = it },
-                    label = { Text("Buscar por ciudad", color = Color(0xFFFEFAE0)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFEFAE0))
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Buscar",
+                            tint = Cafe
+                        )
                     },
-                    colors = searchFieldColors()
-                )
-
-                Button(
-                    onClick = { navController.navigate("nearby") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5C4033))
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Limpiar búsqueda",
+                                    tint = Cafe
+                                )
+                            }
+                        }
+                    },
+                    colors = SearchBarDefaults.colors(
+                        containerColor = Crema,
+                        inputFieldColors = SearchBarDefaults.inputFieldColors(
+                            focusedTextColor = Cafe,
+                            unfocusedTextColor = Cafe,
+                            focusedPlaceholderColor = GrisSuave,
+                            unfocusedPlaceholderColor = GrisSuave
+                        )
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    tonalElevation = 4.dp
                 ) {
-                    Text("Ver proveedores cercanos", color = Color.White)
+                    // Contenido cuando el SearchBar está activo
+                    LazyColumn {
+                        items(filteredList.take(5)) { proveedor ->
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        proveedor.nombre,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Cafe
+                                    )
+                                },
+                                supportingContent = {
+                                    Text(
+                                        proveedor.categoria ?: "Sin categoría",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = GrisSuave
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        navController.navigate("proveedorDetalle/${proveedor.id}")
+                                        isSearchActive = false
+                                    }
+                            )
+                        }
+                    }
                 }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // Filtros mejorados
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(filteredList) { proveedor ->
-                        ProveedorItem(
-                            proveedor = proveedor,
-                            // CORRECCIÓN 3: Comparamos por ID, que es más robusto.
-                            isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
-                            onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(proveedor) },
-                            onVerDetallesClick = {
-                                // CORRECCIÓN 4: Navegamos usando el ID (UID), que es más seguro.
-                                navController.navigate("proveedorDetalle/${proveedor.id}")
-                            }
+                    CategoryDropdown(
+                        selectedCategory = selectedCategory,
+                        onCategorySelected = { selectedCategory = it },
+                        categories = categories
+                    )
+
+                    OutlinedTextField(
+                        value = searchCity,
+                        onValueChange = { searchCity = it },
+                        label = {
+                            Text(
+                                "Ciudad",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Cafe,
+                            unfocusedTextColor = Cafe,
+                            focusedBorderColor = Cafe,
+                            unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
+                            focusedLabelColor = Cafe,
+                            unfocusedLabelColor = GrisSuave
                         )
+                    )
+
+                    ExtendedFloatingActionButton(
+                        onClick = { navController.navigate("nearby") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        containerColor = Crema,
+                        contentColor = Cafe,
+                        elevation = FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp
+                        )
+                    ) {
+                        Text(
+                            "Ver proveedores cercanos",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Lista de proveedores
+                when {
+                    filteredList.isEmpty() -> {
+                        EmptyStateProveedores(
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(filteredList) { proveedor ->
+                                ProveedorItem(
+                                    proveedor = proveedor,
+                                    isFavorito = proveedoresFavoritos.any { it.id == proveedor.id },
+                                    onFavoritoClicked = { favoritosViewModel.toggleProveedorFavorito(proveedor) },
+                                    onVerDetallesClick = {
+                                        navController.navigate("proveedorDetalle/${proveedor.id}")
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -156,17 +263,39 @@ fun ProveedoresScreen(
 }
 
 @Composable
-fun searchFieldColors() = TextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    cursorColor = Color(0xFFFEFAE0),
-    focusedIndicatorColor = Color.Transparent,
-    unfocusedIndicatorColor = Color.Transparent,
-    focusedLabelColor = Color(0xFFFEFAE0),
-    unfocusedLabelColor = Color.LightGray,
-    focusedContainerColor = Color(0xFF5C4033),
-    unfocusedContainerColor = Color(0xFF5C4033)
-)
+private fun EmptyStateProveedores(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_proveedores),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+                tint = GrisSuave.copy(alpha = 0.5f)
+            )
+            Text(
+                text = "No se encontraron proveedores",
+                style = MaterialTheme.typography.headlineSmall,
+                color = Crema,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "Intenta ajustar tus filtros de búsqueda",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GrisSuave,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
 
 @Composable
 fun ProveedorItem(
@@ -175,59 +304,141 @@ fun ProveedorItem(
     onFavoritoClicked: (User) -> Unit,
     onVerDetallesClick: () -> Unit
 ) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
+        label = "scale"
+    )
+
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
-            .width(320.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(0.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xff3E2C1C))
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .scale(scale)
+            .clickable(
+                onClick = {
+                    isPressed = true
+                    onVerDetallesClick()
+                },
+                onClickLabel = "Ver detalles de ${proveedor.nombre}"
+            ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 8.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = Crema
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = CafeClaro.copy(alpha = 0.3f)
+        )
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
                 .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Imagen del proveedor con aspectRatio(1f) y Clip(RoundedCornerShape(16.dp))
             Card(
-                modifier = Modifier.size(115.dp),
-                shape = RoundedCornerShape(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                modifier = Modifier
+                    .width(100.dp)
+                    .aspectRatio(1f),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 AsyncImage(
                     model = proveedor.profileImageUrl,
                     contentDescription = "Imagen de ${proveedor.nombre}",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
             Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxHeight()
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(proveedor.nombre, style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Text(proveedor.categoria ?: "Sin categoría", style = MaterialTheme.typography.bodyMedium, color = Color.LightGray)
-                Text(proveedor.email, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                proveedor.city?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = Color(0xFFFEFAE0))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Título con headlineMedium Bold
+                    Text(
+                        text = proveedor.nombre,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        ),
+                        color = Cafe,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+
+                    // Categoría con bodyMedium grisáceo
+                    Text(
+                        text = proveedor.categoria ?: "Sin categoría",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GrisSuave,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+
+                    // Email
+                    Text(
+                        text = proveedor.email,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GrisSuave,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+
+                    // Ciudad si está disponible
+                    proveedor.city?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Cafe,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
+                // Botones de acción
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onVerDetallesClick) {
-                        Text("Ver detalles", color = Color.White)
+                    TextButton(
+                        onClick = onVerDetallesClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Cafe
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            "Ver detalles",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
-                    IconButton(onClick = { onFavoritoClicked(proveedor) }) {
+
+                    IconButton(
+                        onClick = { onFavoritoClicked(proveedor) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            tint = Color(0xffFEFAE0)
+                            contentDescription = if (isFavorito) "Quitar de favoritos" else "Agregar a favoritos",
+                            tint = if (isFavorito) Cafe else GrisSuave,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
