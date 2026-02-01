@@ -1,14 +1,21 @@
 package com.undef.manoslocales.ui.screens
 
-import android.util.Log
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +38,7 @@ fun SettingScreen(
     val defaultCity by settingsViewModel.defaultCity.collectAsState()
     val priceNotificationsEnabled by settingsViewModel.priceNotificationsEnabled.collectAsState()
     val newProductNotificationsEnabled by settingsViewModel.newProductNotificationsEnabled.collectAsState()
+    val context = LocalContext.current
 
     var expandedCity by remember { mutableStateOf(false) }
     val provincias = listOf(
@@ -64,7 +72,8 @@ fun SettingScreen(
                 .fillMaxSize()
                 .background(Color(0xff3E2C1C))
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -147,6 +156,46 @@ fun SettingScreen(
                 isChecked = newProductNotificationsEnabled,
                 onCheckedChange = { settingsViewModel.onNewProductNotificationsChange(it) }
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Soporte",
+                fontSize = 20.sp,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp).align(Alignment.Start)
+            )
+
+            Button(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:") // only email apps should handle this
+                        putExtra(Intent.EXTRA_EMAIL, arrayOf("soporte@manoslocales.com"))
+                        putExtra(Intent.EXTRA_SUBJECT, "Consulta - Aplicación Manos Locales")
+                    }
+                    if (intent.resolveActivity(context.packageManager) != null) {
+                        context.startActivity(intent)
+                    } else {
+                        // Fallback si no hay app de mail (aunque raro en Android)
+                        val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "message/rfc822"
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf("soporte@manoslocales.com"))
+                            putExtra(Intent.EXTRA_SUBJECT, "Consulta - Aplicación Manos Locales")
+                        }
+                        context.startActivity(Intent.createChooser(fallbackIntent, "Enviar consulta por:"))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Crema,
+                    contentColor = Cafe
+                )
+            ) {
+                Icon(Icons.Default.Email, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Contactar al desarrollador", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

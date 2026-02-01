@@ -1,5 +1,6 @@
 package com.undef.manoslocales.ui.proveedor
 
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,12 +13,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -221,6 +224,8 @@ fun ProveedorItem(
     onFavoritoClicked: (User) -> Unit,
     onVerDetallesClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,6 +247,29 @@ fun ProveedorItem(
                 Text(proveedor.categoria ?: "General", style = MaterialTheme.typography.bodyMedium, color = GrisSuave)
                 Text(proveedor.city ?: "Ubicación no especificada", style = MaterialTheme.typography.bodySmall, color = Cafe)
             }
+            
+            // Botón Compartir (Intent)
+            IconButton(onClick = {
+                val sendIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, "¡Mira este emprendimiento en Manos Locales!\n\n" +
+                            "Nombre: ${proveedor.nombre} ${proveedor.apellido}\n" +
+                            "Categoría: ${proveedor.categoria ?: "General"}\n" +
+                            "Ciudad: ${proveedor.city ?: "No especificada"}\n" +
+                            "Contacto: ${proveedor.phone}")
+                    type = "text/plain"
+                }
+                val shareIntent = Intent.createChooser(sendIntent, null)
+                context.startActivity(shareIntent)
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "Compartir",
+                    tint = Cafe
+                )
+            }
+
+            // Botón Favorito
             IconButton(onClick = { onFavoritoClicked(proveedor) }) {
                 Icon(
                     imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
