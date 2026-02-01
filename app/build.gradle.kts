@@ -80,10 +80,8 @@ dependencies {
     // ✅ DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // ✅ Cloudinary (excluye conflicto con Litr)
-    implementation("com.cloudinary:cloudinary-android:1.30.0") {
-        exclude(group = "com.linkedin.android.litr", module = "litr")
-    }
+    // ✅ Cloudinary (actualizado a 2.3.0 para evitar errores de PendingIntent en Android 12+)
+    implementation("com.cloudinary:cloudinary-android:2.3.0")
 
     // ✅ Seguridadd
     implementation("org.mindrot:jbcrypt:0.4")

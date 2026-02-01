@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,8 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.database.UserViewModel
-import androidx.compose.material3.TopAppBarDefaults
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,11 +78,22 @@ fun EditProductScreen(
                     .padding(16.dp)
                     .fillMaxSize()
             ) {
+                val textFieldColors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedLabelColor = Color(0xffFEFAE0),
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                    focusedBorderColor = Color(0xffFEFAE0),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    cursorColor = Color(0xffFEFAE0)
+                )
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Nombre") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -94,7 +102,8 @@ fun EditProductScreen(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Descripción") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -103,7 +112,8 @@ fun EditProductScreen(
                     value = price,
                     onValueChange = { price = it },
                     label = { Text("Precio") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -112,7 +122,8 @@ fun EditProductScreen(
                     value = category,
                     onValueChange = { category = it },
                     label = { Text("Categoría") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -143,6 +154,5 @@ fun EditProductScreen(
                 }
             }
         }
-
     }
 }

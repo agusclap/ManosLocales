@@ -1,26 +1,20 @@
 package com.undef.manoslocales.ui.screens
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.database.UserViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,13 +51,24 @@ fun ChangePasswordScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val textFieldColors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedLabelColor = Color(0xffFEFAE0),
+                unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                focusedBorderColor = Color(0xffFEFAE0),
+                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                cursorColor = Color(0xffFEFAE0)
+            )
+
             OutlinedTextField(
                 value = currentPassword,
                 onValueChange = { currentPassword = it },
                 label = { Text("Contraseña actual") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
-                singleLine = true
+                singleLine = true,
+                colors = textFieldColors
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -74,7 +79,8 @@ fun ChangePasswordScreen(
                 label = { Text("Nueva contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
-                singleLine = true
+                singleLine = true,
+                colors = textFieldColors
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -85,7 +91,8 @@ fun ChangePasswordScreen(
                 label = { Text("Confirmar nueva contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
-                singleLine = true
+                singleLine = true,
+                colors = textFieldColors
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -129,12 +136,15 @@ fun ChangePasswordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xffFEFAE0),
+                    contentColor = Color(0xff3E2C1C)
+                )
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.Black)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xff3E2C1C))
                 } else {
-                    Text("Cambiar contraseña", color = Color.Black)
+                    Text("Cambiar contraseña", color = Color(0xff3E2C1C))
                 }
             }
 

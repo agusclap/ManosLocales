@@ -211,12 +211,12 @@ fun ProductosCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         border = BorderStroke(1.dp, com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(140.dp))
-            Spacer(modifier = Modifier.height(8.dp))
+            Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text("Productos", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }
@@ -233,12 +233,12 @@ fun ProveedoresCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         border = BorderStroke(1.dp, com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(140.dp))
-            Spacer(modifier = Modifier.height(8.dp))
+            Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text("Proveedores", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }

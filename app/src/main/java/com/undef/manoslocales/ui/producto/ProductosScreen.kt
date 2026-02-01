@@ -51,15 +51,17 @@ fun ProductosScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
-    val ciudadNormalized = if (selectedCity == "Todas") "" else selectedCity.trim().lowercase()
+    
+    // Normalizamos la ciudad para la consulta a Firestore
+    val ciudadParaFiltro = if (selectedCity == "Todas") null else selectedCity.trim().lowercase()
 
-    LaunchedEffect(selectedCategory, ciudadNormalized, proveedor) {
+    LaunchedEffect(selectedCategory, selectedCity, proveedor) {
         isLoading = true
         if (proveedor.isNotBlank()) {
             viewModel.getProviderIdsByName(proveedor) { providerIds ->
                 viewModel.getFilteredProducts(
                     categoria = if (selectedCategory == "Todas") null else selectedCategory,
-                    ciudad = if (ciudadNormalized.isBlank()) null else ciudadNormalized,
+                    ciudad = ciudadParaFiltro,
                     proveedorId = null
                 ) { productosEncontrados ->
                     productos = productosEncontrados.filter { it.providerId in providerIds }
@@ -69,7 +71,7 @@ fun ProductosScreen(
         } else {
             viewModel.getFilteredProducts(
                 categoria = if (selectedCategory == "Todas") null else selectedCategory,
-                ciudad = if (ciudadNormalized.isBlank()) null else ciudadNormalized,
+                ciudad = ciudadParaFiltro,
                 proveedorId = null
             ) {
                 productos = it
@@ -78,7 +80,12 @@ fun ProductosScreen(
         }
     }
 
-    val filteredList = productos.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    // Filtrado por nombre en memoria (ignorando tildes y mayúsculas si es posible, aquí simple ignoreCase)
+    val filteredList = productos.filter { 
+        it.name.contains(searchQuery, ignoreCase = true) || 
+        it.description.contains(searchQuery, ignoreCase = true)
+    }
+    
     var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -95,7 +102,7 @@ fun ProductosScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(top = 8.dp) // Reducido padding superior
+                .padding(top = 8.dp)
         ) {
             // Header Compacto
             Image(
@@ -103,13 +110,13 @@ fun ProductosScreen(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp) // Altura reducida
+                    .height(100.dp)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Fit
             )
 
-            // Buscador Compacto
+            // Buscador
             @OptIn(ExperimentalMaterial3Api::class)
             SearchBar(
                 query = searchQuery,
@@ -119,8 +126,8 @@ fun ProductosScreen(
                 onActiveChange = { isSearchActive = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp), // Espaciado reducido
-                placeholder = { Text("Buscar...", fontSize = 14.sp, color = GrisSuave) },
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                placeholder = { Text("Buscar por nombre o descripción...", fontSize = 14.sp, color = GrisSuave) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -132,15 +139,25 @@ fun ProductosScreen(
                 colors = SearchBarDefaults.colors(containerColor = Crema),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                // Resultados de búsqueda...
+                // Sugerencias de búsqueda si se desea
+                val suggestions = productos.filter { it.name.contains(searchQuery, ignoreCase = true) }.take(5)
+                suggestions.forEach { suggestion ->
+                    ListItem(
+                        headlineContent = { Text(suggestion.name) },
+                        modifier = Modifier.clickable { 
+                            searchQuery = suggestion.name
+                            isSearchActive = false
+                        }
+                    )
+                }
             }
 
-            // Filtros Compactos
+            // Filtros
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp) // Espaciado reducido
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -154,7 +171,6 @@ fun ProductosScreen(
                         )
                     }
 
-                    // Selector de Provincia (Dropdown)
                     @OptIn(ExperimentalMaterial3Api::class)
                     ExposedDropdownMenuBox(
                         expanded = cityExpanded,
@@ -165,7 +181,7 @@ fun ProductosScreen(
                             value = selectedCity,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Provincia", fontSize = 10.sp) }, // Fuente pequeña
+                            label = { Text("Provincia", fontSize = 10.sp) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
                             modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -195,14 +211,17 @@ fun ProductosScreen(
                 }
             }
 
-            // Grilla de Productos (2 columnas)
+            // Lista de Resultados
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Crema)
                 }
             } else if (filteredList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay productos", color = Crema)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("No se encontraron productos", color = Crema, fontWeight = FontWeight.Bold)
+                        Text("Prueba con otros filtros o términos", color = GrisSuave, fontSize = 12.sp)
+                    }
                 }
             } else {
                 LazyVerticalGrid(
