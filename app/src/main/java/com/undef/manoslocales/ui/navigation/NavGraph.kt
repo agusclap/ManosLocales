@@ -13,12 +13,10 @@ import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.data.SessionManager
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.database.UserViewModelFactory
-import com.undef.manoslocales.ui.login.ForgotPasswordScreen
-import com.undef.manoslocales.ui.login.LoginScreen
-import com.undef.manoslocales.ui.login.RegisterScreen
-import com.undef.manoslocales.ui.login.ResetLinkScreen
+import com.undef.manoslocales.ui.login.*
 import com.undef.manoslocales.ui.notifications.FavoritesRepository
 import com.undef.manoslocales.ui.notifications.FavoritosViewModelFactory
+import com.undef.manoslocales.ui.notifications.NotificationViewModel
 import com.undef.manoslocales.ui.producto.ProductoDetalleScreen
 import com.undef.manoslocales.ui.producto.ProductosScreen
 import com.undef.manoslocales.ui.proveedor.CreateProductScreen
@@ -27,12 +25,7 @@ import com.undef.manoslocales.ui.proveedor.MisProductosScreen
 import com.undef.manoslocales.ui.proveedor.NearbyProvidersScreen
 import com.undef.manoslocales.ui.proveedor.ProveedorDetalleScreen
 import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
-import com.undef.manoslocales.ui.screens.ChangePasswordScreen
-import com.undef.manoslocales.ui.screens.EditProfileScreen
-import com.undef.manoslocales.ui.screens.FavoritosScreen
-import com.undef.manoslocales.ui.screens.HomeScreen
-import com.undef.manoslocales.ui.screens.ProfileScreen
-import com.undef.manoslocales.ui.screens.SettingScreen
+import com.undef.manoslocales.ui.screens.*
 import com.undef.manoslocales.ui.splash.SplashScreen
 
 @Composable
@@ -51,12 +44,15 @@ fun AppNavGraph(navController: NavHostController) {
         factory = UserViewModelFactory(application, sessionManager)
     )
     val favoritosViewModel: FavoritosViewModel = viewModel(factory = favoritosViewModelFactory)
+    val notificationViewModel: NotificationViewModel = viewModel()
 
     LaunchedEffect(key1 = sessionManager.isLoggedIn()) {
         if (sessionManager.isLoggedIn()) {
             favoritosViewModel.loadFavoritesForCurrentUser()
+            notificationViewModel.startListening()
         } else {
             favoritosViewModel.clearFavorites()
+            notificationViewModel.clearNotifications()
         }
     }
 
@@ -71,10 +67,25 @@ fun AppNavGraph(navController: NavHostController) {
         composable("register") {
             RegisterScreen(
                 viewModel = userViewModel,
-                onRegisterSuccess = { navController.navigate("login") },
+                onRegisterSuccess = { email, uid -> 
+                    navController.navigate("verification/$email/$uid") 
+                },
                 onLoginClick = { navController.navigate("login") }
             )
         }
+
+        composable("verification/{email}/{uid}") { backStack ->
+            val email = backStack.arguments?.getString("email") ?: ""
+            val uid = backStack.arguments?.getString("uid") ?: ""
+            VerificationScreen(
+                email = email,
+                uid = uid,
+                viewModel = userViewModel,
+                onVerificationSuccess = { navController.navigate("login") },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable("login") {
             LoginScreen(
                 viewModel = userViewModel,
@@ -92,6 +103,7 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreen(
                 navController = navController,
                 userViewModel = userViewModel,
+                notificationViewModel = notificationViewModel,
                 onProductosClick = { navController.navigate("productos") },
                 onProveedoresClick = { navController.navigate("proveedores") },
                 onCreateProductClick = { navController.navigate("createproduct") }
@@ -126,9 +138,16 @@ fun AppNavGraph(navController: NavHostController) {
 
         composable("proveedorDetalle/{providerId}") { backStack ->
             val providerId = backStack.arguments?.getString("providerId") ?: ""
-            ProveedorDetalleScreen(providerId = providerId, viewModel = userViewModel, onBack = {
-                navController.popBackStack()
-            })
+            ProveedorDetalleScreen(
+                providerId = providerId, 
+                viewModel = userViewModel, 
+                onBack = { navController.popBackStack() },
+                onProviderClick = { newId ->
+                    navController.navigate("proveedorDetalle/$newId") {
+                        popUpTo("proveedorDetalle/$providerId") { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable("editProfile") {
@@ -148,7 +167,8 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable("settings") {
             SettingScreen(
-                navController = navController
+                navController = navController,
+                userViewModel = userViewModel
             )
         }
         composable("profile") {
@@ -160,7 +180,30 @@ fun AppNavGraph(navController: NavHostController) {
 
         composable("forgotpassword") {
             ForgotPasswordScreen(
-                onBackToLoginClick = { navController.navigate("login") }
+                userViewModel = userViewModel,
+                onBackToLoginClick = { navController.navigate("login") },
+                onCodeSent = { email -> navController.navigate("reset_verification/$email") }
+            )
+        }
+
+        composable("reset_verification/{email}") { backStack ->
+            val email = backStack.arguments?.getString("email") ?: ""
+            ResetVerificationScreen(
+                email = email,
+                viewModel = userViewModel,
+                onCodeVerified = { code -> navController.navigate("new_password/$email/$code") },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("new_password/{email}/{code}") { backStack ->
+            val email = backStack.arguments?.getString("email") ?: ""
+            val code = backStack.arguments?.getString("code") ?: ""
+            NewPasswordScreen(
+                email = email,
+                code = code,
+                viewModel = userViewModel,
+                onSuccess = { navController.navigate("login") }
             )
         }
 
@@ -181,7 +224,7 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
         composable("createproduct") {
-            CreateProductScreen(viewModel = userViewModel)
+            CreateProductScreen(viewModel = userViewModel, navController = navController)
         }
     }
 }

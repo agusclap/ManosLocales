@@ -2,7 +2,7 @@ package com.undef.manoslocales.ui.producto
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.theme.Cafe
@@ -42,124 +45,81 @@ fun ItemProduct(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(4.dp)
             .scale(scale)
-            .clickable(
-                onClick = {
-                    isPressed = true
-                    onVerDetallesClick()
-                },
-                onClickLabel = "Ver detalles de ${producto.name}"
-            ),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 8.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = Crema
-        ),
+            .clickable {
+                isPressed = true
+                onVerDetallesClick()
+            },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Crema),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = CafeClaro.copy(alpha = 0.3f)
+            color = CafeClaro.copy(alpha = 0.2f)
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Imagen del producto con aspectRatio(1f) y Clip(RoundedCornerShape(16.dp))
-            Card(
-                modifier = Modifier
-                    .width(120.dp)
-                    .aspectRatio(1f),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 AsyncImage(
                     model = producto.imageUrl,
-                    contentDescription = "Imagen de ${producto.name}",
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 )
+                
+                IconButton(
+                    onClick = { onFavoritoClicked(producto) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(32.dp)
+                        .background(Crema.copy(alpha = 0.7f), RoundedCornerShape(50.dp))
+                ) {
+                    Icon(
+                        imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorito) Cafe else GrisSuave,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // Título con headlineMedium Bold
-                    Text(
-                        text = producto.name,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        ),
-                        color = Cafe,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
+                Text(
+                    text = producto.name,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    ),
+                    color = Cafe,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                    // Descripción con bodyMedium grisáceo
-                    Text(
-                        text = producto.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = GrisSuave,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-
-                    // Precio destacado
-                    Text(
-                        text = "$${String.format("%.2f", producto.price)}",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        ),
-                        color = Cafe,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                // Botones de acción
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onVerDetallesClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Cafe
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            "Ver detalles",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { onFavoritoClicked(producto) },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = if (isFavorito) "Quitar de favoritos" else "Agregar a favoritos",
-                            tint = if (isFavorito) Cafe else GrisSuave,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+                Text(
+                    text = "$${String.format("%.2f", producto.price)}",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 13.sp
+                    ),
+                    color = Cafe
+                )
+                
+                Text(
+                    text = producto.category,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = GrisSuave,
+                    maxLines = 1
+                )
             }
         }
     }

@@ -1,11 +1,12 @@
 package com.undef.manoslocales.ui.producto
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -15,12 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
@@ -38,22 +39,22 @@ fun ProductosScreen(
 ) {
     var selectedCategory by remember { mutableStateOf("Todas") }
     var searchQuery by remember { mutableStateOf("") }
-    var ciudad by remember { mutableStateOf("") }
+    var selectedCity by remember { mutableStateOf("Todas") }
+    var cityExpanded by remember { mutableStateOf(false) }
     var proveedor by remember { mutableStateOf("") }
     var selectedItem by remember { mutableIntStateOf(0) }
 
-    val categories = listOf("Todas", "Tecnologia", "Herramientas", "Alimentos")
+    val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos")
+    val provincias = listOf("Todas", "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán")
 
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
-
-    val ciudadNormalized = ciudad.trim().lowercase()
+    val ciudadNormalized = if (selectedCity == "Todas") "" else selectedCity.trim().lowercase()
 
     LaunchedEffect(selectedCategory, ciudadNormalized, proveedor) {
         isLoading = true
-
         if (proveedor.isNotBlank()) {
             viewModel.getProviderIdsByName(proveedor) { providerIds ->
                 viewModel.getFilteredProducts(
@@ -77,277 +78,153 @@ fun ProductosScreen(
         }
     }
 
-    val filteredList = productos.filter {
-        it.name.contains(searchQuery, ignoreCase = true)
-    }
-
-    var activeSearchQuery by remember { mutableStateOf("") }
+    val filteredList = productos.filter { it.name.contains(searchQuery, ignoreCase = true) }
     var isSearchActive by remember { mutableStateOf(false) }
 
-    ManosLocalesTheme {
-        Scaffold(
-            bottomBar = {
-                BottomNavigationBar(
-                    selectedItem = selectedItem,
-                    onItemSelected = { selectedItem = it },
-                    navController = navController
-                )
-            },
-            containerColor = CafeOscuro
-        ) { paddingValues ->
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                selectedItem = selectedItem,
+                onItemSelected = { selectedItem = it },
+                navController = navController
+            )
+        },
+        containerColor = CafeOscuro
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(top = 8.dp) // Reducido padding superior
+        ) {
+            // Header Compacto
+            Image(
+                painter = painterResource(R.drawable.manoslocales),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp) // Altura reducida
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit
+            )
+
+            // Buscador Compacto
+            @OptIn(ExperimentalMaterial3Api::class)
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                onSearch = { isSearchActive = false },
+                active = isSearchActive,
+                onActiveChange = { isSearchActive = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp), // Espaciado reducido
+                placeholder = { Text("Buscar...", fontSize = 14.sp, color = GrisSuave) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp)) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = null, tint = Cafe)
+                        }
+                    }
+                },
+                colors = SearchBarDefaults.colors(containerColor = Crema),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                // Resultados de búsqueda...
+            }
+
+            // Filtros Compactos
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(CafeOscuro)
-                    .padding(paddingValues)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Espaciado reducido
             ) {
-                // Header con logo
-                Image(
-                    painter = painterResource(R.drawable.manoslocales),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Fit
-                )
-
-                // DockedSearchBar moderno
-                @OptIn(ExperimentalMaterial3Api::class)
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = { activeSearchQuery = searchQuery },
-                    active = isSearchActive,
-                    onActiveChange = { isSearchActive = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = {
-                        Text(
-                            "Buscar productos...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GrisSuave
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = "Buscar",
-                            tint = Cafe
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Limpiar búsqueda",
-                                    tint = Cafe
-                                )
-                            }
-                        }
-                    },
-                    colors = SearchBarDefaults.colors(
-                        containerColor = Crema,
-                        inputFieldColors = SearchBarDefaults.inputFieldColors(
-                            focusedTextColor = Cafe,
-                            unfocusedTextColor = Cafe,
-                            focusedPlaceholderColor = GrisSuave,
-                            unfocusedPlaceholderColor = GrisSuave
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                    tonalElevation = 4.dp
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Contenido cuando el SearchBar está activo
-                    LazyColumn {
-                        items(filteredList.take(5)) { producto ->
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        producto.name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Cafe
-                                    )
-                                },
-                                supportingContent = {
-                                    Text(
-                                        "$${String.format("%.2f", producto.price)}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = GrisSuave
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
-                                        isSearchActive = false
-                                    }
-                            )
-                        }
+                    Box(modifier = Modifier.weight(1f)) {
+                        CategoryDropdown(
+                            selectedCategory = selectedCategory,
+                            onCategorySelected = { selectedCategory = it },
+                            categories = categories
+                        )
                     }
-                }
 
-                // Filtros mejorados
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    CategoryDropdown(
-                        selectedCategory = selectedCategory,
-                        onCategorySelected = { selectedCategory = it },
-                        categories = categories
-                    )
-
-                    // Filtros de ciudad y proveedor con diseño moderno
-                    OutlinedTextField(
-                        value = ciudad,
-                        onValueChange = { ciudad = it },
-                        label = {
-                            Text(
-                                "Ciudad",
-                                style = MaterialTheme.typography.bodyMedium
+                    // Selector de Provincia (Dropdown)
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    ExposedDropdownMenuBox(
+                        expanded = cityExpanded,
+                        onExpandedChange = { cityExpanded = !cityExpanded },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedCity,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Provincia", fontSize = 10.sp) }, // Fuente pequeña
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
+                            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodySmall,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Cafe,
+                                unfocusedTextColor = Cafe,
+                                focusedBorderColor = Cafe,
+                                unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
+                                focusedLabelColor = Cafe,
+                                unfocusedLabelColor = GrisSuave
                             )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Cafe,
-                            unfocusedTextColor = Cafe,
-                            focusedBorderColor = Cafe,
-                            unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
-                            focusedLabelColor = Cafe,
-                            unfocusedLabelColor = GrisSuave
                         )
-                    )
-
-                    OutlinedTextField(
-                        value = proveedor,
-                        onValueChange = { proveedor = it },
-                        label = {
-                            Text(
-                                "Proveedor",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Cafe,
-                            unfocusedTextColor = Cafe,
-                            focusedBorderColor = Cafe,
-                            unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
-                            focusedLabelColor = Cafe,
-                            unfocusedLabelColor = GrisSuave
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Contenido principal
-                when {
-                    isLoading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
+                        ExposedDropdownMenu(
+                            expanded = cityExpanded,
+                            onDismissRequest = { cityExpanded = false },
+                            modifier = Modifier.background(Crema)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                CircularProgressIndicator(
-                                    color = Crema,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Text(
-                                    "Cargando productos...",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Crema
-                                )
-                            }
-                        }
-                    }
-
-                    filteredList.isEmpty() -> {
-                        EmptyState(
-                            title = "No se encontraron productos",
-                            message = "Intenta ajustar tus filtros de búsqueda",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredList) { producto ->
-                                val isFavorito = productosFavoritos.any { it.id == producto.id }
-
-                                ItemProduct(
-                                    producto = producto,
-                                    isFavorito = isFavorito,
-                                    onFavoritoClicked = {
-                                        favoritosViewModel.toggleProductoFavorito(it)
-                                    },
-                                    onVerDetallesClick = {
-                                        navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
-                                    }
+                            provincias.forEach { prov ->
+                                DropdownMenuItem(
+                                    text = { Text(prov, color = Cafe, fontSize = 14.sp) },
+                                    onClick = { selectedCity = prov; cityExpanded = false }
                                 )
                             }
                         }
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun EmptyState(
-    title: String,
-    message: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_emprendedores),
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = GrisSuave.copy(alpha = 0.5f)
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = Crema,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = GrisSuave,
-                textAlign = TextAlign.Center
-            )
+            // Grilla de Productos (2 columnas)
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Crema)
+                }
+            } else if (filteredList.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay productos", color = Crema)
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(filteredList) { producto ->
+                        val isFavorito = productosFavoritos.any { it.id == producto.id }
+                        ItemProduct(
+                            producto = producto,
+                            isFavorito = isFavorito,
+                            onFavoritoClicked = { favoritosViewModel.toggleProductoFavorito(it) },
+                            onVerDetallesClick = {
+                                navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

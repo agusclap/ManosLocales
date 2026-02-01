@@ -5,6 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,12 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
+import com.undef.manoslocales.ui.theme.Cafe
+import com.undef.manoslocales.ui.theme.CafeOscuro
+import com.undef.manoslocales.ui.theme.Crema
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: UserViewModel,
@@ -28,112 +37,141 @@ fun LoginScreen(
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var loginRequested by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     val isFormValid = password.isNotBlank() && email.isNotBlank()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xff3E2C1C))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
+            .background(CafeOscuro)
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
             painter = painterResource(id = R.drawable.manoslocales),
             contentDescription = null,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .width(180.dp)
+                .size(180.dp)
         )
 
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Iniciar Sesión",
             style = MaterialTheme.typography.headlineMedium,
-            color = Color(0xffFEFAE0)
+            color = Crema,
+            fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        TextField(
+        OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            colors = loginTextFieldColors(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextField(
+        OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            colors = loginTextFieldColors(),
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Forgot your password?",
-            color = Color(0xffFEFAE0),
-            textAlign = TextAlign.Right,
+            text = "¿Olvidaste tu contraseña?",
+            color = Crema,
+            textAlign = TextAlign.End,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onForgotPasswordClick() }
+                .clickable(enabled = !isLoading) { onForgotPasswordClick() },
+            style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
         Button(
             onClick = {
+                isLoading = true
                 viewModel.loginUser(email, password)
-                loginRequested = true
             },
-            enabled = isFormValid,
-            modifier = Modifier.fillMaxWidth(),
+            enabled = isFormValid && !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xffFEFAE0),
-                contentColor = Color(0xff3E2C1C)
+                containerColor = Crema,
+                contentColor = Cafe
             )
         ) {
-            Text("Log In")
+            if (isLoading) {
+                CircularProgressIndicator(color = Cafe, modifier = Modifier.size(24.dp))
+            } else {
+                Text("INGRESAR", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
         }
 
-        Spacer(modifier = Modifier.height(70.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Don't have an account? Register",
-            color = Color(0xffFEFAE0),
+            text = "¿No tenés cuenta? Registrate",
+            color = Crema,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onRegisterClick() }
+                .clickable(enabled = !isLoading) { onRegisterClick() },
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 
-    // 🔁 Efecto para manejar la respuesta del login
-    if (loginRequested) {
-        LaunchedEffect(viewModel.loginSuccess.value) {
-            if (viewModel.loginSuccess.value == true) {
-                viewModel.getUserRole { role ->
-                    if (role != null) {
-                        Toast.makeText(context, "Bienvenido ($role)", Toast.LENGTH_SHORT).show()
-                        onLoginSuccess(role)
-                    } else {
-                        Toast.makeText(context, "No se pudo obtener el rol", Toast.LENGTH_SHORT).show()
-                    }
-                    loginRequested = false
+    // 🔁 Manejo de respuesta del login
+    LaunchedEffect(viewModel.loginSuccess.value) {
+        val success = viewModel.loginSuccess.value
+        if (success == true) {
+            viewModel.fetchUserInfo { user ->
+                isLoading = false
+                if (user != null) {
+                    Toast.makeText(context, "¡Bienvenido, ${user.nombre}!", Toast.LENGTH_SHORT).show()
+                    onLoginSuccess(user.role ?: "user")
+                } else {
+                    onLoginSuccess("user")
                 }
-            } else if (viewModel.loginSuccess.value == false) {
-                Toast.makeText(context, "Email o contraseña incorrectos", Toast.LENGTH_SHORT).show()
-                loginRequested = false
             }
+        } else if (success == false) {
+            isLoading = false
+            val error = viewModel.authErrorMessage.value ?: "Email o contraseña incorrectos"
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
         }
     }
 }
+
+@Composable
+private fun loginTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Crema,
+    unfocusedTextColor = Crema,
+    focusedBorderColor = Crema,
+    unfocusedBorderColor = Crema.copy(alpha = 0.5f),
+    focusedLabelColor = Crema,
+    unfocusedLabelColor = Crema.copy(alpha = 0.7f),
+    cursorColor = Crema,
+    disabledTextColor = Crema.copy(alpha = 0.5f),
+    disabledBorderColor = Crema.copy(alpha = 0.3f),
+    disabledLabelColor = Crema.copy(alpha = 0.5f)
+)

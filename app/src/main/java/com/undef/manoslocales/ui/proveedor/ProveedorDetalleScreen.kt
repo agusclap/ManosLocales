@@ -4,21 +4,28 @@ import android.content.Intent
 import android.widget.Toast
 import android.content.ActivityNotFoundException
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.database.User
@@ -29,10 +36,12 @@ import com.undef.manoslocales.ui.database.UserViewModel
 fun ProveedorDetalleScreen(
     providerId: String,
     viewModel: UserViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onProviderClick: (String) -> Unit = {}
 ) {
     var proveedor by remember { mutableStateOf<User?>(null) }
     var productosProv by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var otrosProveedores by remember { mutableStateOf<List<User>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
@@ -52,7 +61,14 @@ fun ProveedorDetalleScreen(
     }
 
     LaunchedEffect(providerId) {
-        viewModel.getUserById(providerId) { proveedor = it }
+        viewModel.getUserById(providerId) { p ->
+            proveedor = p
+            p?.categoria?.let { cat ->
+                viewModel.getProvidersByCategory(cat) { list ->
+                    otrosProveedores = list.filter { it.id != providerId }
+                }
+            }
+        }
         viewModel.getProductsByProvider(providerId) {
             productosProv = it
             isLoading = false
@@ -106,8 +122,9 @@ fun ProveedorDetalleScreen(
                                 contentDescription = p.nombre,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(140.dp)
-                                    .padding(8.dp)
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .padding(4.dp)
                             )
                             Text(
                                 text = p.nombre,
@@ -115,10 +132,9 @@ fun ProveedorDetalleScreen(
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(p.email, color = Color.LightGray)
-                            Text(p.phone, color = Color.LightGray)
+                            Text(p.email, color = Color.LightGray, fontSize = 14.sp)
+                            Text(p.phone, color = Color.LightGray, fontSize = 14.sp)
 
-                            // Botón para enviar correo
                             Button(
                                 onClick = { enviarCorreo(p.email) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBC6C25)),
@@ -127,13 +143,14 @@ fun ProveedorDetalleScreen(
                                 Text("Contactar por correo", color = Color.White)
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Divider(color = Color.Gray, thickness = 1.dp)
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp)
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 "Productos del proveedor",
                                 color = Color(0xFFFFF5C0),
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -143,12 +160,13 @@ fun ProveedorDetalleScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033))
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033)),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             Modifier
-                                .padding(12.dp)
+                                .padding(8.dp)
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -156,12 +174,21 @@ fun ProveedorDetalleScreen(
                                 model = prod.imageUrl,
                                 contentDescription = prod.name,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text(prod.name, color = Color.White, style = MaterialTheme.typography.titleMedium)
-                                Text("Precio: \$${prod.price}", color = Color.LightGray)
+                                Text(
+                                    prod.name, 
+                                    color = Color.White, 
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text("Precio: \$${prod.price}", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -172,10 +199,63 @@ fun ProveedorDetalleScreen(
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .padding(60.dp),
+                                .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("Este proveedor aún no publicó productos", color = Color.LightGray)
+                        }
+                    }
+                }
+
+                if (otrosProveedores.isNotEmpty()) {
+                    item {
+                        Column(modifier = Modifier.padding(top = 24.dp)) {
+                            Text(
+                                text = "Otros proveedores de ${proveedor?.categoria ?: ""}",
+                                color = Color(0xFFFFF5C0),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                            ) {
+                                items(otrosProveedores) { otherProv ->
+                                    Card(
+                                        modifier = Modifier
+                                            .width(110.dp)
+                                            .clickable { onProviderClick(otherProv.id) },
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF5C4033)),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.padding(8.dp)
+                                        ) {
+                                            AsyncImage(
+                                                model = otherProv.profileImageUrl,
+                                                contentDescription = otherProv.nombre,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .size(70.dp)
+                                                    .clip(CircleShape)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = otherProv.nombre,
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

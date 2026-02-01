@@ -1,13 +1,11 @@
 package com.undef.manoslocales.ui.screens
 
-import android.util.Log // Importante añadir el Log
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,21 +16,30 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.undef.manoslocales.R
+import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
+import com.undef.manoslocales.ui.theme.Cafe
+import com.undef.manoslocales.ui.theme.Crema
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
     navController: NavHostController,
+    userViewModel: UserViewModel,
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
-    // Observamos los StateFlows del ViewModel.
     val defaultCity by settingsViewModel.defaultCity.collectAsState()
     val priceNotificationsEnabled by settingsViewModel.priceNotificationsEnabled.collectAsState()
     val newProductNotificationsEnabled by settingsViewModel.newProductNotificationsEnabled.collectAsState()
 
-    // --- LUZ DE INSPECCIÓN 1 ---
-    // Este log nos dirá con qué valor se está dibujando la pantalla cada vez que se recompone.
-    Log.d("SettingScreen", "Recomponiendo UI. Valores actuales -> Precios: $priceNotificationsEnabled, Nuevos Productos: $newProductNotificationsEnabled")
+    var expandedCity by remember { mutableStateOf(false) }
+    val provincias = listOf(
+        "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba",
+        "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja",
+        "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan",
+        "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero",
+        "Tierra del Fuego", "Tucumán"
+    )
 
     val selectedItem = 2
 
@@ -76,23 +83,53 @@ fun SettingScreen(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // --- SECCIÓN DE PREFERENCIAS DE BÚSQUEDA ---
             Text(
                 text = "Preferencias de Búsqueda",
                 fontSize = 20.sp,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start)
             )
-            OutlinedTextField(
-                value = defaultCity,
-                onValueChange = { settingsViewModel.onDefaultCityChange(it) },
-                label = { Text("Ciudad por defecto para búsquedas") },
+
+            ExposedDropdownMenuBox(
+                expanded = expandedCity,
+                onExpandedChange = { expandedCity = !expandedCity },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                OutlinedTextField(
+                    value = defaultCity,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Provincia por defecto para búsquedas") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCity) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(type = MenuAnchorType.PrimaryNotEditable),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                    )
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedCity,
+                    onDismissRequest = { expandedCity = false },
+                    modifier = Modifier.background(Crema)
+                ) {
+                    provincias.forEach { prov ->
+                        DropdownMenuItem(
+                            text = { Text(prov, color = Cafe) },
+                            onClick = {
+                                settingsViewModel.onDefaultCityChange(prov)
+                                expandedCity = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- SECCIÓN DE NOTIFICACIONES ---
             Text(
                 text = "Notificaciones",
                 fontSize = 20.sp,
@@ -103,30 +140,16 @@ fun SettingScreen(
             SwitchItem(
                 title = "Alertas de cambio de precio",
                 isChecked = priceNotificationsEnabled,
-                onCheckedChange = { newCheckedState ->
-                    // --- LUZ DE INSPECCIÓN 2 ---
-                    // Este log nos dirá si el clic se está registrando y qué valor debería guardarse.
-                    Log.d("SettingScreen", "Switch de PRECIOS clickeado. Nuevo estado debería ser: $newCheckedState")
-                    settingsViewModel.onPriceNotificationsChange(newCheckedState)
-                }
+                onCheckedChange = { settingsViewModel.onPriceNotificationsChange(it) }
             )
             SwitchItem(
                 title = "Alertas de nuevos productos",
                 isChecked = newProductNotificationsEnabled,
-                onCheckedChange = { newCheckedState ->
-                    // --- LUZ DE INSPECCIÓN 3 ---
-                    Log.d("SettingScreen", "Switch de NUEVOS PRODUCTOS clickeado. Nuevo estado debería ser: $newCheckedState")
-                    settingsViewModel.onNewProductNotificationsChange(newCheckedState)
-                }
+                onCheckedChange = { settingsViewModel.onNewProductNotificationsChange(it) }
             )
         }
     }
 }
-
-
-@Composable
-fun SettingItem(title: String, value: String, actionText: String) { /* ... tu código ... */ }
-
 
 @Composable
 fun SwitchItem(title: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {

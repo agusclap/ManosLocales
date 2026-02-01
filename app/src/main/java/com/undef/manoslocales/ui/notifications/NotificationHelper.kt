@@ -2,66 +2,68 @@ package com.undef.manoslocales.ui.notifications
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
+import com.undef.manoslocales.MainActivity
 import com.undef.manoslocales.R
 
 object NotificationHelper {
 
-    private const val PRICE_CHANGE_CHANNEL_ID = "price_change_channel"
-    private const val NEW_PRODUCT_CHANNEL_ID = "new_product_channel"
-    private const val CHANNEL_NAME = "Alertas de ManosLocales"
+    const val CHANNEL_ID = "canal_precios"
+    private const val CHANNEL_NAME = "Alertas de Manos Locales"
 
-    /**
-     * Muestra una notificación local cuando el precio de un producto cambia.
-     * ESTA ES LA FUNCIÓN QUE TE FALTA.
-     *
-     * @param context El contexto de la aplicación.
-     * @param productName El nombre del producto que cambió de precio.
-     * @param newPrice El nuevo precio del producto.
-     * @param changeType Una cadena de texto como "subió" o "bajó".
-     */
-    fun showPriceChangeNotification(context: Context, productName: String, newPrice: Double, changeType: String) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
+    fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(PRICE_CHANGE_CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
+                description = "Notificaciones sobre productos y proveedores favoritos"
+            }
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
-
-        val notification = NotificationCompat.Builder(context, PRICE_CHANGE_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // ¡Usa un ícono tuyo!
-            .setContentTitle("¡Actualización de precio!")
-            .setContentText("El precio de '$productName' ha cambiado. ¡Ahora $changeType a $$newPrice!")
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("El precio de tu producto favorito '$productName' ha cambiado. ¡Ahora $changeType a $$newPrice!"))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(productName.hashCode(), notification)
     }
 
-    /**
-     * Muestra una notificación cuando un proveedor favorito publica un nuevo producto.
-     */
-    fun showNewProductNotification(context: Context, providerName: String, productName: String) {
+    fun sendProductNotification(context: Context, productId: String, title: String, message: String) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(NEW_PRODUCT_CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(channel)
+        // Intent para Deep Linking
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("PRODUCT_ID", productId)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        val notification = NotificationCompat.Builder(context, NEW_PRODUCT_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("¡Nuevo producto de ${providerName}!")
-            .setContentText(productName)
+        // TaskStackBuilder para navegación correcta hacia atrás
+        val pendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(intent)
+            getPendingIntent(productId.hashCode(), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Asegúrate de tener este recurso
+            .setContentTitle(title)
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
-            .build()
+            .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // Expandible
 
-        notificationManager.notify(productName.hashCode(), notification)
+        notificationManager.notify(productId.hashCode(), builder.build())
+    }
+
+    fun showPriceChangeNotification(context: Context, productId: String, productName: String, newPrice: Double, changeType: String) {
+        val title = "¡Cambio de precio!"
+        val message = "El precio de $productName $changeType a $$newPrice"
+        sendProductNotification(context, productId, title, message)
+    }
+
+    fun showNewProductNotification(context: Context, productId: String, providerName: String, productName: String) {
+        val title = "¡Nuevo producto!"
+        val message = "$providerName ha subido un nuevo producto: $productName"
+        sendProductNotification(context, productId, title, message)
     }
 }

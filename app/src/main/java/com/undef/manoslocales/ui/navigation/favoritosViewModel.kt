@@ -107,6 +107,7 @@ class FavoritosViewModel(
                     Log.i("PriceListener", "¡CAMBIO DE PRECIO! Notificando al usuario.")
                     NotificationHelper.showPriceChangeNotification(
                         context = getApplication(),
+                        productId = updatedProduct.id,
                         productName = updatedProduct.name,
                         newPrice = newPrice,
                         changeType = changeType
@@ -149,6 +150,7 @@ class FavoritosViewModel(
                 Log.i("NewProductListener", "¡NUEVO PRODUCTO DETECTADO! Notificando al usuario.")
                 NotificationHelper.showNewProductNotification(
                     context = getApplication(),
+                    productId = newProduct.id,
                     providerName = providerName,
                     productName = newProduct.name
                 )
