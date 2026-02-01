@@ -1,46 +1,74 @@
 package com.undef.manoslocales.ui.navigation
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-
+import com.undef.manoslocales.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDropdown(
-    selectedCategory: String, //Categoria seleccionada
-    onCategorySelected: (String) -> Unit, //Callback cuando se selecciona una categoria
-    categories: List<String>, //Lista de las categorias
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit,
+    categories: List<String>,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) } //controla si esl menu esta abierto o no
+    var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
     ) {
-        TextField( //Cuando lo tocamos, se abre la lista de categorias
+        OutlinedTextField(
             value = selectedCategory,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Categoría") },
+            label = {
+                Text(
+                    "Categoría",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
-            modifier = Modifier.menuAnchor()
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Cafe,
+                unfocusedTextColor = Cafe,
+                focusedBorderColor = Cafe,
+                unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
+                focusedLabelColor = Cafe,
+                unfocusedLabelColor = GrisSuave
+            )
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.exposedDropdownSize(true)
         ) {
             categories.forEach { category ->
-                DropdownMenuItem( //Por cada categoria crea un item
-                    text = { Text(category) },
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            category,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (category == selectedCategory) Cafe else CafeOscuro
+                        )
+                    },
                     onClick = {
                         onCategorySelected(category)
                         expanded = false
-                    }
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = Cafe
+                    )
                 )
             }
         }
