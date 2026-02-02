@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +40,10 @@ fun SettingScreen(
     val priceNotificationsEnabled by settingsViewModel.priceNotificationsEnabled.collectAsState()
     val newProductNotificationsEnabled by settingsViewModel.newProductNotificationsEnabled.collectAsState()
     val context = LocalContext.current
+
+    // Capturamos los strings aquí para evitar el error de LocalContext en el onClick
+    val supportEmailSubject = stringResource(id = R.string.support_email_subject)
+    val chooserTitle = stringResource(id = R.string.chooser_title)
 
     var expandedCity by remember { mutableStateOf(false) }
     val provincias = listOf(
@@ -84,7 +89,7 @@ fun SettingScreen(
                     .height(180.dp)
             )
             Text(
-                text = "Ajustes",
+                text = stringResource(id = R.string.settings_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color(0xffFEFAE0),
                 fontSize = 24.sp,
@@ -93,7 +98,7 @@ fun SettingScreen(
             )
 
             Text(
-                text = "Preferencias de Búsqueda",
+                text = stringResource(id = R.string.search_preferences),
                 fontSize = 20.sp,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start)
@@ -108,7 +113,7 @@ fun SettingScreen(
                     value = defaultCity,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Provincia por defecto para búsquedas") },
+                    label = { Text(stringResource(id = R.string.default_province_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCity) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(type = MenuAnchorType.PrimaryNotEditable),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -140,19 +145,19 @@ fun SettingScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Notificaciones",
+                text = stringResource(id = R.string.notifications_title),
                 fontSize = 20.sp,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 16.dp).align(Alignment.Start)
             )
 
             SwitchItem(
-                title = "Alertas de cambio de precio",
+                title = stringResource(id = R.string.price_alerts),
                 isChecked = priceNotificationsEnabled,
                 onCheckedChange = { settingsViewModel.onPriceNotificationsChange(it) }
             )
             SwitchItem(
-                title = "Alertas de nuevos productos",
+                title = stringResource(id = R.string.new_product_alerts),
                 isChecked = newProductNotificationsEnabled,
                 onCheckedChange = { settingsViewModel.onNewProductNotificationsChange(it) }
             )
@@ -160,7 +165,7 @@ fun SettingScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Soporte",
+                text = stringResource(id = R.string.support_title),
                 fontSize = 20.sp,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 16.dp).align(Alignment.Start)
@@ -171,18 +176,17 @@ fun SettingScreen(
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:") // only email apps should handle this
                         putExtra(Intent.EXTRA_EMAIL, arrayOf("soporte@manoslocales.com"))
-                        putExtra(Intent.EXTRA_SUBJECT, "Consulta - Aplicación Manos Locales")
+                        putExtra(Intent.EXTRA_SUBJECT, supportEmailSubject)
                     }
                     if (intent.resolveActivity(context.packageManager) != null) {
                         context.startActivity(intent)
                     } else {
-                        // Fallback si no hay app de mail (aunque raro en Android)
                         val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "message/rfc822"
                             putExtra(Intent.EXTRA_EMAIL, arrayOf("soporte@manoslocales.com"))
-                            putExtra(Intent.EXTRA_SUBJECT, "Consulta - Aplicación Manos Locales")
+                            putExtra(Intent.EXTRA_SUBJECT, supportEmailSubject)
                         }
-                        context.startActivity(Intent.createChooser(fallbackIntent, "Enviar consulta por:"))
+                        context.startActivity(Intent.createChooser(fallbackIntent, chooserTitle))
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -194,7 +198,7 @@ fun SettingScreen(
             ) {
                 Icon(Icons.Default.Email, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Contactar al desarrollador", fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.contact_developer), fontWeight = FontWeight.Bold)
             }
         }
     }

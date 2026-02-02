@@ -1,3 +1,40 @@
 <resources>
     <string name="app_name">Manos Locales</string>
+    <string name="settings_title">Ajustes</string>
+    <string name="search_preferences">Preferencias de Búsqueda</string>
+    <string name="default_province_label">Provincia por defecto para búsquedas</string>
+    <string name="notifications_title">Notificaciones</string>
+    <string name="price_alerts">Alertas de cambio de precio</string>
+    <string name="new_product_alerts">Alertas de nuevos productos</string>
+    <string name="support_title">Soporte</string>
+    <string name="support_email_subject">Consulta - Aplicación Manos Locales</string>
+    <string name="contact_developer">Contactar al desarrollador</string>
+    <string name="chooser_title">Enviar consulta por:</string>
+    <string name="home_title">Manos Locales</string>
+    <string name="notifications_desc">Notificaciones</string>
+    <string name="no_notifications">No hay notificaciones</string>
+    <string name="clear_all">Limpiar todo</string>
+    <string name="mis_productos">Mis Productos</string>
+    <string name="crear_producto">Crear Producto</string>
+    <string name="mi_perfil">Mi Perfil</string>
+    <string name="productos">Productos</string>
+    <string name="proveedores">Proveedores</string>
+
+    <string name="profile_pic_desc">Foto de perfil</string>
+    <string name="profile_name">Nombre: %1$s %2$s</string>
+    <string name="profile_email">Email: %1$s</string>
+    <string name="profile_phone">Teléfono: %1$s</string>
+    <string name="loading_user">Cargando usuario...</string>
+    <string name="btn_edit_profile">Editar Perfil</string>
+    <string name="btn_change_password">Cambiar Contraseña</string>
+    <string name="btn_logout">Cerrar Sesión</string>
+
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Contraseña</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="btn_login">INGRESAR</string>
+    <string name="no_account_register">¿No tenés cuenta? Registrate</string>
+    <string name="welcome_msg">¡Bienvenido, %1$s!</string>
+    <string name="error_login">Email o contraseña incorrectos</string>
 </resources>

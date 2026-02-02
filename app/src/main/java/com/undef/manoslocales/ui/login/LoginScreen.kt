@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,9 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     val isFormValid = password.isNotBlank() && email.isNotBlank()
 
+    // Strings para Toasts extraídos aquí
+    val errorLoginMsg = stringResource(id = R.string.error_login)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +63,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Iniciar Sesión",
+            text = stringResource(id = R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,
             color = Crema,
             fontWeight = FontWeight.Bold
@@ -70,7 +74,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text(stringResource(id = R.string.email_label)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = loginTextFieldColors(),
@@ -83,7 +87,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña") },
+            label = { Text(stringResource(id = R.string.password_label)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -95,7 +99,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "¿Olvidaste tu contraseña?",
+            text = stringResource(id = R.string.forgot_password),
             color = Crema,
             textAlign = TextAlign.End,
             modifier = Modifier
@@ -124,14 +128,14 @@ fun LoginScreen(
             if (isLoading) {
                 CircularProgressIndicator(color = Cafe, modifier = Modifier.size(24.dp))
             } else {
-                Text("INGRESAR", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(id = R.string.btn_login), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "¿No tenés cuenta? Registrate",
+            text = stringResource(id = R.string.no_account_register),
             color = Crema,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -148,7 +152,8 @@ fun LoginScreen(
             viewModel.fetchUserInfo { user ->
                 isLoading = false
                 if (user != null) {
-                    Toast.makeText(context, "¡Bienvenido, ${user.nombre}!", Toast.LENGTH_SHORT).show()
+                    val welcomeMsg = context.getString(R.string.welcome_msg, user.nombre)
+                    Toast.makeText(context, welcomeMsg, Toast.LENGTH_SHORT).show()
                     onLoginSuccess(user.role ?: "user")
                 } else {
                     onLoginSuccess("user")
@@ -156,7 +161,7 @@ fun LoginScreen(
             }
         } else if (success == false) {
             isLoading = false
-            val error = viewModel.authErrorMessage.value ?: "Email o contraseña incorrectos"
+            val error = viewModel.authErrorMessage.value ?: errorLoginMsg
             Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
         }
     }

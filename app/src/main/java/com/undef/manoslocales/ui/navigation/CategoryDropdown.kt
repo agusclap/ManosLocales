@@ -6,7 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.undef.manoslocales.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,8 +23,6 @@ fun CategoryDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // El wrapper de MaterialTheme asegura que el fondo de la etiqueta (label mask) 
-    // coincida con el color del contenedor del OutlinedTextField (Crema).
     MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(surface = Crema)) {
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -31,52 +33,44 @@ fun CategoryDropdown(
                 value = selectedCategory,
                 onValueChange = {},
                 readOnly = true,
-                label = {
+                label = { 
                     Text(
-                        "Categoría",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Cafe
-                    )
+                        "Categoría", 
+                        style = TextStyle(
+                            color = Cafe, 
+                            fontSize = 14.sp, 
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) 
                 },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                shape = RoundedCornerShape(16.dp),
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = TextStyle(color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Crema,
+                    unfocusedContainerColor = Crema,
                     focusedTextColor = Cafe,
                     unfocusedTextColor = Cafe,
                     focusedBorderColor = Cafe,
-                    unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Cafe,
                     focusedLabelColor = Cafe,
-                    unfocusedLabelColor = Cafe.copy(alpha = 0.7f),
-                    focusedContainerColor = Crema,
-                    unfocusedContainerColor = Crema
+                    unfocusedLabelColor = Cafe,
+                    focusedTrailingIconColor = Cafe,
+                    unfocusedTrailingIconColor = Cafe
                 )
             )
-
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier
-                    .exposedDropdownSize(true)
-                    .background(Crema)
+                modifier = Modifier.background(Crema)
             ) {
                 categories.forEach { category ->
                     DropdownMenuItem(
-                        text = {
-                            Text(
-                                category,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Cafe
-                            )
-                        },
-                        onClick = {
-                            onCategorySelected(category)
-                            expanded = false
-                        }
+                        text = { Text(category, color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
+                        onClick = { onCategorySelected(category); expanded = false }
                     )
                 }
             }

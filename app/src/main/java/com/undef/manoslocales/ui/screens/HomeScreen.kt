@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,6 +21,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +66,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Manos Locales", color = Crema) },
+                title = { Text(stringResource(id = R.string.home_title), color = Crema) },
                 actions = {
                     Box {
                         IconButton(onClick = { 
@@ -82,7 +82,7 @@ fun HomeScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Crema)
+                                Icon(Icons.Default.Notifications, contentDescription = stringResource(id = R.string.notifications_desc), tint = Crema)
                             }
                         }
                         
@@ -93,7 +93,7 @@ fun HomeScreen(
                         ) {
                             if (notifications.isEmpty()) {
                                 Text(
-                                    "No hay notificaciones",
+                                    stringResource(id = R.string.no_notifications),
                                     modifier = Modifier.padding(16.dp),
                                     color = Crema,
                                     fontSize = 14.sp
@@ -113,12 +113,12 @@ fun HomeScreen(
                                         }
                                     )
                                 }
-                                Divider(color = Crema.copy(alpha = 0.2f))
+                                HorizontalDivider(color = Crema.copy(alpha = 0.2f))
                                 TextButton(
                                     onClick = { notificationViewModel.clearNotifications() },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Limpiar todo", color = Crema)
+                                    Text(stringResource(id = R.string.clear_all), color = Crema)
                                 }
                             }
                         }
@@ -181,7 +181,7 @@ fun HomeScreen(
                         containerColor = Crema,
                         contentColor = Cafe
                     ) {
-                        Text("Mis Productos", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                        Text(stringResource(id = R.string.mis_productos), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     }
 
                     ExtendedFloatingActionButton(
@@ -191,7 +191,7 @@ fun HomeScreen(
                         containerColor = Crema,
                         contentColor = Cafe
                     ) {
-                        Text("Crear Producto", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                        Text(stringResource(id = R.string.crear_producto), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     }
                 }
             }
@@ -217,7 +217,7 @@ fun ProductosCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Productos", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Text(stringResource(id = R.string.productos), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }
 }
@@ -239,7 +239,7 @@ fun ProveedoresCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Proveedores", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Text(stringResource(id = R.string.proveedores), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }
 }
@@ -253,6 +253,6 @@ fun PerfilButton(navController: NavHostController) {
         containerColor = Crema,
         contentColor = Cafe
     ) {
-        Text("Mi Perfil", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Text(stringResource(id = R.string.mi_perfil), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
     }
 }

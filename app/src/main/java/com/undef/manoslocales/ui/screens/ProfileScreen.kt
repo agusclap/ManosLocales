@@ -10,12 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
+import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
-import com.undef.manoslocales.ui.database.User // ✅ Asegurate de usar esta clase
+import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 
 @Composable
@@ -54,7 +55,7 @@ fun ProfileScreen(
             user?.let {
                 Image(
                     painter = rememberAsyncImagePainter(it.profileImageUrl),
-                    contentDescription = "Foto de perfil",
+                    contentDescription = stringResource(id = R.string.profile_pic_desc),
                     modifier = Modifier
                         .size(140.dp)
                         .clip(CircleShape)
@@ -63,19 +64,31 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text("Name: ${it.nombre} ${it.apellido}", style = MaterialTheme.typography.headlineSmall, color = Color.White)
-                Text("Email: ${it.email}", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Text("Cellphone: ${it.phone}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                Text(
+                    text = stringResource(id = R.string.profile_name, it.nombre, it.apellido),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White
+                )
+                Text(
+                    text = stringResource(id = R.string.profile_email, it.email),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+                Text(
+                    text = stringResource(id = R.string.profile_phone, it.phone),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White
+                )
 
                 Spacer(modifier = Modifier.height(40.dp))
-            } ?: Text("Loading User...", color = Color.White)
+            } ?: Text(stringResource(id = R.string.loading_user), color = Color.White)
 
             Button(
                 onClick = { navController.navigate("editProfile") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Edit Profile", color = Color.Black)
+                Text(stringResource(id = R.string.btn_edit_profile), color = Color.Black)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -85,7 +98,7 @@ fun ProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Change Password", color = Color.Black)
+                Text(stringResource(id = R.string.btn_change_password), color = Color.Black)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -100,7 +113,7 @@ fun ProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
-                Text("Logout", color = Color.Black)
+                Text(stringResource(id = R.string.btn_logout), color = Color.Black)
             }
         }
     }

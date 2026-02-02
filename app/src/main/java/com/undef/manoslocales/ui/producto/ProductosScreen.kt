@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -52,7 +52,6 @@ fun ProductosScreen(
 
     val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
     
-    // Normalizamos la ciudad para la consulta a Firestore
     val ciudadParaFiltro = if (selectedCity == "Todas") null else selectedCity.trim().lowercase()
 
     LaunchedEffect(selectedCategory, selectedCity, proveedor) {
@@ -80,7 +79,6 @@ fun ProductosScreen(
         }
     }
 
-    // Filtrado por nombre en memoria (ignorando tildes y mayúsculas si es posible, aquí simple ignoreCase)
     val filteredList = productos.filter { 
         it.name.contains(searchQuery, ignoreCase = true) || 
         it.description.contains(searchQuery, ignoreCase = true)
@@ -104,7 +102,6 @@ fun ProductosScreen(
                 .padding(paddingValues)
                 .padding(top = 8.dp)
         ) {
-            // Header Compacto
             Image(
                 painter = painterResource(R.drawable.manoslocales),
                 contentDescription = null,
@@ -116,7 +113,6 @@ fun ProductosScreen(
                 contentScale = ContentScale.Fit
             )
 
-            // Buscador
             @OptIn(ExperimentalMaterial3Api::class)
             SearchBar(
                 query = searchQuery,
@@ -127,7 +123,7 @@ fun ProductosScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                placeholder = { Text("Buscar por nombre o descripción...", fontSize = 14.sp, color = GrisSuave) },
+                placeholder = { Text("Buscar por nombre o descripción...", fontSize = 14.sp, color = Cafe.copy(alpha = 0.6f)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -139,20 +135,18 @@ fun ProductosScreen(
                 colors = SearchBarDefaults.colors(containerColor = Crema),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                // Sugerencias de búsqueda si se desea
                 val suggestions = productos.filter { it.name.contains(searchQuery, ignoreCase = true) }.take(5)
                 suggestions.forEach { suggestion ->
                     ListItem(
-                        headlineContent = { Text(suggestion.name) },
+                        headlineContent = { Text(suggestion.name, color = Cafe) },
                         modifier = Modifier.clickable { 
                             searchQuery = suggestion.name
                             isSearchActive = false
-                        }
+                        }.background(Crema)
                     )
                 }
             }
 
-            // Filtros
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -177,24 +171,39 @@ fun ProductosScreen(
                         onExpandedChange = { cityExpanded = !cityExpanded },
                         modifier = Modifier.weight(1f)
                     ) {
-                        OutlinedTextField(
-                            value = selectedCity,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Provincia", fontSize = 10.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
-                            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = MaterialTheme.typography.bodySmall,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Cafe,
-                                unfocusedTextColor = Cafe,
-                                focusedBorderColor = Cafe,
-                                unfocusedBorderColor = CafeClaro.copy(alpha = 0.5f),
-                                focusedLabelColor = Cafe,
-                                unfocusedLabelColor = GrisSuave
+                        MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(surface = Crema)) {
+                            OutlinedTextField(
+                                value = selectedCity,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { 
+                                    Text(
+                                        "Provincia", 
+                                        style = TextStyle(
+                                            color = Cafe, 
+                                            fontSize = 14.sp, 
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    ) 
+                                },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = TextStyle(color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Crema,
+                                    unfocusedContainerColor = Crema,
+                                    focusedTextColor = Cafe,
+                                    unfocusedTextColor = Cafe,
+                                    focusedBorderColor = Cafe,
+                                    unfocusedBorderColor = Cafe,
+                                    focusedLabelColor = Cafe,
+                                    unfocusedLabelColor = Cafe,
+                                    focusedTrailingIconColor = Cafe,
+                                    unfocusedTrailingIconColor = Cafe
+                                )
                             )
-                        )
+                        }
                         ExposedDropdownMenu(
                             expanded = cityExpanded,
                             onDismissRequest = { cityExpanded = false },
@@ -202,7 +211,7 @@ fun ProductosScreen(
                         ) {
                             provincias.forEach { prov ->
                                 DropdownMenuItem(
-                                    text = { Text(prov, color = Cafe, fontSize = 14.sp) },
+                                    text = { Text(prov, color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
                                     onClick = { selectedCity = prov; cityExpanded = false }
                                 )
                             }
@@ -211,7 +220,6 @@ fun ProductosScreen(
                 }
             }
 
-            // Lista de Resultados
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Crema)
@@ -220,7 +228,7 @@ fun ProductosScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("No se encontraron productos", color = Crema, fontWeight = FontWeight.Bold)
-                        Text("Prueba con otros filtros o términos", color = GrisSuave, fontSize = 12.sp)
+                        Text("Prueba con otros filtros o términos", color = Crema.copy(alpha = 0.7f), fontSize = 12.sp)
                     }
                 }
             } else {
