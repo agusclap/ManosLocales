@@ -1,5 +1,7 @@
 package com.undef.manoslocales.ui.screens
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -17,6 +20,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.database.User
+import com.undef.manoslocales.ui.login.LoginActivity
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
 
 @Composable
@@ -24,8 +28,9 @@ fun ProfileScreen(
     navController: NavHostController,
     userViewModel: UserViewModel
 ) {
-    var selectedItem by remember { mutableStateOf(0) }
+    var selectedItem by remember { mutableIntStateOf(1) } // 1 es el índice de Perfil en tu BottomBar
     var user by remember { mutableStateOf<User?>(null) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUserInfo { fetchedUser ->
@@ -37,7 +42,13 @@ fun ProfileScreen(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it },
+                onItemSelected = { index ->
+                    when (index) {
+                        0 -> navController.navigate("home") { popUpTo("home") { inclusive = true } }
+                        1 -> {} // Ya estamos en Perfil
+                        2 -> navController.navigate("settings") { popUpTo("settings") { inclusive = true } }
+                    }
+                },
                 navController = navController
             )
         },
@@ -105,10 +116,18 @@ fun ProfileScreen(
 
             Button(
                 onClick = {
+                    // 1. Cerramos sesión en Firebase y SessionManager
                     userViewModel.logoutUser()
-                    navController.navigate("login") {
-                        popUpTo("profile") { inclusive = true }
+                    
+                    // 2. Iniciamos LoginActivity explícitamente
+                    val intent = Intent(context, LoginActivity::class.java).apply {
+                        // Limpiamos el stack de tareas para que no puedan volver atrás
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     }
+                    context.startActivity(intent)
+                    
+                    // 3. Cerramos la MainActivity actual
+                    (context as? Activity)?.finish()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)

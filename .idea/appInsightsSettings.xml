@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.undef.manoslocales" />
-                  <option name="mobileSdkAppId" value="1:464823087689:android:52ca74e08cf8b976880598" />
-                  <option name="projectId" value="manoslocales-1a96d" />
-                  <option name="projectNumber" value="464823087689" />
+                  <option name="mobileSdkAppId" value="1:751443585058:android:64c9f3223269d03bcac27b" />
+                  <option name="projectId" value="manos-locales-29c68" />
+                  <option name="projectNumber" value="751443585058" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

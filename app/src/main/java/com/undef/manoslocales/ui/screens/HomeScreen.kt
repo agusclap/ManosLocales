@@ -7,11 +7,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +33,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
+import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 import com.undef.manoslocales.ui.notifications.NotificationViewModel
+import com.undef.manoslocales.ui.producto.ItemProduct
 import com.undef.manoslocales.ui.theme.Cafe
 import com.undef.manoslocales.ui.theme.Crema
 
@@ -42,6 +47,7 @@ fun HomeScreen(
     onProveedoresClick: () -> Unit,
     userViewModel: UserViewModel,
     notificationViewModel: NotificationViewModel,
+    favoritosViewModel: FavoritosViewModel,
     onCreateProductClick: () -> Unit
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -58,6 +64,7 @@ fun HomeScreen(
     
     val notifications = notificationViewModel.notifications
     val unreadCount by notificationViewModel.unreadCount.collectAsState()
+    val productosFavoritos by favoritosViewModel.productosFavoritos.collectAsState()
 
     LaunchedEffect(Unit) {
         userViewModel.getUserRole { role -> userRole = role }
@@ -146,20 +153,55 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 24.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(120.dp)
                     .clip(RoundedCornerShape(20.dp)),
                 contentScale = ContentScale.Fit
             )
+
+            // --- SECCIÓN LAZY ROW DE FAVORITOS ---
+            if (productosFavoritos.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Star, contentDescription = null, tint = Crema, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Mis Favoritos",
+                            color = Crema,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(220.dp)
+                    ) {
+                        items(productosFavoritos) { producto ->
+                            Box(modifier = Modifier.width(160.dp)) {
+                                ItemProduct(
+                                    producto = producto,
+                                    isFavorito = true,
+                                    onFavoritoClicked = { favoritosViewModel.toggleProductoFavorito(it) },
+                                    onVerDetallesClick = {
+                                        navController.navigate("productoDetalle/${producto.id}/${producto.providerId}")
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -205,7 +247,7 @@ fun ProductosCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(targetValue = if (isPressed) 0.95f else 1f, animationSpec = tween(150))
     Card(
-        modifier = modifier.height(200.dp).scale(scale).clickable { isPressed = true; onClick() },
+        modifier = modifier.height(180.dp).scale(scale).clickable { isPressed = true; onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Crema),
         border = BorderStroke(1.dp, com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f))
@@ -215,9 +257,9 @@ fun ProductosCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
+            Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(100.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(stringResource(id = R.string.productos), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Text(stringResource(id = R.string.productos), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }
 }
@@ -227,7 +269,7 @@ fun ProveedoresCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(targetValue = if (isPressed) 0.95f else 1f, animationSpec = tween(150))
     Card(
-        modifier = modifier.height(200.dp).scale(scale).clickable { isPressed = true; onClick() },
+        modifier = modifier.height(180.dp).scale(scale).clickable { isPressed = true; onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Crema),
         border = BorderStroke(1.dp, com.undef.manoslocales.ui.theme.CafeClaro.copy(alpha = 0.3f))
@@ -237,9 +279,9 @@ fun ProveedoresCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(120.dp))
+            Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(100.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(stringResource(id = R.string.proveedores), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Text(stringResource(id = R.string.proveedores), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
         }
     }
 }

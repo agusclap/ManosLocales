@@ -1,4 +1,3 @@
-// src/main/java/com.undef.manoslocales.ui.navigation/AppNavGraph.kt
 package com.undef.manoslocales.ui.navigation
 
 import android.app.Application
@@ -13,12 +12,12 @@ import androidx.navigation.compose.composable
 import com.undef.manoslocales.ui.data.SessionManager
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.database.UserViewModelFactory
-import com.undef.manoslocales.ui.login.*
 import com.undef.manoslocales.ui.notifications.FavoritesRepository
 import com.undef.manoslocales.ui.notifications.FavoritosViewModelFactory
 import com.undef.manoslocales.ui.notifications.NotificationViewModel
 import com.undef.manoslocales.ui.producto.ProductoDetalleScreen
 import com.undef.manoslocales.ui.producto.ProductosScreen
+import com.undef.manoslocales.ui.producto.SearchResultsScreen
 import com.undef.manoslocales.ui.proveedor.CreateProductScreen
 import com.undef.manoslocales.ui.proveedor.EditProductScreen
 import com.undef.manoslocales.ui.proveedor.MisProductosScreen
@@ -26,7 +25,6 @@ import com.undef.manoslocales.ui.proveedor.NearbyProvidersScreen
 import com.undef.manoslocales.ui.proveedor.ProveedorDetalleScreen
 import com.undef.manoslocales.ui.proveedor.ProveedoresScreen
 import com.undef.manoslocales.ui.screens.*
-import com.undef.manoslocales.ui.splash.SplashScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -56,54 +54,16 @@ fun AppNavGraph(navController: NavHostController) {
         }
     }
 
-    val startDestination = "splash"
-
+    val startDestination = "home"
 
     NavHost(navController = navController, startDestination = startDestination) {
-        composable("splash") {
-            SplashScreen(navController, sessionManager)
-        }
-
-        composable("register") {
-            RegisterScreen(
-                viewModel = userViewModel,
-                onRegisterSuccess = { email, uid -> 
-                    navController.navigate("verification/$email/$uid") 
-                },
-                onLoginClick = { navController.navigate("login") }
-            )
-        }
-
-        composable("verification/{email}/{uid}") { backStack ->
-            val email = backStack.arguments?.getString("email") ?: ""
-            val uid = backStack.arguments?.getString("uid") ?: ""
-            VerificationScreen(
-                email = email,
-                uid = uid,
-                viewModel = userViewModel,
-                onVerificationSuccess = { navController.navigate("login") },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("login") {
-            LoginScreen(
-                viewModel = userViewModel,
-                onLoginSuccess = { role ->
-                    when (role) {
-                        "provider" -> navController.navigate("home")
-                        "user" -> navController.navigate("home")
-                    }
-                },
-                onRegisterClick = { navController.navigate("register") },
-                onForgotPasswordClick = { navController.navigate("forgotpassword") }
-            )
-        }
+        
         composable("home") {
             HomeScreen(
                 navController = navController,
                 userViewModel = userViewModel,
                 notificationViewModel = notificationViewModel,
+                favoritosViewModel = favoritosViewModel,
                 onProductosClick = { navController.navigate("productos") },
                 onProveedoresClick = { navController.navigate("proveedores") },
                 onCreateProductClick = { navController.navigate("createproduct") }
@@ -116,6 +76,17 @@ fun AppNavGraph(navController: NavHostController) {
                 favoritosViewModel = favoritosViewModel
             )
         }
+
+        composable("searchResults/{query}") { backStack ->
+            val query = backStack.arguments?.getString("query") ?: ""
+            SearchResultsScreen(
+                query = query,
+                navController = navController,
+                viewModel = userViewModel,
+                favoritosViewModel = favoritosViewModel
+            )
+        }
+
         composable("favoritos") {
             FavoritosScreen(
                 navController = navController,
@@ -175,42 +146,6 @@ fun AppNavGraph(navController: NavHostController) {
             ProfileScreen(
                 navController = navController,
                 userViewModel = userViewModel
-            )
-        }
-
-        composable("forgotpassword") {
-            ForgotPasswordScreen(
-                userViewModel = userViewModel,
-                onBackToLoginClick = { navController.navigate("login") },
-                onCodeSent = { email -> navController.navigate("reset_verification/$email") }
-            )
-        }
-
-        composable("reset_verification/{email}") { backStack ->
-            val email = backStack.arguments?.getString("email") ?: ""
-            ResetVerificationScreen(
-                email = email,
-                viewModel = userViewModel,
-                onCodeVerified = { code -> navController.navigate("new_password/$email/$code") },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("new_password/{email}/{code}") { backStack ->
-            val email = backStack.arguments?.getString("email") ?: ""
-            val code = backStack.arguments?.getString("code") ?: ""
-            NewPasswordScreen(
-                email = email,
-                code = code,
-                viewModel = userViewModel,
-                onSuccess = { navController.navigate("login") }
-            )
-        }
-
-        composable("resetlink") {
-            ResetLinkScreen(
-                email = "example@mail.com",
-                onBackToLoginClick = { navController.navigate("login") }
             )
         }
 

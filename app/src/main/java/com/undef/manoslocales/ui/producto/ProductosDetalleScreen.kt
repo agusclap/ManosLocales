@@ -1,5 +1,6 @@
 package com.undef.manoslocales.ui.producto
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,16 +8,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.dataclasses.Product
 
@@ -30,6 +34,7 @@ fun ProductoDetalleScreen(
 ) {
     var product by remember { mutableStateOf<Product?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    val context = LocalContext.current
 
     LaunchedEffect(productId) {
         viewModel.getProductById(productId) { loaded ->
@@ -43,7 +48,7 @@ fun ProductoDetalleScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = product?.name ?: "Detalle de producto",
+                        text = product?.name ?: stringResource(id = R.string.product_detail_title),
                         color = Color.White,
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -52,9 +57,37 @@ fun ProductoDetalleScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(id = R.string.back_button_desc),
                             tint = Color.White
                         )
+                    }
+                },
+                actions = {
+                    product?.let { p ->
+                        IconButton(onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                val shareText = context.getString(
+                                    R.string.share_product_text,
+                                    p.name,
+                                    p.price,
+                                    p.description
+                                )
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(
+                                    shareIntent,
+                                    context.getString(R.string.share_chooser_title)
+                                )
+                            )
+                        }) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = stringResource(id = R.string.share_button_desc),
+                                tint = Color.White
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF3E2C1C))
@@ -103,18 +136,18 @@ fun ProductoDetalleScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Precio: \$${p.price}",
+                        text = stringResource(id = R.string.price_label, p.price),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Divider(color = Color.LightGray.copy(alpha = 0.3f), thickness = 1.dp)
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f), thickness = 1.dp)
 
-                    InfoItem(label = "Descripción", value = p.description)
-                    InfoItem(label = "Categoría", value = p.category)
-                    InfoItem(label = "Ciudad", value = p.city)
+                    InfoItem(label = stringResource(id = R.string.description_label), value = p.description)
+                    InfoItem(label = stringResource(id = R.string.category_label), value = p.category)
+                    InfoItem(label = stringResource(id = R.string.city_label), value = p.city)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -131,7 +164,7 @@ fun ProductoDetalleScreen(
                         ),
                         shape = RoundedCornerShape(50)
                     ) {
-                        Text("Ver proveedor", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(id = R.string.btn_view_provider), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }

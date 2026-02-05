@@ -1,6 +1,7 @@
 package com.undef.manoslocales.ui.login
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -34,11 +36,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.theme.*
 
+@SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun RegisterScreen(
@@ -75,6 +77,14 @@ fun RegisterScreen(
         "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", 
         "Tierra del Fuego", "Tucumán"
     )
+
+    // Strings para Toasts y Errores
+    val errorInvalidEmail = stringResource(id = R.string.error_invalid_email)
+    val errorPasswordLength = stringResource(id = R.string.error_password_length)
+    val errorPasswordUpperCase = stringResource(id = R.string.error_password_uppercase)
+    val errorPasswordDigit = stringResource(id = R.string.error_password_digit)
+    val errorEmailInUse = stringResource(id = R.string.error_email_in_use)
+    val errorRegisterGeneric = stringResource(id = R.string.error_register_generic)
 
     val isFormValid = password.isNotBlank() && email.isNotBlank() && numerotel.isNotBlank() && nombre.isNotBlank() && selectedProvincia.isNotBlank()
 
@@ -122,7 +132,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Crear Cuenta",
+                text = stringResource(id = R.string.register_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = Crema,
                 fontWeight = FontWeight.Bold
@@ -135,7 +145,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Nombre") },
+                    label = { Text(stringResource(id = R.string.name_label)) },
                     modifier = Modifier.weight(1f),
                     colors = registerTextFieldColors(),
                     shape = RoundedCornerShape(12.dp),
@@ -144,7 +154,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = apellido,
                     onValueChange = { apellido = it },
-                    label = { Text("Apellido") },
+                    label = { Text(stringResource(id = R.string.lastname_label)) },
                     modifier = Modifier.weight(1f),
                     colors = registerTextFieldColors(),
                     shape = RoundedCornerShape(12.dp),
@@ -169,7 +179,7 @@ fun RegisterScreen(
                         value = selectedCountryCode,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Cód.") },
+                        label = { Text(stringResource(id = R.string.country_code_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = countryCodeExpanded) },
                         modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable),
                         colors = registerTextFieldColors(),
@@ -196,7 +206,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = numerotel,
                     onValueChange = { if (it.all { char -> char.isDigit() }) numerotel = it },
-                    label = { Text("Teléfono") },
+                    label = { Text(stringResource(id = R.string.phone_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = registerTextFieldColors(),
@@ -207,7 +217,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Selector de Provincia (ExposedDropdownMenuBox)
+            // Selector de Provincia
             ExposedDropdownMenuBox(
                 expanded = provinciaExpanded && !isLoading,
                 onExpandedChange = { if (!isLoading) provinciaExpanded = !provinciaExpanded },
@@ -217,7 +227,7 @@ fun RegisterScreen(
                     value = selectedProvincia,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Provincia") },
+                    label = { Text(stringResource(id = R.string.province_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinciaExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -248,7 +258,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(id = R.string.email_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = registerTextFieldColors(),
                 shape = RoundedCornerShape(12.dp),
@@ -260,7 +270,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text(stringResource(id = R.string.password_label)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = registerTextFieldColors(),
@@ -271,7 +281,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Selector de Rol
-            Text("Quiero unirme como:", color = Crema, fontWeight = FontWeight.Medium)
+            Text(stringResource(id = R.string.role_selection_title), color = Crema, fontWeight = FontWeight.Medium)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = role == "user",
@@ -279,7 +289,7 @@ fun RegisterScreen(
                     colors = RadioButtonDefaults.colors(selectedColor = Crema, unselectedColor = Crema.copy(alpha = 0.6f)),
                     enabled = !isLoading
                 )
-                Text("Usuario", color = Crema)
+                Text(stringResource(id = R.string.role_user), color = Crema)
                 Spacer(modifier = Modifier.width(16.dp))
                 RadioButton(
                     selected = role == "provider",
@@ -287,7 +297,7 @@ fun RegisterScreen(
                     colors = RadioButtonDefaults.colors(selectedColor = Crema, unselectedColor = Crema.copy(alpha = 0.6f)),
                     enabled = !isLoading
                 )
-                Text("Proveedor", color = Crema)
+                Text(stringResource(id = R.string.role_provider), color = Crema)
             }
 
             if (role == "provider") {
@@ -300,7 +310,7 @@ fun RegisterScreen(
                         value = categoria,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Categoría de Emprendimiento") },
+                        label = { Text(stringResource(id = R.string.provider_category_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -331,18 +341,17 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    // Validaciones de Contraseña
                     val hasUpperCase = password.any { it.isUpperCase() }
                     val hasDigit = password.any { it.isDigit() }
                     
                     if (!email.contains("@")) {
-                        Toast.makeText(context, "Email inválido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, errorInvalidEmail, Toast.LENGTH_SHORT).show()
                     } else if (password.length < 6) {
-                        Toast.makeText(context, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, errorPasswordLength, Toast.LENGTH_SHORT).show()
                     } else if (!hasUpperCase) {
-                        Toast.makeText(context, "La contraseña debe incluir al menos una mayúscula", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, errorPasswordUpperCase, Toast.LENGTH_SHORT).show()
                     } else if (!hasDigit) {
-                        Toast.makeText(context, "La contraseña debe incluir al menos un número", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, errorPasswordDigit, Toast.LENGTH_SHORT).show()
                     } else {
                         isLoading = true
                         val fullPhone = "$selectedCountryCode$numerotel"
@@ -355,7 +364,7 @@ fun RegisterScreen(
                                 role = role,
                                 phone = fullPhone,
                                 categoria = if (role == "provider") categoria else null,
-                                ciudad = selectedProvincia, // Se usa la provincia seleccionada
+                                ciudad = selectedProvincia,
                                 lat = if (role == "provider") la else null,
                                 lng = if (role == "provider") lo else null
                             ) { success, message ->
@@ -365,13 +374,10 @@ fun RegisterScreen(
                                     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
                                     onRegisterSuccess(email, uid)
                                 } else {
-                                    // Manejo de colisión de email
-                                    val exception = FirebaseAuth.getInstance().currentUser // Esto es un hack, mejor capturar en el VM o pasar el error
-                                    // Pero basándonos en el mensaje de Firebase o el tipo:
                                     if (message?.contains("already in use", ignoreCase = true) == true) {
-                                        Toast.makeText(context, "Este correo ya está registrado. Intenta iniciar sesión.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, errorEmailInUse, Toast.LENGTH_LONG).show()
                                     } else {
-                                        Toast.makeText(context, message ?: "Error al registrar", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, message ?: errorRegisterGeneric, Toast.LENGTH_LONG).show()
                                     }
                                 }
                             }
@@ -418,14 +424,19 @@ fun RegisterScreen(
                 if (isLoading) {
                     CircularProgressIndicator(color = Cafe, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("REGISTRARSE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = stringResource(id = R.string.btn_register), 
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 16.sp,
+                        color = Cafe
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "¿Ya tenés cuenta? Iniciá sesión",
+                text = stringResource(id = R.string.already_have_account),
                 color = Crema,
                 modifier = Modifier.clickable(enabled = !isLoading) { onLoginClick() },
                 style = MaterialTheme.typography.bodyMedium

@@ -16,10 +16,10 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.Source
 import com.undef.manoslocales.ui.data.AuthManager
 import com.undef.manoslocales.ui.data.SessionManager
 import com.undef.manoslocales.ui.dataclasses.Product
+import com.undef.manoslocales.ui.network.RetrofitClient
 import com.undef.manoslocales.ui.utils.EmailManager
 import com.undef.manoslocales.utils.FileUtils
 import kotlinx.coroutines.*
@@ -46,9 +46,43 @@ class UserViewModel(
     var isUnverified = mutableStateOf(false)
         private set
 
+    // --- PROVINCIAS (Retrofit / GeoRef API) ---
+    var provincias = mutableStateOf<List<String>>(emptyList())
+        private set
+
+    var isProvinciasLoading = mutableStateOf(false)
+        private set
+
+    fun loadProvincias() {
+        if (provincias.value.isNotEmpty()) return
+        viewModelScope.launch {
+            isProvinciasLoading.value = true
+            try {
+                val response = RetrofitClient.instance.getProvincias()
+                provincias.value = listOf("Todas") + response.provincias
+                    .map { it.nombre }
+                    .sorted()
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error cargando provincias: ${e.message}")
+                provincias.value = listOf(
+                    "Todas", "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", 
+                    "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", 
+                    "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", 
+                    "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", 
+                    "Tierra del Fuego", "Tucumán"
+                )
+            } finally {
+                isProvinciasLoading.value = false
+            }
+        }
+    }
+
     /*** AUTH ***/
 
     fun loginUser(email: String, password: String) {
+        loginSuccess.value = null
+        authErrorMessage.value = null
+        
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
                 val user = result.user
@@ -87,6 +121,7 @@ class UserViewModel(
         sessionManager.logout()
         auth.signOut()
         currentUser.value = null
+        loginSuccess.value = null
     }
 
     fun isUserLoggedIn(): Boolean = sessionManager.isLoggedIn()
@@ -142,13 +177,15 @@ class UserViewModel(
     fun getProvidersByCategory(category: String, onResult: (List<User>) -> Unit) {
         firestore.collection("users")
             .whereEqualTo("role", "provider")
-            .whereEqualTo("categoria", category)
             .get()
             .addOnSuccessListener { snap ->
                 val list = snap.documents.mapNotNull { doc ->
                     val user = doc.toObject(User::class.java)
                     user?.id = doc.id
                     user
+                }.filter { 
+                    // Filtro manual para ser insensible a mayúsculas/tildes si es posible
+                    it.categoria?.equals(category, ignoreCase = true) == true 
                 }
                 onResult(list)
             }
@@ -243,12 +280,11 @@ class UserViewModel(
     fun sendResetCode(email: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             try {
-                // Tarea 1: Timeout de 5 segundos y bloque try-catch específico
                 val snap = withTimeout(5000L) {
                     firestore.collection("users")
                         .whereEqualTo("email", email)
                         .limit(1)
-                        .get() // Quitamos Source.SERVER para mayor resiliencia ante fallos de GMS
+                        .get()
                         .await()
                 }
 
@@ -258,14 +294,12 @@ class UserViewModel(
                     val uid = snap.documents[0].id
                     val code = EmailManager.generateCode()
                     
-                    // Actualizar el código en Firestore con timeout
                     withTimeout(5000L) {
                         firestore.collection("users").document(uid)
                             .update("verificationCode", code)
                             .await()
                     }
 
-                    // Tarea 2: Disparo de EmailJS solo si Firestore fue exitoso
                     Log.d("EmailJS_Status", "Intentando enviar correo...")
                     val sent = EmailManager.sendResetPasswordEmail(email, code)
                     if (sent) {
@@ -296,7 +330,6 @@ class UserViewModel(
                 }
                 val doc = snap.documents[0]
                 if (doc.getString("verificationCode") == code) {
-                    // Identidad confirmada, enviamos el reset nativo de Firebase
                     auth.sendPasswordResetEmail(email)
                         .addOnSuccessListener {
                             onResult(true, "¡Identidad confirmada! Revisa tu email para el último paso de seguridad")
@@ -313,7 +346,6 @@ class UserViewModel(
             }
     }
 
-    // Mantengo esta función por compatibilidad si se usa en otros lados, pero la lógica nueva va en validateResetCodeAndSendEmail
     fun resetPasswordWithCode(email: String, code: String, newPass: String, onResult: (Boolean, String?) -> Unit) {
         firestore.collection("users").whereEqualTo("email", email).limit(1).get()
             .addOnSuccessListener { snap ->
@@ -333,8 +365,6 @@ class UserViewModel(
                 }
             }
     }
-
-    /*** PROFILE / OTHERS (Mantener lo existente) ***/
 
     fun changePassword(currentPassword: String, newPassword: String, onResult: (Boolean, String?) -> Unit) {
         val user = auth.currentUser
@@ -441,13 +471,22 @@ class UserViewModel(
     }
 
     fun getFilteredProducts(categoria: String?, ciudad: String?, proveedorId: String?, onComplete: (List<Product>) -> Unit) {
-        var q: Query = firestore.collection("products")
-        categoria?.takeIf { it != "Todas" }?.let { q = q.whereEqualTo("category", it) }
-        ciudad?.takeIf(String::isNotBlank)?.let { q = q.whereEqualTo("city", it.trim().lowercase()) }
-        proveedorId?.takeIf(String::isNotBlank)?.let { q = q.whereEqualTo("providerId", it) }
-        q.get()
+        firestore.collection("products").get()
             .addOnSuccessListener { snap ->
-                onComplete(snap.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) })
+                var list = snap.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
+                
+                // Filtro manual para mayor flexibilidad con mayúsculas/minúsculas y tildes
+                if (categoria != null && categoria != "Todas") {
+                    list = list.filter { it.category.equals(categoria, ignoreCase = true) }
+                }
+                if (!ciudad.isNullOrBlank()) {
+                    list = list.filter { it.city.equals(ciudad, ignoreCase = true) }
+                }
+                if (!proveedorId.isNullOrBlank()) {
+                    list = list.filter { it.providerId == proveedorId }
+                }
+                
+                onComplete(list)
             }
             .addOnFailureListener { onComplete(emptyList()) }
     }

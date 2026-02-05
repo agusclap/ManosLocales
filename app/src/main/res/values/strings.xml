@@ -37,4 +37,38 @@
     <string name="no_account_register">¿No tenés cuenta? Registrate</string>
     <string name="welcome_msg">¡Bienvenido, %1$s!</string>
     <string name="error_login">Email o contraseña incorrectos</string>
+
+    <string name="product_detail_title">Detalle de producto</string>
+    <string name="back_button_desc">Volver</string>
+    <string name="share_button_desc">Compartir</string>
+    <string name="price_label">Precio: $%1$.2f</string>
+    <string name="description_label">Descripción</string>
+    <string name="category_label">Categoría</string>
+    <string name="city_label">Ciudad</string>
+    <string name="btn_view_provider">Ver proveedor</string>
+    <string name="share_product_text">¡Mirá este producto en Manos Locales: %1$s! Cuesta $%2$.2f. Descripción: %3$s</string>
+    <string name="share_chooser_title">Compartir producto vía…</string>
+
+    <string name="register_title">Crear Cuenta</string>
+    <string name="name_label">Nombre</string>
+    <string name="lastname_label">Apellido</string>
+    <string name="country_code_label">Cód.</string>
+    <string name="phone_label">Teléfono</string>
+    <string name="province_label">Provincia</string>
+    <string name="role_selection_title">Quiero unirme como:</string>
+    <string name="role_user">Usuario</string>
+    <string name="role_provider">Proveedor</string>
+    <string name="provider_category_label">Categoría de Emprendimiento</string>
+    <string name="btn_register">REGISTRARSE</string>
+    <string name="already_have_account">¿Ya tenés cuenta? Iniciá sesión</string>
+
+    <string name="error_invalid_email">Email inválido</string>
+    <string name="error_password_length">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_password_uppercase">La contraseña debe incluir al menos una mayúscula</string>
+    <string name="error_password_digit">La contraseña debe incluir al menos un número</string>
+    <string name="error_email_in_use">Este correo ya está registrado. Intenta iniciar sesión.</string>
+    <string name="error_register_generic">Error al registrar</string>
+
+    <string name="app_logo_desc">Logo de Manos Locales</string>
+    <string name="loading_data">Cargando datos...</string>
 </resources>

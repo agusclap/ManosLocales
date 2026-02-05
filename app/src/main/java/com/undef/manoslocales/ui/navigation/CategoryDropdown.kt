@@ -23,6 +23,7 @@ fun CategoryDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    // El color surface de este MaterialTheme local controla el fondo del 'recorte' del label
     MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(surface = Crema)) {
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -37,7 +38,7 @@ fun CategoryDropdown(
                     Text(
                         "Categoría", 
                         style = TextStyle(
-                            color = Cafe, 
+                            color = Crema,
                             fontSize = 14.sp, 
                             fontWeight = FontWeight.Bold
                         )

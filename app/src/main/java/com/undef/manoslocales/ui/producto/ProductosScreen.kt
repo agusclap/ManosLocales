@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -16,10 +18,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -41,11 +45,13 @@ fun ProductosScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCity by remember { mutableStateOf("Todas") }
     var cityExpanded by remember { mutableStateOf(false) }
-    var proveedor by remember { mutableStateOf("") }
     var selectedItem by remember { mutableIntStateOf(0) }
 
     val categories = listOf("Todas", "Tecnología", "Herramientas", "Alimentos")
-    val provincias = listOf("Todas", "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán")
+    
+    // Provincias dinámicas del ViewModel
+    val provincias = viewModel.provincias.value
+    val isProvinciasLoading = viewModel.isProvinciasLoading.value
 
     var productos by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -54,43 +60,33 @@ fun ProductosScreen(
     
     val ciudadParaFiltro = if (selectedCity == "Todas") null else selectedCity.trim().lowercase()
 
-    LaunchedEffect(selectedCategory, selectedCity, proveedor) {
-        isLoading = true
-        if (proveedor.isNotBlank()) {
-            viewModel.getProviderIdsByName(proveedor) { providerIds ->
-                viewModel.getFilteredProducts(
-                    categoria = if (selectedCategory == "Todas") null else selectedCategory,
-                    ciudad = ciudadParaFiltro,
-                    proveedorId = null
-                ) { productosEncontrados ->
-                    productos = productosEncontrados.filter { it.providerId in providerIds }
-                    isLoading = false
-                }
-            }
-        } else {
-            viewModel.getFilteredProducts(
-                categoria = if (selectedCategory == "Todas") null else selectedCategory,
-                ciudad = ciudadParaFiltro,
-                proveedorId = null
-            ) {
-                productos = it
-                isLoading = false
-            }
-        }
+    LaunchedEffect(Unit) {
+        viewModel.loadProvincias()
     }
 
-    val filteredList = productos.filter { 
-        it.name.contains(searchQuery, ignoreCase = true) || 
-        it.description.contains(searchQuery, ignoreCase = true)
+    LaunchedEffect(selectedCategory, selectedCity) {
+        isLoading = true
+        viewModel.getFilteredProducts(
+            categoria = if (selectedCategory == "Todas") null else selectedCategory,
+            ciudad = ciudadParaFiltro,
+            proveedorId = null
+        ) {
+            productos = it
+            isLoading = false
+        }
     }
-    
-    var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it },
+                onItemSelected = { index ->
+                    when (index) {
+                        0 -> navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true }
+                        1 -> navController.navigate("favoritos") { popUpTo("favoritos") { inclusive = true }; launchSingleTop = true }
+                        2 -> navController.navigate("settings") { popUpTo("settings") { inclusive = true }; launchSingleTop = true }
+                    }
+                },
                 navController = navController
             )
         },
@@ -113,18 +109,15 @@ fun ProductosScreen(
                 contentScale = ContentScale.Fit
             )
 
-            @OptIn(ExperimentalMaterial3Api::class)
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { isSearchActive = false },
-                active = isSearchActive,
-                onActiveChange = { isSearchActive = it },
+            // --- BUSCADOR CORREGIDO (Sin bug visual y con navegación) ---
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                placeholder = { Text("Buscar por nombre o descripción...", fontSize = 14.sp, color = Cafe.copy(alpha = 0.6f)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp)) },
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Buscar productos...", color = Cafe.copy(alpha = 0.6f)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Cafe) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
@@ -132,21 +125,25 @@ fun ProductosScreen(
                         }
                     }
                 },
-                colors = SearchBarDefaults.colors(containerColor = Crema),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                val suggestions = productos.filter { it.name.contains(searchQuery, ignoreCase = true) }.take(5)
-                suggestions.forEach { suggestion ->
-                    ListItem(
-                        headlineContent = { Text(suggestion.name, color = Cafe) },
-                        modifier = Modifier.clickable { 
-                            searchQuery = suggestion.name
-                            isSearchActive = false
-                        }.background(Crema)
-                    )
-                }
-            }
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    if (searchQuery.isNotBlank()) {
+                        navController.navigate("searchResults/$searchQuery")
+                    }
+                }),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Crema,
+                    unfocusedContainerColor = Crema,
+                    focusedTextColor = Cafe,
+                    unfocusedTextColor = Cafe,
+                    focusedBorderColor = Crema,
+                    unfocusedBorderColor = Crema
+                )
+            )
 
+            // Filtros
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -179,11 +176,9 @@ fun ProductosScreen(
                                 label = { 
                                     Text(
                                         "Provincia", 
-                                        style = TextStyle(
-                                            color = Cafe, 
-                                            fontSize = 14.sp, 
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        style = TextStyle(color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                                        color = Crema
+
                                     ) 
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
@@ -209,11 +204,18 @@ fun ProductosScreen(
                             onDismissRequest = { cityExpanded = false },
                             modifier = Modifier.background(Crema)
                         ) {
-                            provincias.forEach { prov ->
+                            if (isProvinciasLoading) {
                                 DropdownMenuItem(
-                                    text = { Text(prov, color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = { selectedCity = prov; cityExpanded = false }
+                                    text = { Text("Cargando...", color = Cafe) },
+                                    onClick = {}
                                 )
+                            } else {
+                                provincias.forEach { prov ->
+                                    DropdownMenuItem(
+                                        text = { Text(prov, color = Cafe, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
+                                        onClick = { selectedCity = prov; cityExpanded = false }
+                                    )
+                                }
                             }
                         }
                     }
@@ -224,11 +226,11 @@ fun ProductosScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Crema)
                 }
-            } else if (filteredList.isEmpty()) {
+            } else if (productos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("No se encontraron productos", color = Crema, fontWeight = FontWeight.Bold)
-                        Text("Prueba con otros filtros o términos", color = Crema.copy(alpha = 0.7f), fontSize = 12.sp)
+                        Text("Prueba con otros filtros", color = Crema.copy(alpha = 0.7f), fontSize = 12.sp)
                     }
                 }
             } else {
@@ -239,7 +241,7 @@ fun ProductosScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(filteredList) { producto ->
+                    items(productos) { producto ->
                         val isFavorito = productosFavoritos.any { it.id == producto.id }
                         ItemProduct(
                             producto = producto,
