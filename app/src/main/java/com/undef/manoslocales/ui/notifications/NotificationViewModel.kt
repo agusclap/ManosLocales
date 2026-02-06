@@ -13,12 +13,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.ListenerRegistration
 
 class NotificationViewModel(application: Application) : AndroidViewModel(application) {
     private val favoritesRepository = FavoritesRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
-    
+
+    private var notificationsListener: ListenerRegistration? = null
+
+
     val notifications = mutableStateListOf<NotificationItem>()
     
     private val _unreadCount = MutableStateFlow(0)
@@ -79,11 +83,15 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private fun loadPersistentNotifications(userId: String) {
-        db.collection("user_notifications")
+
+        notificationsListener?.remove()
+
+        notificationsListener = db.collection("user_notifications")
             .document(userId)
             .collection("items")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
+
                 if (e != null) {
                     Log.w("NotifVM", "Listen failed.", e)
                     return@addSnapshotListener
@@ -91,12 +99,21 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
 
                 if (snapshot != null) {
                     notifications.clear()
-                    val items = snapshot.documents.mapNotNull { it.toObject(NotificationItem::class.java)?.copy(id = it.id) }
+                    val items = snapshot.documents.mapNotNull {
+                        it.toObject(NotificationItem::class.java)?.copy(id = it.id)
+                    }
                     notifications.addAll(items)
                     _unreadCount.value = items.count { !it.read }
                 }
             }
     }
+
+
+    fun stopListening() {
+        notificationsListener?.remove()
+        notificationsListener = null
+    }
+
 
     private fun saveAndShowNotification(userId: String, title: String, message: String, productId: String) {
         val notificationItem = NotificationItem(

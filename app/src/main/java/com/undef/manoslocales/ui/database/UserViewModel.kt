@@ -24,9 +24,11 @@ import com.undef.manoslocales.ui.network.RetrofitClient
 import com.undef.manoslocales.ui.utils.EmailManager
 import com.undef.manoslocales.utils.FileUtils
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.tasks.await
+
 
 class UserViewModel(
     application: Application,
@@ -87,7 +89,7 @@ class UserViewModel(
         loginSuccess.value = null
         authErrorMessage.value = null
         
-        auth.signInWithEmailAndPassword(email, password)
+        auth.signInWithEmailAndPassword(email.trim(), password)
             .addOnSuccessListener { result ->
                 val user = result.user
                 if (user != null) {
@@ -254,13 +256,13 @@ class UserViewModel(
         lng: Double? = null,
         onComplete: (Boolean, String?) -> Unit
     ) {
-        auth.createUserWithEmailAndPassword(email, password)
+        auth.createUserWithEmailAndPassword(email.trim(), password)
             .addOnSuccessListener { authResult ->
                 val uid = authResult.user?.uid ?: return@addOnSuccessListener
                 val code = EmailManager.generateCode()
 
                 val userMap = mutableMapOf<String, Any>(
-                    "email" to email,
+                    "email" to email.trim(),
                     "nombre" to nombre,
                     "apellido" to apellido,
                     "phone" to phone,
@@ -280,7 +282,7 @@ class UserViewModel(
                 firestore.collection("users").document(uid).set(userMap)
                     .addOnSuccessListener {
                         viewModelScope.launch {
-                            val sent = EmailManager.sendVerificationEmail(email, code)
+                            val sent = EmailManager.sendVerificationEmail(email.trim(), code)
                             if (sent) {
                                 onComplete(true, "¡Código enviado! Revisa tu casilla de correo")
                             } else {
@@ -311,9 +313,10 @@ class UserViewModel(
     fun sendResetCode(email: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             try {
+                val cleanEmail = email.trim()
                 val snap = withTimeout(5000L) {
                     firestore.collection("users")
-                        .whereEqualTo("email", email)
+                        .whereEqualTo("email", cleanEmail)
                         .limit(1)
                         .get()
                         .await()
@@ -332,7 +335,7 @@ class UserViewModel(
                     }
 
                     Log.d("EmailJS_Status", "Intentando enviar correo...")
-                    val sent = EmailManager.sendResetPasswordEmail(email, code)
+                    val sent = EmailManager.sendResetPasswordEmail(cleanEmail, code)
                     if (sent) {
                         onResult(true, "¡Código enviado! Revisa tu casilla de correo")
                     } else {
@@ -352,50 +355,51 @@ class UserViewModel(
         }
     }
 
-    fun validateResetCodeAndSendEmail(email: String, code: String, onResult: (Boolean, String?) -> Unit) {
-        firestore.collection("users").whereEqualTo("email", email).limit(1).get()
-            .addOnSuccessListener { snap ->
-                if (snap.isEmpty) {
-                    onResult(false, "Error al validar el usuario")
+    fun validateResetCodeAndSendEmail(
+        email: String,
+        code: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val cleanEmail = email.trim()
+
+        firestore.collection("users")
+            .whereEqualTo("email", cleanEmail)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { snapshot ->
+
+                if (snapshot.isEmpty) {
+                    callback(false, "Usuario no encontrado")
                     return@addOnSuccessListener
                 }
-                val doc = snap.documents[0]
-                if (doc.getString("verificationCode") == code) {
-                    auth.sendPasswordResetEmail(email)
-                        .addOnSuccessListener {
-                            onResult(true, "¡Identidad confirmada! Revisa tu email para el último paso de seguridad")
-                        }
-                        .addOnFailureListener { e ->
-                            onResult(false, "Error al enviar email de reset: ${e.message}")
-                        }
-                } else {
-                    onResult(false, "Código incorrecto")
+
+                val doc = snapshot.documents.first()
+                val storedCode = doc.getString("verificationCode")
+
+                if (storedCode != code) {
+                    callback(false, "Código incorrecto")
+                    return@addOnSuccessListener
                 }
+
+                doc.reference.update("isVerified", true)
+
+                FirebaseAuth.getInstance()
+                    .sendPasswordResetEmail(cleanEmail)
+                    .addOnSuccessListener {
+                        callback(true, "Revisa tu email para restablecer la contraseña")
+                    }
+                    .addOnFailureListener {
+                        callback(false, it.message ?: "Error enviando email")
+                    }
             }
-            .addOnFailureListener { e ->
-                onResult(false, e.message)
+            .addOnFailureListener {
+                callback(false, "Error verificando código")
             }
     }
 
-    fun resetPasswordWithCode(email: String, code: String, newPass: String, onResult: (Boolean, String?) -> Unit) {
-        firestore.collection("users").whereEqualTo("email", email).limit(1).get()
-            .addOnSuccessListener { snap ->
-                if (snap.isEmpty) return@addOnSuccessListener onResult(false, "Error")
-                val doc = snap.documents[0]
-                if (doc.getString("verificationCode") == code) {
-                    val user = auth.currentUser
-                    if (user != null && user.email == email) {
-                        user.updatePassword(newPass)
-                            .addOnSuccessListener { onResult(true, "Contraseña actualizada") }
-                            .addOnFailureListener { e -> onResult(false, e.message) }
-                    } else {
-                        onResult(false, "Se requiere sesión activa para cambiar contraseña por seguridad.")
-                    }
-                } else {
-                    onResult(false, "Código inválido")
-                }
-            }
-    }
+
+
+
 
     fun changePassword(currentPassword: String, newPassword: String, onResult: (Boolean, String?) -> Unit) {
         val user = auth.currentUser

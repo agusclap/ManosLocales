@@ -4,14 +4,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,8 +53,9 @@ fun ForgotPasswordScreen(
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
+
                 Text(
-                    text = "Recuperar Contraseña",
+                    "Recuperar Contraseña",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Cafe,
@@ -72,12 +71,6 @@ fun ForgotPasswordScreen(
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Cafe,
-                        unfocusedTextColor = Cafe,
-                        focusedBorderColor = Cafe,
-                        unfocusedBorderColor = Cafe.copy(alpha = 0.5f)
-                    ),
                     enabled = !isLoading
                 )
 
@@ -86,19 +79,19 @@ fun ForgotPasswordScreen(
                 Button(
                     onClick = {
                         val trimmedEmail = email.trim()
-                        if (trimmedEmail.isNotBlank()) {
-                            isLoading = true
-                            Log.d("ForgotPassword", "Iniciando recuperación para: $trimmedEmail")
-                            userViewModel.sendResetCode(trimmedEmail) { success, message ->
-                                isLoading = false
-                                Log.d("ForgotPassword", "Resultado: success=$success, message=$message")
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (success) {
-                                    onCodeSent(trimmedEmail)
-                                }
-                            }
-                        } else {
-                            Toast.makeText(context, "Por favor, ingresa tu email", Toast.LENGTH_SHORT).show()
+
+                        if (trimmedEmail.isBlank()) {
+                            Toast.makeText(context, "Ingresa tu email", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        isLoading = true
+
+                        userViewModel.sendResetCode(trimmedEmail) { success, message ->
+                            isLoading = false
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+
+                            if (success) onCodeSent(trimmedEmail)
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),

@@ -22,6 +22,8 @@ import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.login.LoginActivity
 import com.undef.manoslocales.ui.navigation.BottomNavigationBar
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.undef.manoslocales.ui.notifications.NotificationViewModel
 
 @Composable
 fun ProfileScreen(
@@ -31,6 +33,7 @@ fun ProfileScreen(
     var selectedItem by remember { mutableIntStateOf(1) } // 1 es el índice de Perfil en tu BottomBar
     var user by remember { mutableStateOf<User?>(null) }
     val context = LocalContext.current
+    val notificationViewModel: NotificationViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUserInfo { fetchedUser ->
@@ -116,19 +119,20 @@ fun ProfileScreen(
 
             Button(
                 onClick = {
-                    // 1. Cerramos sesión en Firebase y SessionManager
+                    // 🔥 detener listeners de notificaciones primero
+                    notificationViewModel.stopListening()
+
+                    // cerrar sesión
                     userViewModel.logoutUser()
-                    
-                    // 2. Iniciamos LoginActivity explícitamente
+
                     val intent = Intent(context, LoginActivity::class.java).apply {
-                        // Limpiamos el stack de tareas para que no puedan volver atrás
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     }
                     context.startActivity(intent)
-                    
-                    // 3. Cerramos la MainActivity actual
+
                     (context as? Activity)?.finish()
-                },
+                }
+                ,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFEFAE0)),
                 modifier = Modifier.fillMaxWidth(0.8f).height(56.dp)
             ) {
