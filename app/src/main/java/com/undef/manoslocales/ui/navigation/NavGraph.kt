@@ -126,7 +126,7 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
         composable("nearby") {
-            NearbyProvidersScreen(viewModel = userViewModel)
+            NearbyProvidersScreen(viewModel = userViewModel, navController = navController)
         }
 
         composable("proveedores") {

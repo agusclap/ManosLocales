@@ -18,11 +18,14 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.undef.manoslocales.ui.data.AuthManager
 import com.undef.manoslocales.ui.data.SessionManager
+import com.undef.manoslocales.ui.data.SettingsManager
 import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.network.RetrofitClient
 import com.undef.manoslocales.ui.utils.EmailManager
 import com.undef.manoslocales.utils.FileUtils
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.tasks.await
 
 class UserViewModel(
@@ -33,6 +36,7 @@ class UserViewModel(
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val authManager = AuthManager()
+    private val settingsManager = SettingsManager(application)
 
     var loginSuccess = mutableStateOf<Boolean?>(null)
         private set
@@ -157,19 +161,32 @@ class UserViewModel(
         firestore.collection("users").whereEqualTo("role", "provider")
             .get()
             .addOnSuccessListener { snap ->
-                val providerList = snap.documents.mapNotNull { doc ->
+                viewModelScope.launch {
                     try {
-                        val user = doc.toObject(User::class.java)
-                        user?.id = doc.id
-                        user
+                        val userProvince = withTimeoutOrNull(1000L) {
+                            settingsManager.defaultCityFlow.firstOrNull()
+                        }?.lowercase() ?: ""
+
+                        val providerList = snap.documents.mapNotNull { doc ->
+                            try {
+                                val user = doc.toObject(User::class.java)
+                                user?.id = doc.id
+                                user
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }.sortedByDescending { it.city?.lowercase() == userProvince }
+                        
+                        Log.d("UserViewModel", "Proveedores obtenidos: ${providerList.size}")
+                        onResult(providerList)
                     } catch (e: Exception) {
-                        null
+                        Log.e("UserViewModel", "Error procesando proveedores", e)
+                        onResult(emptyList())
                     }
                 }
-                onResult(providerList)
             }
             .addOnFailureListener {
-                Log.e("UserViewModel", "Error al obtener proveedores", it)
+                Log.e("UserViewModel", "Error al obtener proveedores de Firestore", it)
                 onResult(emptyList())
             }
     }
@@ -179,17 +196,31 @@ class UserViewModel(
             .whereEqualTo("role", "provider")
             .get()
             .addOnSuccessListener { snap ->
-                val list = snap.documents.mapNotNull { doc ->
-                    val user = doc.toObject(User::class.java)
-                    user?.id = doc.id
-                    user
-                }.filter { 
-                    // Filtro manual para ser insensible a mayúsculas/tildes si es posible
-                    it.categoria?.equals(category, ignoreCase = true) == true 
+                viewModelScope.launch {
+                    try {
+                        val userProvince = withTimeoutOrNull(1000L) {
+                            settingsManager.defaultCityFlow.firstOrNull()
+                        }?.lowercase() ?: ""
+
+                        val list = snap.documents.mapNotNull { doc ->
+                            val user = doc.toObject(User::class.java)
+                            user?.id = doc.id
+                            user
+                        }.filter { 
+                            it.categoria?.equals(category, ignoreCase = true) == true 
+                        }.sortedByDescending { it.city?.lowercase() == userProvince }
+                        
+                        onResult(list)
+                    } catch (e: Exception) {
+                        Log.e("UserViewModel", "Error procesando proveedores por categoría", e)
+                        onResult(emptyList())
+                    }
                 }
-                onResult(list)
             }
-            .addOnFailureListener { onResult(emptyList()) }
+            .addOnFailureListener { 
+                Log.e("UserViewModel", "Error al obtener proveedores por categoría", it)
+                onResult(emptyList()) 
+            }
     }
 
     fun getProviderIdsByName(name: String, onResult: (List<String>) -> Unit) {
@@ -473,20 +504,30 @@ class UserViewModel(
     fun getFilteredProducts(categoria: String?, ciudad: String?, proveedorId: String?, onComplete: (List<Product>) -> Unit) {
         firestore.collection("products").get()
             .addOnSuccessListener { snap ->
-                var list = snap.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
-                
-                // Filtro manual para mayor flexibilidad con mayúsculas/minúsculas y tildes
-                if (categoria != null && categoria != "Todas") {
-                    list = list.filter { it.category.equals(categoria, ignoreCase = true) }
+                viewModelScope.launch {
+                    try {
+                        val userProvince = withTimeoutOrNull(1000L) {
+                            settingsManager.defaultCityFlow.firstOrNull()
+                        }?.lowercase() ?: ""
+
+                        var list = snap.documents.mapNotNull { it.toObject(Product::class.java)?.copy(id = it.id) }
+                        
+                        if (categoria != null && categoria != "Todas") {
+                            list = list.filter { it.category.equals(categoria, ignoreCase = true) }
+                        }
+                        if (!ciudad.isNullOrBlank()) {
+                            list = list.filter { it.city.equals(ciudad, ignoreCase = true) }
+                        }
+                        if (!proveedorId.isNullOrBlank()) {
+                            list = list.filter { it.providerId == proveedorId }
+                        }
+                        
+                        list = list.sortedByDescending { it.city.lowercase() == userProvince }
+                        onComplete(list)
+                    } catch (e: Exception) {
+                        onComplete(emptyList())
+                    }
                 }
-                if (!ciudad.isNullOrBlank()) {
-                    list = list.filter { it.city.equals(ciudad, ignoreCase = true) }
-                }
-                if (!proveedorId.isNullOrBlank()) {
-                    list = list.filter { it.providerId == proveedorId }
-                }
-                
-                onComplete(list)
             }
             .addOnFailureListener { onComplete(emptyList()) }
     }
@@ -533,18 +574,24 @@ class UserViewModel(
                 val nearby = snap.documents.mapNotNull { doc ->
                     val ulat = doc.getDouble("lat")
                     val ulng = doc.getDouble("lng")
-                    if (ulat != null && ulng != null) {
+                    if (ulat != null && ulng != null && (ulat != 0.0 || ulng != 0.0)) {
                         val distance = FloatArray(1)
                         Location.distanceBetween(lat, lng, ulat, ulng, distance)
-                        if (distance[0] <= 20000) { // 20km radius
+                        if (distance[0] <= 50000) { // Aumentado a 50km para pruebas
                             val user = doc.toObject(User::class.java)
                             user?.id = doc.id
                             user
                         } else null
                     } else null
                 }
+                Log.d("UserViewModel", "Proveedores cercanos encontrados: ${nearby.size}")
                 onResult(nearby)
             }
-            .addOnFailureListener { onResult(emptyList()) }
+            .addOnFailureListener { 
+                Log.e("UserViewModel", "Error al buscar proveedores cercanos", it)
+                onResult(emptyList()) 
+            }
     }
+
+    val defaultCityFlow = settingsManager.defaultCityFlow
 }

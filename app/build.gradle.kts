@@ -52,8 +52,9 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
 
-    // ✅ Google Play Services (ubicación)
+    // ✅ Google Play Services (ubicación) y Google Maps Compose
     implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
 
     // ✅ Accompanist y lifecycle
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
