@@ -1,6 +1,13 @@
 package com.undef.manoslocales.ui.proveedor
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,17 +15,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.undef.manoslocales.ui.dataclasses.Product
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.theme.*
@@ -35,11 +47,21 @@ fun EditProductScreen(
     var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var imageUrl by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var isSaving by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     // Estado para el selector de categoría
     var expandedCategory by remember { mutableStateOf(false) }
-    val categories = listOf("Tecnología", "Herramientas", "Alimentos")
+    val categories = listOf("Tecnología", "Herramientas", "Alimentos", "Textiles", "Artesanías", "Cosmética natural")
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> imageUri = uri }
+    )
 
     LaunchedEffect(productId) {
         viewModel.getProductById(productId) { loadedProduct ->
@@ -49,6 +71,7 @@ fun EditProductScreen(
                 description = it.description
                 price = it.price.toString()
                 category = it.category
+                imageUrl = it.imageUrl
                 isLoading = false
             }
         }
@@ -87,8 +110,48 @@ fun EditProductScreen(
                     .padding(padding)
                     .padding(16.dp)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Imagen del producto editable
+                Box(
+                    modifier = Modifier
+                        .size(160.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Crema.copy(alpha = 0.1f))
+                        .clickable {
+                            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val displayImage = imageUri ?: imageUrl
+                    if (displayImage != "") {
+                        Image(
+                            painter = rememberAsyncImagePainter(displayImage),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    
+                    // Superposición de icono de cámara
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoCamera,
+                            contentDescription = "Cambiar imagen",
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 val textFieldColors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -121,11 +184,9 @@ fun EditProductScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // CAMBIO 1: Validación de Precio Numerico
                 OutlinedTextField(
                     value = price,
                     onValueChange = { input ->
-                        // Permitir solo números y un punto decimal
                         if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*\$"))) {
                             price = input
                         }
@@ -139,7 +200,6 @@ fun EditProductScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // CAMBIO 2: Selector de Categoría (Dropdown)
                 MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(surface = Crema)) {
                     ExposedDropdownMenuBox(
                         expanded = expandedCategory,
@@ -186,28 +246,54 @@ fun EditProductScreen(
 
                 Button(
                     onClick = {
-                        val updated = product?.copy(
-                            name = name,
-                            description = description,
-                            price = price.toDoubleOrNull() ?: 0.0,
-                            category = category
-                        )
-                        if (updated != null) {
-                            viewModel.updateProduct(updated) { success, _ ->
-                                if (success) {
-                                    navController.popBackStack()
+                        isSaving = true
+                        val saveProduct = { finalImageUrl: String ->
+                            val updated = product?.copy(
+                                name = name,
+                                description = description,
+                                price = price.toDoubleOrNull() ?: 0.0,
+                                category = category,
+                                imageUrl = finalImageUrl
+                            )
+                            if (updated != null) {
+                                viewModel.updateProduct(updated) { success, _ ->
+                                    isSaving = false
+                                    if (success) {
+                                        Toast.makeText(context, "Producto actualizado", Toast.LENGTH_SHORT).show()
+                                        navController.popBackStack()
+                                    } else {
+                                        Toast.makeText(context, "Error al actualizar", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
+
+                        if (imageUri != null) {
+                            viewModel.uploadProductImage(imageUri!!) { newUrl ->
+                                if (newUrl != null) {
+                                    saveProduct(newUrl)
+                                } else {
+                                    isSaving = false
+                                    Toast.makeText(context, "Error al subir imagen", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            saveProduct(imageUrl)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = !isSaving,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Crema,
                         contentColor = Cafe
                     )
                 ) {
-                    Text("Guardar Cambios", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    if (isSaving) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Cafe)
+                    } else {
+                        Text("Guardar Cambios", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
             }
         }

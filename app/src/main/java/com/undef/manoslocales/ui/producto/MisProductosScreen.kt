@@ -77,19 +77,25 @@ fun MisProductosScreen(
 
     if (showConfirmDialog && productoAEliminar != null) {
         AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
+            onDismissRequest = { 
+                showConfirmDialog = false
+                productoAEliminar = null
+            },
             title = { Text("Confirmar eliminación", color = Color.Black) },
             text = {
                 Text(
-                    "¿Seguro querés eliminar \"${productoAEliminar!!.name}\"?",
+                    "¿Seguro querés eliminar \"${productoAEliminar?.name ?: ""}\"?",
                     color = Color.Black
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deleteProduct(productoAEliminar!!.id) { success, _ ->
-                        if (success) {
-                            productos = productos.filter { it.id != productoAEliminar!!.id }
+                    val idToRemove = productoAEliminar?.id
+                    if (idToRemove != null) {
+                        viewModel.deleteProduct(idToRemove) { success, _ ->
+                            if (success) {
+                                productos = productos.filter { it.id != idToRemove }
+                            }
                         }
                     }
                     showConfirmDialog = false
@@ -124,29 +130,35 @@ fun MisProductosScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors( // ✅ CORREGIDO
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xff3E2C1C)
                 )
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(Color(0xff3E2C1C))
-        ) {
-            items(productos, key = { it.id }) { producto ->
-                MisProductoItem( // ✅ IMPORT NECESARIO
-                    producto = producto,
-                    onEdit = {
-                        navController.navigate("editarProducto/${producto.id}")
-                    },
-                    onDelete = {
-                        productoAEliminar = producto
-                        showConfirmDialog = true
-                    }
-                )
+        if (productos.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Text("No tienes productos publicados", color = Color.LightGray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .background(Color(0xff3E2C1C))
+            ) {
+                items(productos, key = { it.id }) { producto ->
+                    MisProductoItem(
+                        producto = producto,
+                        onEdit = {
+                            navController.navigate("editarProducto/${producto.id}")
+                        },
+                        onDelete = {
+                            productoAEliminar = producto
+                            showConfirmDialog = true
+                        }
+                    )
+                }
             }
         }
     }
