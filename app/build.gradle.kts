@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material3:material3:1.2.0")
+    implementation(libs.androidx.material.icons.extended)
 
     // ✅ Imágenes
     implementation("io.coil-kt:coil-compose:2.4.0")

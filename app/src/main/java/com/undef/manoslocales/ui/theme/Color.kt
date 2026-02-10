@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 val Cafe = Color(0xFF4E342E)        // Café principal
 val Crema = Color(0xFFFFF8E1)        // Crema principal
 val CafeClaro = Color(0xFF6D4C41)    // Café claro para bordes
-val CafeOscuro = Color(0xFF3E2723)   // Café oscuro para fondos
+val CafeOscuro = Color(0xFF3E2C1C)   // Café oscuro profundo (#3E2C1C) - ACTUALIZADO
 val CremaOscuro = Color(0xFFFFF3C4)   // Crema oscuro para acentos
 val GrisSuave = Color(0xFF9E9E9E)    // Gris suave para descripciones
 val GrisClaro = Color(0xFFE0E0E0)    // Gris claro para fondos secundarios

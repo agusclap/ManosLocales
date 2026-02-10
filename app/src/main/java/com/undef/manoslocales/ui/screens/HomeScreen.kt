@@ -15,6 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.Inventory2
+import androidx.compose.material.icons.rounded.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import com.undef.manoslocales.ui.navigation.FavoritosViewModel
 import com.undef.manoslocales.ui.notifications.NotificationViewModel
 import com.undef.manoslocales.ui.producto.ItemProduct
 import com.undef.manoslocales.ui.theme.Cafe
+import com.undef.manoslocales.ui.theme.CafeOscuro
 import com.undef.manoslocales.ui.theme.Crema
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,7 +150,7 @@ fun HomeScreen(
                 navController = navController
             )
         },
-        containerColor = com.undef.manoslocales.ui.theme.CafeOscuro
+        containerColor = CafeOscuro
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -257,9 +260,17 @@ fun ProductosCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_emprendedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(100.dp))
+            Image(
+                painter = painterResource(id = R.drawable.ic_emprendedores), 
+                contentDescription = null, 
+                modifier = Modifier.size(120.dp)
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(stringResource(id = R.string.productos), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Inventory2, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(id = R.string.productos), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            }
         }
     }
 }
@@ -279,9 +290,17 @@ fun ProveedoresCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(painter = painterResource(id = R.drawable.ic_proveedores), contentDescription = null, tint = Cafe, modifier = Modifier.size(100.dp))
+            Image(
+                painter = painterResource(id = R.drawable.ic_proveedores), 
+                contentDescription = null, 
+                modifier = Modifier.size(120.dp)
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(stringResource(id = R.string.proveedores), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Storefront, contentDescription = null, tint = Cafe, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(id = R.string.proveedores), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Cafe)
+            }
         }
     }
 }
