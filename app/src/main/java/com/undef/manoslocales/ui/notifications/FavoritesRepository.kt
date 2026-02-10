@@ -5,6 +5,7 @@ import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.messaging.FirebaseMessaging
 import com.undef.manoslocales.ui.database.User
 import com.undef.manoslocales.ui.dataclasses.Product
 import kotlinx.coroutines.tasks.await
@@ -12,8 +13,31 @@ import kotlinx.coroutines.tasks.await
 class FavoritesRepository {
 
     private val db = FirebaseFirestore.getInstance()
+    private val fcm = FirebaseMessaging.getInstance()
 
-    // --- PRODUCTOS ---
+    // --- ESCUCHAS REACTIVOS DE FAVORITOS ---
+    
+    fun listenToFavoriteProviderIds(userId: String, onUpdate: (List<String>) -> Unit): ListenerRegistration {
+        return db.collection("users").document(userId)
+            .collection("favoriteProviders")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val ids = snapshot?.documents?.map { it.id } ?: emptyList()
+                onUpdate(ids)
+            }
+    }
+
+    fun listenToFavoriteProductIds(userId: String, onUpdate: (List<String>) -> Unit): ListenerRegistration {
+        return db.collection("users").document(userId)
+            .collection("favoriteProducts")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val ids = snapshot?.documents?.map { it.id } ?: emptyList()
+                onUpdate(ids)
+            }
+    }
+
+    // --- OPERACIONES DE PRODUCTOS ---
 
     suspend fun getFavoriteProducts(userId: String): List<Product> {
         try {
@@ -29,7 +53,6 @@ class FavoritesRepository {
                 product
             }
         } catch (e: Exception) {
-            Log.e("FAV_REPO", "Error al obtener productos favoritos", e)
             return emptyList()
         }
     }
@@ -38,37 +61,32 @@ class FavoritesRepository {
         db.collection("users").document(userId)
             .collection("favoriteProducts").document(productId)
             .set(mapOf("addedAt" to FieldValue.serverTimestamp())).await()
+        fcm.subscribeToTopic("product_$productId")
     }
 
     suspend fun removeProductFromFavorites(userId: String, productId: String) {
         db.collection("users").document(userId)
             .collection("favoriteProducts").document(productId)
             .delete().await()
+        fcm.unsubscribeFromTopic("product_$productId")
     }
 
-    // --- PROVEEDORES ---
+    // --- OPERACIONES DE PROVEEDORES ---
 
     suspend fun getFavoriteProviders(userId: String): List<User> {
         try {
             val favoriteIdsSnapshot = db.collection("users").document(userId)
                 .collection("favoriteProviders").get().await()
             val favoriteProviderIds = favoriteIdsSnapshot.documents.map { it.id }
-            Log.d("FAV_REPO_DEBUG", "Buscando datos para ${favoriteProviderIds.size} proveedores favoritos.")
             if (favoriteProviderIds.isEmpty()) return emptyList()
             val providersSnapshot = db.collection("users")
                 .whereIn("__name__", favoriteProviderIds).get().await()
-
             return providersSnapshot.documents.mapNotNull { doc ->
-                try {
-                    val user = doc.toObject(User::class.java)
-                    user?.id = doc.id // Asignamos el ID del documento al objeto User
-                    user
-                } catch (e: Exception) {
-                    null
-                }
+                val user = doc.toObject(User::class.java)
+                user?.id = doc.id
+                user
             }
         } catch (e: Exception) {
-            Log.e("FAV_REPO", "Error al obtener proveedores favoritos", e)
             return emptyList()
         }
     }
@@ -77,72 +95,53 @@ class FavoritesRepository {
         db.collection("users").document(userId)
             .collection("favoriteProviders").document(providerId)
             .set(mapOf("addedAt" to FieldValue.serverTimestamp())).await()
+        fcm.subscribeToTopic("provider_$providerId")
     }
 
     suspend fun removeProviderFromFavorites(userId: String, providerId: String) {
         db.collection("users").document(userId)
             .collection("favoriteProviders").document(providerId)
             .delete().await()
+        fcm.unsubscribeFromTopic("provider_$providerId")
     }
 
+    // --- LISTENERS DE CAMBIOS EN PRODUCTOS ---
 
     fun listenToNewProductsFromProviders(
         providerIds: List<String>,
         startTime: Long,
         onNewProduct: (Product) -> Unit
     ): ListenerRegistration {
-        val productsRef = db.collection("products")
-
-        return productsRef
-            // Filtramos por los proveedores a los que el usuario está suscrito.
+        return db.collection("products")
             .whereIn("providerId", providerIds)
-            // Filtramos solo por productos creados DESPUÉS de que el "escucha" se inició.
             .whereGreaterThan("createdAt", startTime)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("NewProductListener", "Error en el listener:", error)
+                    Log.e("NewProductListener", "Error: ${error.message}. ¿Falta el índice compuesto?")
                     return@addSnapshotListener
                 }
-
-                // Iteramos sobre los cambios, buscando solo los de tipo AÑADIDO (nuevos).
-                for (change in snapshots!!.documentChanges) {
+                for (change in snapshots?.documentChanges ?: emptyList()) {
                     if (change.type == DocumentChange.Type.ADDED) {
-                        try {
-                            val product = change.document.toObject(Product::class.java)
-                            product.id = change.document.id
-                            onNewProduct(product)
-                        } catch (e: Exception) {
-                            Log.e("NewProductListener", "Error al deserializar nuevo producto", e)
-                        }
+                        val product = change.document.toObject(Product::class.java)
+                        product.id = change.document.id
+                        onNewProduct(product)
                     }
                 }
             }
     }
 
     fun listenToProductChanges(productIds: List<String>, onProductUpdate: (Product) -> Unit): ListenerRegistration {
-        val productsRef = db.collection("products")
-
-        return productsRef.whereIn("__name__", productIds)
+        return db.collection("products")
+            .whereIn("__name__", productIds)
             .addSnapshotListener { snapshots, error ->
-                if (error != null) {
-                    Log.w("PriceListenerRepo", "Error en el listener:", error)
-                    return@addSnapshotListener
-                }
-
-                // Iteramos solo sobre los documentos que han sido MODIFICADOS.
-                for (change in snapshots!!.documentChanges) {
+                if (error != null) return@addSnapshotListener
+                for (change in snapshots?.documentChanges ?: emptyList()) {
                     if (change.type == DocumentChange.Type.MODIFIED) {
-                        try {
-                            val product = change.document.toObject(Product::class.java)
-                            product.id = change.document.id
-                            onProductUpdate(product)
-                        } catch (e: Exception) {
-                            Log.e("PriceListenerRepo", "Error al deserializar producto modificado", e)
-                        }
+                        val product = change.document.toObject(Product::class.java)
+                        product.id = change.document.id
+                        onProductUpdate(product)
                     }
                 }
             }
     }
 }
-
-

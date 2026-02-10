@@ -22,10 +22,12 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     private var notificationsListener: ListenerRegistration? = null
     private var newProductsListener: ListenerRegistration? = null
     private var priceChangesListener: ListenerRegistration? = null
+    
+    // Listeners para detectar cambios en la lista de favoritos
+    private var favProvidersListener: ListenerRegistration? = null
+    private var favProductsListener: ListenerRegistration? = null
 
-    // Para evitar duplicados por desajustes de reloj
     private val notifiedProductIds = mutableSetOf<String>()
-
     val notifications = mutableStateListOf<NotificationItem>()
     
     private val _unreadCount = MutableStateFlow(0)
@@ -43,78 +45,62 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     fun startListening() {
         val userId = auth.currentUser?.uid ?: return
         
-        // Limpiar listeners previos si existen
         stopListening()
-
-        // Cargar notificaciones persistentes desde Firestore
         loadPersistentNotifications(userId)
 
-        viewModelScope.launch {
-            try {
-                // 1. Escuchar nuevos productos de proveedores favoritos
-                val favoriteProviders = favoritesRepository.getFavoriteProviders(userId)
-                val providerIds = favoriteProviders.map { it.id }
-                
-                if (providerIds.isNotEmpty()) {
-                    // Usamos un margen de 10 minutos para el tiempo de inicio para evitar perder notificaciones por desfase de reloj
-                    val safeStartTime = System.currentTimeMillis() - (10 * 60 * 1000)
-                    
-                    newProductsListener = favoritesRepository.listenToNewProductsFromProviders(
-                        providerIds,
-                        safeStartTime
-                    ) { product ->
-                        // Solo notificar si no lo hemos visto en esta sesión para evitar duplicados del margen de seguridad
-                        if (!notifiedProductIds.contains(product.id)) {
-                            notifiedProductIds.add(product.id)
-                            
-                            val title = "¡Nuevo producto!"
-                            val message = "${product.name} ha sido publicado por un proveedor favorito."
-                            saveAndShowNotification(userId, title, message, product.id)
-                        }
-                    }
-                }
+        // Escucha reactiva: Si agregas un favorito nuevo, reiniciamos los filtros automáticamente
+        favProvidersListener = favoritesRepository.listenToFavoriteProviderIds(userId) { providerIds ->
+            setupNewProductListener(userId, providerIds)
+        }
 
-                // 2. Escuchar cambios en productos favoritos (Precio)
-                val favoriteProducts = favoritesRepository.getFavoriteProducts(userId)
-                val productIds = favoriteProducts.map { it.id }
-                
-                if (productIds.isNotEmpty()) {
-                    val productPrices = favoriteProducts.associate { it.id to it.price }.toMutableMap()
-                    
-                    priceChangesListener = favoritesRepository.listenToProductChanges(productIds) { updatedProduct ->
-                        val oldPrice = productPrices[updatedProduct.id]
-                        if (oldPrice != null && updatedProduct.price != oldPrice) {
-                            val changeType = if (updatedProduct.price > oldPrice) "subió" else "bajó"
-                            val title = "¡Cambio de precio!"
-                            val message = "El precio de ${updatedProduct.name} $changeType a $${updatedProduct.price}"
-                            
-                            saveAndShowNotification(userId, title, message, updatedProduct.id)
-                            productPrices[updatedProduct.id] = updatedProduct.price
-                        }
-                    }
+        favProductsListener = favoritesRepository.listenToFavoriteProductIds(userId) { productIds ->
+            setupPriceChangeListener(userId, productIds)
+        }
+    }
+
+    private fun setupNewProductListener(userId: String, providerIds: List<String>) {
+        newProductsListener?.remove()
+        if (providerIds.isEmpty()) return
+
+        val safeStartTime = System.currentTimeMillis() - (2 * 60 * 1000)
+        newProductsListener = favoritesRepository.listenToNewProductsFromProviders(
+            providerIds, safeStartTime
+        ) { product ->
+            if (!notifiedProductIds.contains(product.id)) {
+                notifiedProductIds.add(product.id)
+                saveAndShowNotification(userId, "¡Nuevo producto!", "${product.name} publicado por proveedor favorito", product.id)
+            }
+        }
+    }
+
+    private fun setupPriceChangeListener(userId: String, productIds: List<String>) {
+        priceChangesListener?.remove()
+        if (productIds.isEmpty()) return
+
+        // Cargamos precios actuales para comparar
+        viewModelScope.launch {
+            val currentProducts = favoritesRepository.getFavoriteProducts(userId)
+            val productPrices = currentProducts.associate { it.id to it.price }.toMutableMap()
+
+            priceChangesListener = favoritesRepository.listenToProductChanges(productIds) { updatedProduct ->
+                val oldPrice = productPrices[updatedProduct.id]
+                if (oldPrice != null && updatedProduct.price != oldPrice) {
+                    val change = if (updatedProduct.price > oldPrice) "subió" else "bajó"
+                    saveAndShowNotification(userId, "¡Cambio de precio!", "El precio de ${updatedProduct.name} $change a $${updatedProduct.price}", updatedProduct.id)
+                    productPrices[updatedProduct.id] = updatedProduct.price
                 }
-            } catch (e: Exception) {
-                Log.e("NotifVM", "Error al iniciar listeners: ${e.message}")
             }
         }
     }
 
     private fun loadPersistentNotifications(userId: String) {
         notificationsListener = db.collection("user_notifications")
-            .document(userId)
-            .collection("items")
+            .document(userId).collection("items")
             .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.w("NotifVM", "Listen failed.", e)
-                    return@addSnapshotListener
-                }
-
+            .addSnapshotListener { snapshot, _ ->
                 if (snapshot != null) {
                     notifications.clear()
-                    val items = snapshot.documents.mapNotNull {
-                        it.toObject(NotificationItem::class.java)?.copy(id = it.id)
-                    }
+                    val items = snapshot.documents.mapNotNull { it.toObject(NotificationItem::class.java)?.copy(id = it.id) }
                     notifications.addAll(items)
                     _unreadCount.value = items.count { !it.read }
                 }
@@ -125,64 +111,41 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
         notificationsListener?.remove()
         newProductsListener?.remove()
         priceChangesListener?.remove()
-        
-        notificationsListener = null
-        newProductsListener = null
-        priceChangesListener = null
-    }
-
-    private fun saveAndShowNotification(userId: String, title: String, message: String, productId: String) {
-        val notificationItem = NotificationItem(
-            title = title,
-            message = message,
-            productId = productId,
-            timestamp = System.currentTimeMillis(),
-            read = false
-        )
-
-        // Persistencia en Firestore
-        db.collection("user_notifications")
-            .document(userId)
-            .collection("items")
-            .add(notificationItem)
-
-        // Notificación de sistema de ALTA PRIORIDAD
-        NotificationHelper.sendProductNotification(
-            getApplication(),
-            productId,
-            title,
-            message
-        )
-    }
-    
-    fun markAllAsRead() {
-        val userId = auth.currentUser?.uid ?: return
-        viewModelScope.launch {
-            val batch = db.batch()
-            notifications.filter { !it.read }.forEach { notif ->
-                val docRef = db.collection("user_notifications")
-                    .document(userId)
-                    .collection("items")
-                    .document(notif.id)
-                batch.update(docRef, "read", true)
-            }
-            batch.commit()
-        }
+        favProvidersListener?.remove()
+        favProductsListener?.remove()
     }
 
     fun clearNotifications() {
+        stopListening()
+        notifications.clear()
+        _unreadCount.value = 0
+        notifiedProductIds.clear()
+    }
+
+    fun markAllAsRead() {
         val userId = auth.currentUser?.uid ?: return
+        val unreadNotifications = notifications.filter { !it.read }
+        if (unreadNotifications.isEmpty()) return
+
         viewModelScope.launch {
             val batch = db.batch()
-            notifications.forEach { notif ->
+            unreadNotifications.forEach { notif ->
                 val docRef = db.collection("user_notifications")
-                    .document(userId)
-                    .collection("items")
-                    .document(notif.id)
-                batch.delete(docRef)
+                    .document(userId).collection("items").document(notif.id)
+                batch.update(docRef, "read", true)
             }
-            batch.commit()
+            try {
+                batch.commit()
+            } catch (e: Exception) {
+                Log.e("NotificationVM", "Error marking notifications as read", e)
+            }
         }
+    }
+
+    private fun saveAndShowNotification(userId: String, title: String, message: String, productId: String) {
+        val item = NotificationItem(title = title, message = message, productId = productId)
+        db.collection("user_notifications").document(userId).collection("items").add(item)
+        NotificationHelper.sendProductNotification(getApplication(), productId, title, message)
     }
 
     override fun onCleared() {
