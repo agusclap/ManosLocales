@@ -23,12 +23,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.theme.*
 
@@ -44,13 +46,19 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
     var selectedCategory by remember { mutableStateOf("Tecnología") }
     var categoryExpanded by remember { mutableStateOf(false) }
 
-    val provincias = listOf(
-        "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
-        "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones",
-        "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe",
-        "Santiago del Estero", "Tierra del Fuego", "Tucumán"
-    )
-    val categorias = listOf("Tecnología", "Herramientas", "Alimentos")
+    // Optimización: Uso de remember para evitar recreación de listas en cada recomposición
+    val provincias = remember {
+        listOf(
+            "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
+            "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones",
+            "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe",
+            "Santiago del Estero", "Tierra del Fuego", "Tucumán"
+        )
+    }
+    val categorias = remember { 
+        listOf("Tecnología", "Herramientas", "Alimentos", "Textiles", "Artesanías", "Cosmética natural") 
+    }
+    
     val context = LocalContext.current
     val placeholderImage = "https://via.placeholder.com/150"
 
@@ -73,10 +81,10 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Producto", color = Cafe, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(id = R.string.crear_producto), color = Cafe, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Cafe)
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.back_button_desc), tint = Cafe)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Crema)
@@ -123,7 +131,7 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nombre del Producto") },
+                label = { Text(stringResource(id = R.string.name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = outlinedTextFieldColors()
@@ -132,7 +140,7 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Descripción") },
+                label = { Text(stringResource(id = R.string.description_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 minLines = 3,
@@ -149,7 +157,7 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 colors = outlinedTextFieldColors()
             )
 
-            // Selección de Provincia (Exposed Dropdown Menu)
+            // Selección de Provincia (Exposed Dropdown Menu Optimizado)
             ExposedDropdownMenuBox(
                 expanded = cityExpanded,
                 onExpandedChange = { cityExpanded = !cityExpanded }
@@ -157,8 +165,8 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 OutlinedTextField(
                     value = selectedCity,
                     onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Provincia / Ciudad") },
+                    readOnly = true, // Evita que se abra el teclado
+                    label = { Text(stringResource(id = R.string.province_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
                     modifier = Modifier
                         .menuAnchor(type = MenuAnchorType.PrimaryNotEditable)
@@ -170,7 +178,9 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 ExposedDropdownMenu(
                     expanded = cityExpanded,
                     onDismissRequest = { cityExpanded = false },
-                    modifier = Modifier.background(Crema)
+                    modifier = Modifier
+                        .background(Crema)
+                        .heightIn(max = 240.dp) // UX: Limita la altura del menú
                 ) {
                     provincias.forEach { provincia ->
                         DropdownMenuItem(
@@ -178,13 +188,14 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                             onClick = {
                                 selectedCity = provincia
                                 cityExpanded = false
-                            }
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
                 }
             }
 
-            // Selección de Categoría
+            // Selección de Categoría (Exposed Dropdown Menu Optimizado)
             ExposedDropdownMenuBox(
                 expanded = categoryExpanded,
                 onExpandedChange = { categoryExpanded = !categoryExpanded }
@@ -192,8 +203,8 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 OutlinedTextField(
                     value = selectedCategory,
                     onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Categoría") },
+                    readOnly = true, // Evita que se abra el teclado
+                    label = { Text(stringResource(id = R.string.category_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                     modifier = Modifier
                         .menuAnchor(type = MenuAnchorType.PrimaryNotEditable)
@@ -205,7 +216,9 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 ExposedDropdownMenu(
                     expanded = categoryExpanded,
                     onDismissRequest = { categoryExpanded = false },
-                    modifier = Modifier.background(Crema)
+                    modifier = Modifier
+                        .background(Crema)
+                        .heightIn(max = 240.dp) // UX: Limita la altura
                 ) {
                     categorias.forEach { categoria ->
                         DropdownMenuItem(
@@ -213,7 +226,8 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                             onClick = {
                                 selectedCategory = categoria
                                 categoryExpanded = false
-                            }
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
                 }
@@ -259,7 +273,7 @@ fun CreateProductScreen(viewModel: UserViewModel, navController: NavHostControll
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                Text("CREAR PRODUCTO", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.crear_producto).uppercase(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

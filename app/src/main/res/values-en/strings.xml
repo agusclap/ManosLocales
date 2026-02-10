@@ -1,0 +1,141 @@
+<resources>
+    <string name="app_name">Local Hands</string>
+    <string name="settings_title">Settings</string>
+    <string name="search_preferences">Search Preferences</string>
+    <string name="default_province_label">Default province for searches</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="price_alerts">Price change alerts</string>
+    <string name="new_product_alerts">New product alerts</string>
+    <string name="support_title">Support</string>
+    <string name="support_email_subject">Inquiry - Local Hands App</string>
+    <string name="contact_developer">Contact developer</string>
+    <string name="chooser_title">Send inquiry via:</string>
+    <string name="home_title">Local Hands</string>
+    <string name="notifications_desc">Notifications</string>
+    <string name="no_notifications">No notifications</string>
+    <string name="clear_all">Clear all</string>
+    <string name="mis_productos">My Products</string>
+    <string name="crear_producto">Create Product</string>
+    <string name="mi_perfil">My Profile</string>
+    <string name="productos">Products</string>
+    <string name="proveedores">Providers</string>
+    <string name="mis_favoritos">My Favorites</string>
+
+    <string name="profile_pic_desc">Profile picture</string>
+    <string name="profile_name">Name: %1$s %2$s</string>
+    <string name="profile_email">Email: %1$s</string>
+    <string name="profile_phone">Phone: %1$s</string>
+    <string name="loading_user">Loading user...</string>
+    <string name="btn_edit_profile">Edit Profile</string>
+    <string name="btn_change_password">Change Password</string>
+    <string name="btn_logout">Logout</string>
+
+    <string name="login_title">Login</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="forgot_password">Forgot your password?</string>
+    <string name="btn_login">LOGIN</string>
+    <string name="no_account_register">Don\'t have an account? Register</string>
+    <string name="welcome_msg">Welcome, %1$s!</string>
+    <string name="error_login">Incorrect email or password</string>
+
+    <string name="product_detail_title">Product detail</string>
+    <string name="back_button_desc">Back</string>
+    <string name="share_button_desc">Share</string>
+    <string name="price_label">Price: $%1$.2f</string>
+    <string name="description_label">Description</string>
+    <string name="category_label">Category</string>
+    <string name="city_label">City</string>
+    <string name="btn_view_provider">View provider</string>
+    <string name="share_product_text">Check out this product on Local Hands: %1$s! It costs $%2$.2f. Description: %3$s</string>
+    <string name="share_chooser_title">Share product via…</string>
+
+    <string name="register_title">Create Account</string>
+    <string name="name_label">First Name</string>
+    <string name="lastname_label">Last Name</string>
+    <string name="country_code_label">Code</string>
+    <string name="phone_label">Phone</string>
+    <string name="province_label">Province</string>
+    <string name="role_selection_title">I want to join as:</string>
+    <string name="role_user">User</string>
+    <string name="role_provider">Provider</string>
+    <string name="provider_category_label">Business Category</string>
+    <string name="btn_register">REGISTER</string>
+    <string name="already_have_account">Already have an account? Login</string>
+
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_password_length">Password must be at least 6 characters</string>
+    <string name="error_password_uppercase">Password must include at least one uppercase letter</string>
+    <string name="error_password_digit">Password must include at least one digit</string>
+    <string name="error_email_in_use">This email is already registered. Try logging in.</string>
+    <string name="error_register_generic">Error registering</string>
+
+    <string name="app_logo_desc">Local Hands Logo</string>
+    <string name="loading_data">Loading data...</string>
+
+    <string-array name="provincias">
+        <item>Buenos Aires</item>
+        <item>CABA</item>
+        <item>Catamarca</item>
+        <item>Chaco</item>
+        <item>Chubut</item>
+        <item>Córdoba</item>
+        <item>Corrientes</item>
+        <item>Entre Ríos</item>
+        <item>Formosa</item>
+        <item>Jujuy</item>
+        <item>La Pampa</item>
+        <item>La Rioja</item>
+        <item>Mendoza</item>
+        <item>Misiones</item>
+        <item>Neuquén</item>
+        <item>Río Negro</item>
+        <item>Salta</item>
+        <item>San Juan</item>
+        <item>San Luis</item>
+        <item>Santa Cruz</item>
+        <item>Santa Fe</item>
+        <item>Santiago del Estero</item>
+        <item>Tierra del Fuego</item>
+        <item>Tucumán</item>
+    </string-array>
+
+    <string-array name="categorias">
+        <item>Technology</item>
+        <item>Tools</item>
+        <item>Food</item>
+        <item>Textiles</item>
+        <item>Crafts</item>
+        <item>Natural cosmetics</item>
+    </string-array>
+
+    <string-array name="country_codes">
+        <item>+54</item>
+        <item>+55</item>
+        <item>+56</item>
+        <item>+57</item>
+        <item>+58</item>
+        <item>+51</item>
+        <item>+598</item>
+    </string-array>
+
+    <!-- Nearby Providers -->
+    <string name="nearby_title">Near you</string>
+    <string name="your_province_tag">Your province</string>
+    <string name="no_location">No location</string>
+    <string name="default_category">Entrepreneur</string>
+    <string name="view_action">View</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Product Categories -->
+    <string name="cat_tech">Technology</string>
+    <string name="cat_tools">Tools</string>
+    <string name="cat_food">Food</string>
+    <string name="cat_textiles">Textiles</string>
+    <string name="cat_crafts">Crafts</string>
+    <string name="cat_cosmetics">Natural cosmetics</string>
+</resources>

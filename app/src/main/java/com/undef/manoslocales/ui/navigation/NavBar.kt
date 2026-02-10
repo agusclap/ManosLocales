@@ -12,9 +12,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.undef.manoslocales.R
 
 @Composable
 fun BottomNavigationBar(
@@ -32,13 +34,13 @@ fun BottomNavigationBar(
             icon = { 
                 Icon(
                     Icons.Default.Home, 
-                    contentDescription = "Home",
+                    contentDescription = stringResource(id = R.string.nav_home),
                     tint = if (selectedItem == 0) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
                 ) 
             },
             label = { 
                 Text(
-                    "Home", 
+                    stringResource(id = R.string.nav_home), 
                     color = if (selectedItem == 0) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
                     fontWeight = if (selectedItem == 0) FontWeight.Bold else FontWeight.Normal,
                     style = MaterialTheme.typography.labelMedium
@@ -68,13 +70,13 @@ fun BottomNavigationBar(
             icon = { 
                 Icon(
                     Icons.Filled.Favorite, 
-                    contentDescription = "Favoritos",
+                    contentDescription = stringResource(id = R.string.nav_favorites),
                     tint = if (selectedItem == 1) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
                 ) 
             },
             label = { 
                 Text(
-                    "Favoritos", 
+                    stringResource(id = R.string.nav_favorites), 
                     color = if (selectedItem == 1) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
                     fontWeight = if (selectedItem == 1) FontWeight.Bold else FontWeight.Normal,
                     style = MaterialTheme.typography.labelMedium
@@ -104,13 +106,13 @@ fun BottomNavigationBar(
             icon = { 
                 Icon(
                     Icons.Filled.Settings, 
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(id = R.string.nav_settings),
                     tint = if (selectedItem == 2) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave
                 ) 
             },
             label = { 
                 Text(
-                    "Settings", 
+                    stringResource(id = R.string.nav_settings), 
                     color = if (selectedItem == 2) com.undef.manoslocales.ui.theme.Cafe else com.undef.manoslocales.ui.theme.GrisSuave,
                     fontWeight = if (selectedItem == 2) FontWeight.Bold else FontWeight.Normal,
                     style = MaterialTheme.typography.labelMedium
@@ -135,16 +137,4 @@ fun BottomNavigationBar(
             )
         )
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun BottomNavigationBarPreview() {
-    val navController = rememberNavController() // NavController "falso" para el preview
-    BottomNavigationBar(
-        selectedItem = 0,
-        onItemSelected = {},
-        navController = navController
-    )
 }

@@ -19,6 +19,7 @@
     <string name="mi_perfil">Mi Perfil</string>
     <string name="productos">Productos</string>
     <string name="proveedores">Proveedores</string>
+    <string name="mis_favoritos">Mis Favoritos</string>
 
     <string name="profile_pic_desc">Foto de perfil</string>
     <string name="profile_name">Nombre: %1$s %2$s</string>
@@ -71,4 +72,70 @@
 
     <string name="app_logo_desc">Logo de Manos Locales</string>
     <string name="loading_data">Cargando datos...</string>
+
+    <string-array name="provincias">
+        <item>Buenos Aires</item>
+        <item>CABA</item>
+        <item>Catamarca</item>
+        <item>Chaco</item>
+        <item>Chubut</item>
+        <item>Córdoba</item>
+        <item>Corrientes</item>
+        <item>Entre Ríos</item>
+        <item>Formosa</item>
+        <item>Jujuy</item>
+        <item>La Pampa</item>
+        <item>La Rioja</item>
+        <item>Mendoza</item>
+        <item>Misiones</item>
+        <item>Neuquén</item>
+        <item>Río Negro</item>
+        <item>Salta</item>
+        <item>San Juan</item>
+        <item>San Luis</item>
+        <item>Santa Cruz</item>
+        <item>Santa Fe</item>
+        <item>Santiago del Estero</item>
+        <item>Tierra del Fuego</item>
+        <item>Tucumán</item>
+    </string-array>
+
+    <string-array name="categorias">
+        <item>Tecnología</item>
+        <item>Herramientas</item>
+        <item>Alimentos</item>
+        <item>Textiles</item>
+        <item>Artesanías</item>
+        <item>Cosmética natural</item>
+    </string-array>
+
+    <string-array name="country_codes">
+        <item>+54</item>
+        <item>+55</item>
+        <item>+56</item>
+        <item>+57</item>
+        <item>+58</item>
+        <item>+51</item>
+        <item>+598</item>
+    </string-array>
+
+    <!-- Nearby Providers -->
+    <string name="nearby_title">Cerca de ti</string>
+    <string name="your_province_tag">Tu provincia</string>
+    <string name="no_location">Sin ubicación</string>
+    <string name="default_category">Emprendedor</string>
+    <string name="view_action">Ver</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_settings">Ajustes</string>
+
+    <!-- Product Categories -->
+    <string name="cat_tech">Tecnología</string>
+    <string name="cat_tools">Herramientas</string>
+    <string name="cat_food">Alimentos</string>
+    <string name="cat_textiles">Textiles</string>
+    <string name="cat_crafts">Artesanías</string>
+    <string name="cat_cosmetics">Cosmética natural</string>
 </resources>

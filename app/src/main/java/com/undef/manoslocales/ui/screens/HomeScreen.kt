@@ -160,7 +160,7 @@ fun HomeScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
-                contentDescription = null,
+                contentDescription = stringResource(id = R.string.app_logo_desc),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
@@ -175,7 +175,7 @@ fun HomeScreen(
                         Icon(Icons.Default.Star, contentDescription = null, tint = Crema, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Mis Favoritos",
+                            text = stringResource(id = R.string.mis_favoritos),
                             color = Crema,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold

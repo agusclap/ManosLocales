@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.undef.manoslocales.R
 import com.undef.manoslocales.ui.database.UserViewModel
 import com.undef.manoslocales.ui.theme.Cafe
-import com.undef.manoslocales.ui.theme.CafeOscuro
 import com.undef.manoslocales.ui.theme.Crema
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +48,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CafeOscuro)
+            .background(Color(0xFF3E2C1C)) // Fondo corregido
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
@@ -55,7 +56,7 @@ fun LoginScreen(
     ) {
         Image(
             painter = painterResource(id = R.drawable.manoslocales),
-            contentDescription = null,
+            contentDescription = stringResource(id = R.string.app_logo_desc),
             modifier = Modifier
                 .size(180.dp)
         )
@@ -79,7 +80,8 @@ fun LoginScreen(
             singleLine = true,
             colors = loginTextFieldColors(),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading
+            enabled = !isLoading,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email) // Habilitar teclado Email
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -93,7 +95,8 @@ fun LoginScreen(
             singleLine = true,
             colors = loginTextFieldColors(),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading
+            enabled = !isLoading,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password) // Habilitar teclado Password
         )
 
         Spacer(modifier = Modifier.height(12.dp))

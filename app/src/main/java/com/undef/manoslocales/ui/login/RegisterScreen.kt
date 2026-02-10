@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,26 +58,25 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var numerotel by remember { mutableStateOf("") }
+    
     var selectedCountryCode by remember { mutableStateOf("+54") }
     var countryCodeExpanded by remember { mutableStateOf(false) }
+    
     var selectedProvincia by remember { mutableStateOf("") }
     var provinciaExpanded by remember { mutableStateOf(false) }
+    
     var role by remember { mutableStateOf("user") }
     var categoria by remember { mutableStateOf("") }
+    var expandedCategory by remember { mutableStateOf(false) }
+    
     var lat by remember { mutableStateOf<Double?>(null) }
     var lng by remember { mutableStateOf<Double?>(null) }
-    var expandedCategory by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
-    val countryCodes = listOf("+54", "+55", "+56", "+57", "+58", "+51", "+598")
-    val categorias = listOf("Tecnología", "Herramientas", "Alimentos")
-    val provincias = listOf(
-        "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", 
-        "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", 
-        "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", 
-        "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", 
-        "Tierra del Fuego", "Tucumán"
-    )
+    // Misión: Reparación de Selectores - Carga de arrays desde strings.xml
+    val countryCodes = stringArrayResource(R.array.country_codes).toList()
+    val categorias = stringArrayResource(R.array.categorias).toList()
+    val provincias = stringArrayResource(R.array.provincias).toList()
 
     // Strings para Toasts y Errores
     val errorInvalidEmail = stringResource(id = R.string.error_invalid_email)
@@ -111,7 +111,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CafeOscuro)
+            .background(Color(0xFF3E2C1C)) // Fondo corregido
     ) {
         Column(
             modifier = Modifier
@@ -123,7 +123,7 @@ fun RegisterScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.manoslocales),
-                contentDescription = null,
+                contentDescription = stringResource(id = R.string.app_logo_desc),
                 modifier = Modifier
                     .size(150.dp)
                     .clip(RoundedCornerShape(20.dp))
@@ -189,11 +189,11 @@ fun RegisterScreen(
                     ExposedDropdownMenu(
                         expanded = countryCodeExpanded,
                         onDismissRequest = { countryCodeExpanded = false },
-                        modifier = Modifier.background(Crema)
+                        modifier = Modifier.background(Crema) // Fondo Crema
                     ) {
                         countryCodes.forEach { code ->
                             DropdownMenuItem(
-                                text = { Text(code, color = Cafe) },
+                                text = { Text(code, color = Cafe) }, // Texto Café
                                 onClick = {
                                     selectedCountryCode = code
                                     countryCodeExpanded = false
@@ -239,11 +239,11 @@ fun RegisterScreen(
                 ExposedDropdownMenu(
                     expanded = provinciaExpanded,
                     onDismissRequest = { provinciaExpanded = false },
-                    modifier = Modifier.background(Crema)
+                    modifier = Modifier.background(Crema) // Fondo Crema
                 ) {
                     provincias.forEach { prov ->
                         DropdownMenuItem(
-                            text = { Text(prov, color = Cafe) },
+                            text = { Text(prov, color = Cafe) }, // Texto Café
                             onClick = {
                                 selectedProvincia = prov
                                 provinciaExpanded = false
@@ -322,11 +322,11 @@ fun RegisterScreen(
                     ExposedDropdownMenu(
                         expanded = expandedCategory,
                         onDismissRequest = { expandedCategory = false },
-                        modifier = Modifier.background(Crema)
+                        modifier = Modifier.background(Crema) // Fondo Crema
                     ) {
                         categorias.forEach { cat ->
                             DropdownMenuItem(
-                                text = { Text(cat, color = Cafe) },
+                                text = { Text(cat, color = Cafe) }, // Texto Café
                                 onClick = {
                                     categoria = cat
                                     expandedCategory = false
