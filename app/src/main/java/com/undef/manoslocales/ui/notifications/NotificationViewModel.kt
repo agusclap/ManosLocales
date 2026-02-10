@@ -12,7 +12,6 @@ import com.undef.manoslocales.ui.dataclasses.Product
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.ListenerRegistration
 
 class NotificationViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,7 +20,11 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     private val db = FirebaseFirestore.getInstance()
 
     private var notificationsListener: ListenerRegistration? = null
+    private var newProductsListener: ListenerRegistration? = null
+    private var priceChangesListener: ListenerRegistration? = null
 
+    // Para evitar duplicados por desajustes de reloj
+    private val notifiedProductIds = mutableSetOf<String>()
 
     val notifications = mutableStateListOf<NotificationItem>()
     
@@ -40,58 +43,68 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     fun startListening() {
         val userId = auth.currentUser?.uid ?: return
         
+        // Limpiar listeners previos si existen
+        stopListening()
+
         // Cargar notificaciones persistentes desde Firestore
         loadPersistentNotifications(userId)
 
         viewModelScope.launch {
-            // 1. Escuchar nuevos productos de proveedores favoritos
-            val favoriteProviders = favoritesRepository.getFavoriteProviders(userId)
-            val providerIds = favoriteProviders.map { it.id }
-            
-            if (providerIds.isNotEmpty()) {
-                favoritesRepository.listenToNewProductsFromProviders(
-                    providerIds,
-                    System.currentTimeMillis()
-                ) { product ->
-                    val title = "¡Nuevo producto!"
-                    val message = "${product.name} ha sido publicado por un proveedor favorito."
-                    
-                    saveAndShowNotification(userId, title, message, product.id)
-                }
-            }
-
-            // 2. Escuchar cambios en productos favoritos (Precio)
-            val favoriteProducts = favoritesRepository.getFavoriteProducts(userId)
-            val productIds = favoriteProducts.map { it.id }
-            
-            if (productIds.isNotEmpty()) {
-                val productPrices = favoriteProducts.associate { it.id to it.price }.toMutableMap()
+            try {
+                // 1. Escuchar nuevos productos de proveedores favoritos
+                val favoriteProviders = favoritesRepository.getFavoriteProviders(userId)
+                val providerIds = favoriteProviders.map { it.id }
                 
-                favoritesRepository.listenToProductChanges(productIds) { updatedProduct ->
-                    val oldPrice = productPrices[updatedProduct.id]
-                    if (oldPrice != null && updatedProduct.price != oldPrice) {
-                        val changeType = if (updatedProduct.price > oldPrice) "subió" else "bajó"
-                        val title = "¡Cambio de precio!"
-                        val message = "El precio de ${updatedProduct.name} $changeType a $${updatedProduct.price}"
-                        
-                        saveAndShowNotification(userId, title, message, updatedProduct.id)
-                        productPrices[updatedProduct.id] = updatedProduct.price
+                if (providerIds.isNotEmpty()) {
+                    // Usamos un margen de 10 minutos para el tiempo de inicio para evitar perder notificaciones por desfase de reloj
+                    val safeStartTime = System.currentTimeMillis() - (10 * 60 * 1000)
+                    
+                    newProductsListener = favoritesRepository.listenToNewProductsFromProviders(
+                        providerIds,
+                        safeStartTime
+                    ) { product ->
+                        // Solo notificar si no lo hemos visto en esta sesión para evitar duplicados del margen de seguridad
+                        if (!notifiedProductIds.contains(product.id)) {
+                            notifiedProductIds.add(product.id)
+                            
+                            val title = "¡Nuevo producto!"
+                            val message = "${product.name} ha sido publicado por un proveedor favorito."
+                            saveAndShowNotification(userId, title, message, product.id)
+                        }
                     }
                 }
+
+                // 2. Escuchar cambios en productos favoritos (Precio)
+                val favoriteProducts = favoritesRepository.getFavoriteProducts(userId)
+                val productIds = favoriteProducts.map { it.id }
+                
+                if (productIds.isNotEmpty()) {
+                    val productPrices = favoriteProducts.associate { it.id to it.price }.toMutableMap()
+                    
+                    priceChangesListener = favoritesRepository.listenToProductChanges(productIds) { updatedProduct ->
+                        val oldPrice = productPrices[updatedProduct.id]
+                        if (oldPrice != null && updatedProduct.price != oldPrice) {
+                            val changeType = if (updatedProduct.price > oldPrice) "subió" else "bajó"
+                            val title = "¡Cambio de precio!"
+                            val message = "El precio de ${updatedProduct.name} $changeType a $${updatedProduct.price}"
+                            
+                            saveAndShowNotification(userId, title, message, updatedProduct.id)
+                            productPrices[updatedProduct.id] = updatedProduct.price
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("NotifVM", "Error al iniciar listeners: ${e.message}")
             }
         }
     }
 
     private fun loadPersistentNotifications(userId: String) {
-
-        notificationsListener?.remove()
-
         notificationsListener = db.collection("user_notifications")
             .document(userId)
             .collection("items")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
-
                 if (e != null) {
                     Log.w("NotifVM", "Listen failed.", e)
                     return@addSnapshotListener
@@ -108,12 +121,15 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
             }
     }
 
-
     fun stopListening() {
         notificationsListener?.remove()
+        newProductsListener?.remove()
+        priceChangesListener?.remove()
+        
         notificationsListener = null
+        newProductsListener = null
+        priceChangesListener = null
     }
-
 
     private fun saveAndShowNotification(userId: String, title: String, message: String, productId: String) {
         val notificationItem = NotificationItem(
@@ -124,13 +140,13 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
             read = false
         )
 
-        // Tarea 3: Persistencia en Firestore
+        // Persistencia en Firestore
         db.collection("user_notifications")
             .document(userId)
             .collection("items")
             .add(notificationItem)
 
-        // Tarea 2: Disparar notificación de sistema (usa canal_precios definido en Helper)
+        // Notificación de sistema de ALTA PRIORIDAD
         NotificationHelper.sendProductNotification(
             getApplication(),
             productId,
@@ -167,5 +183,10 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
             }
             batch.commit()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopListening()
     }
 }

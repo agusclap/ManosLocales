@@ -18,7 +18,7 @@ object NotificationHelper {
 
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_HIGH // Cambio a HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
                 description = "Notificaciones sobre productos y proveedores favoritos"
             }
@@ -31,26 +31,25 @@ object NotificationHelper {
     fun sendProductNotification(context: Context, productId: String, title: String, message: String) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Intent para Deep Linking
         val intent = Intent(context, MainActivity::class.java).apply {
             putExtra("PRODUCT_ID", productId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
-        // TaskStackBuilder para navegación correcta hacia atrás
         val pendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(intent)
             getPendingIntent(productId.hashCode(), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Asegúrate de tener este recurso
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // Cambio a HIGH
+            .setVibrate(longArrayOf(1000, 1000, 1000)) // Opcional: Vibración para mayor visibilidad
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // Expandible
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
 
         notificationManager.notify(productId.hashCode(), builder.build())
     }
